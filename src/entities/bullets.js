@@ -68,6 +68,8 @@ function updateBullets(dt) {
     }
     b.x += b.vx * dt;
     b.y += b.vy * dt;
+    // visual 이 커스텀 모션(파도/나선/지그재그 등) 갖고 있으면 추가 오프셋 적용
+    if (typeof applyBulletVisualMotion === 'function') applyBulletVisualMotion(b, dt);
     b.life -= dt;
     // 벽 처리: bounces 남았으면 반사, 아니면 소멸
     if (b.x < rm.x) {

@@ -24,6 +24,12 @@ function drawBullet(b) {
     ctx.globalAlpha = 1;
   }
 
+  // 스킬 이름 → visual 자동 매핑 카탈로그 (100+ 종). 등록된 항목이면 그걸로 그리고 종료.
+  if (typeof BULLET_VISUALS !== 'undefined' && BULLET_VISUALS[v]) {
+    BULLET_VISUALS[v].draw(b, ang);
+    return;
+  }
+
   switch (v) {
     case 'fireball':
       // 큰 오렌지 파이어볼 + 노란 궤적 잔상
