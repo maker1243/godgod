@@ -230,19 +230,20 @@ function spawnFacultyProfessors(room) {
 }
 
 function spawnFacultyProfessor(pos, def, fac, idx) {
-  const HP = (typeof PROFESSOR_HP !== 'undefined') ? PROFESSOR_HP : 100000000;
+  // 두 교수 동시 등장이므로 각자 개별 HP 도 상향. 총합 = PROFESSOR_HP × 2 근처.
+  const HP = (typeof PROFESSOR_HP !== 'undefined') ? PROFESSOR_HP : 1000000000;
   const boss = {
     x: pos.x, y: pos.y, vx: 0, vy: 0,
     r: 11,
     kind: 'professor',
     hp: HP, maxHp: HP,
-    dmg: 25, speed: 40, xp: 0, gold: 0,
+    dmg: 100, speed: 50, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
-    baseDmg: 1, cdMult: 1, mods: { fire:1, ice:1, lmbCd:1, lmbDmg:1 },
+    baseDmg: 5, cdMult: 0.65, mods: { fire:1.4, ice:1.4, lmbCd:0.65, lmbDmg:1.4 },
     slots: def.slots, cd: {},
-    dmgReduction: 0.35, lifesteal: 0, thorns: 0, crit: 0, critMult: 2, mpCostMult: 1,
-    perks: [], mp: 100, maxMp: 100, mpRegenBonus: 18,
+    dmgReduction: 0.55, lifesteal: 0, thorns: 0, crit: 0.15, critMult: 2.5, mpCostMult: 0.5,
+    perks: [], mp: 300, maxMp: 300, mpRegenBonus: 45,
     _profDef: {
       name: def.name,
       title: def.dept,        // 학과명을 title 로 노출 (기존 drawProfessor 에서 사용)
@@ -253,7 +254,7 @@ function spawnFacultyProfessor(pos, def, fac, idx) {
     },
     _profEntryT: (typeof PROFESSOR_ENTRY_SEC !== 'undefined' ? PROFESSOR_ENTRY_SEC : 1.6),
     _profDeathT: 0,
-    _profShootCd: 0.6 + idx * 0.25,   // 두 교수의 시전 타이밍 어긋나게
+    _profShootCd: 0.3 + idx * 0.15,   // 두 교수의 시전 타이밍 어긋나게 (더 빠르게)
     _profMoveAng: 0,
     _profMoveT: 0,
   };

@@ -4,7 +4,7 @@
 // 등장 모션(투명→불투명 + 링 이펙트) / 사망 모션(폭발 파티클 + 페이드아웃).
 // =====================================================================
 
-const PROFESSOR_HP = 100000000;         // 100M
+const PROFESSOR_HP = 1000000000;        // 1B (10배 상향)
 const PROFESSOR_ENTRY_SEC = 1.6;        // 등장 애니메이션 시간
 const PROFESSOR_DEATH_SEC = 1.5;        // 사망 애니메이션 시간
 
@@ -39,13 +39,13 @@ function spawnProfessor(room, roomIndex) {
     r: 12,
     kind: 'professor',
     hp: PROFESSOR_HP, maxHp: PROFESSOR_HP,
-    dmg: 30, speed: 45, xp: 0, gold: 0,
+    dmg: 120, speed: 55, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
-    baseDmg: 1, cdMult: 1, mods: { fire:1, ice:1, lmbCd:1, lmbDmg:1 },
+    baseDmg: 6, cdMult: 0.6, mods: { fire:1.5, ice:1.5, lmbCd:0.6, lmbDmg:1.5 },
     slots: def.slots, cd: {},
-    dmgReduction: 0.3, lifesteal: 0, thorns: 0, crit: 0, critMult: 2, mpCostMult: 1,
-    perks: [], mp: 100, maxMp: 100, mpRegenBonus: 20,
+    dmgReduction: 0.55, lifesteal: 0, thorns: 0, crit: 0.2, critMult: 2.5, mpCostMult: 0.5,
+    perks: [], mp: 300, maxMp: 300, mpRegenBonus: 50,
     // 커스텀 필드
     _profDef: def,
     _profEntryT: PROFESSOR_ENTRY_SEC,     // 등장 애니메이션 남은 시간
@@ -139,17 +139,17 @@ function updateProfessor(e, dt, sm) {
       if (cast) {
         for (let i = entities.bullets.length - 1; i >= before; i--) {
           const b = entities.bullets[i];
-          // ebullets 로 변환 (플레이어 피격 판정에 편입)
+          // ebullets 로 변환 (플레이어 피격 판정에 편입) - 데미지 대폭 상향
           entities.ebullets.push({
             x: b.x, y: b.y, vx: b.vx, vy: b.vy,
-            r: b.r, dmg: Math.min(60, Math.max(6, Math.floor((b.dmg || 10) * 0.02))),
+            r: b.r, dmg: Math.min(400, Math.max(35, Math.floor((b.dmg || 10) * 0.15))),
             life: b.life, kind: b.kind,
           });
           entities.bullets.splice(i, 1);
         }
       }
     }
-    e._profShootCd = 0.7 + Math.random() * 0.4;
+    e._profShootCd = 0.35 + Math.random() * 0.25;   // 시전 주기 단축
   }
 }
 
