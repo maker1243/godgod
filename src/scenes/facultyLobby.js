@@ -148,6 +148,7 @@ const FACULTY_KEYS = ['humanities','social','natural','engineering','medicine','
 const facultyLobby = {
   cursor: 0,        // 어떤 계열에 커서 (또는 -1 = 중앙 교장)
   hoverT: 0,
+  rewardPopup: null,   // 열린 보상 팝업 { facKey, cursor }
 };
 
 // 교장 정의 - 모든 계열 클리어 시 오염된 트리 중앙에 등장
@@ -189,6 +190,12 @@ function facultyDeg(idx) {
 function updateFacultyLobby(dt) {
   facultyLobby.hoverT += dt;
   const n = FACULTY_KEYS.length;
+
+  // === 보상 팝업 활성 시: 팝업 내 조작만 처리하고 나머지 잠금 ===
+  if (facultyLobby.rewardPopup) {
+    _updateRewardPopup(dt);
+    return;
+  }
 
   // 방향키/WS 로 커서 순환
   if (keys['KeyA'] || keys['ArrowLeft'])  { keys['KeyA']=false; keys['ArrowLeft']=false; facultyLobby.cursor = (facultyLobby.cursor - 1 + n) % n; sfx('hit'); }
@@ -232,6 +239,14 @@ function updateFacultyLobby(dt) {
       return;
     }
     const key = FACULTY_KEYS[facultyLobby.cursor];
+    // 이미 이 계열을 클리어했다면 → 사기 스킬 4개 보상 팝업 열기
+    if (state.facultyCleared && state.facultyCleared[key] > 0 && typeof FACULTY_REWARD_SKILLS !== 'undefined' && FACULTY_REWARD_SKILLS[key]) {
+      facultyLobby.rewardPopup = { facKey: key, cursor: 0 };
+      if (typeof showMsg === 'function') showMsg(FACULTY_PROFESSORS[key].name + ' 보상 열람', 2);
+      sfx('door');
+      return;
+    }
+    // 아직 클리어 안 됨 → 시련 진입
     state.facultyKey = key;
     state.dungeonMode = 'professor';
     if (typeof showMsg === 'function') showMsg(FACULTY_PROFESSORS[key].name + ' 시련 시작!', 3);
@@ -361,7 +376,117 @@ function renderFacultyLobby() {
   drawText(pList, 8, py + 10, '#e8d9b0');
 
   // 안내
-  drawText('WASD/화살표 SELECT   SPACE 시련 시작   R/ESC BACK', W/2 - textWidth('WASD/화살표 SELECT   SPACE 시련 시작   R/ESC BACK')/2, H - 2, '#8a7ab5');
+  drawText('WASD/화살표 SELECT   SPACE 시련/보상   R/ESC BACK', W/2 - textWidth('WASD/화살표 SELECT   SPACE 시련/보상   R/ESC BACK')/2, H - 2, '#8a7ab5');
+
+  // 보상 팝업이 열려있으면 위에 오버레이
+  if (facultyLobby.rewardPopup) _renderRewardPopup();
+}
+
+// === 사기 스킬 보상 팝업 ===
+const _REWARD_SLOTS = ['lmb','q','e','passive'];
+const _REWARD_LABELS = { lmb:'일반 공격', q:'스킬', e:'궁극기', passive:'패시브' };
+
+function _updateRewardPopup(dt) {
+  const pop = facultyLobby.rewardPopup;
+  const set = FACULTY_REWARD_SKILLS[pop.facKey];
+  if (!set) { facultyLobby.rewardPopup = null; return; }
+  const n = _REWARD_SLOTS.length;
+  // 커서 이동
+  if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; pop.cursor = (pop.cursor - 1 + n) % n; sfx('hit'); }
+  if (keys['KeyS'] || keys['ArrowDown']) { keys['KeyS']=false; keys['ArrowDown']=false; pop.cursor = (pop.cursor + 1) % n; sfx('hit'); }
+  // 클릭으로 커서 이동 + 두 번째 클릭 = 구매
+  let clickIdx = -1;
+  if (mouse.down && Array.isArray(window._rewardPopupRows)) {
+    for (const r of window._rewardPopupRows) {
+      if (mouse.x >= r.x && mouse.x <= r.x + r.w && mouse.y >= r.y && mouse.y <= r.y + r.h) {
+        clickIdx = r.idx; break;
+      }
+    }
+  }
+  if (clickIdx >= 0) {
+    mouse.down = false;
+    if (pop.cursor === clickIdx) { _buyReward(set, _REWARD_SLOTS[pop.cursor]); }
+    else { pop.cursor = clickIdx; sfx('hit'); }
+  }
+  // SPACE/Enter 로 구매
+  if (keys['Space'] || keys['Enter']) {
+    keys['Space']=false; keys['Enter']=false;
+    _buyReward(set, _REWARD_SLOTS[pop.cursor]);
+  }
+  // ESC/R 닫기
+  if (keys['Escape'] || keys['KeyR']) {
+    keys['Escape']=false; keys['KeyR']=false;
+    facultyLobby.rewardPopup = null;
+  }
+}
+
+function _buyReward(set, slotKey) {
+  const s = set[slotKey];
+  if (!s) return;
+  const lv = state.ownedSkills[s.id] || 0;
+  const maxLv = s.maxLv || 1;
+  if (lv >= maxLv) { if (typeof showMsg === 'function') showMsg('이미 소유', 1.5); sfx('hurt'); return; }
+  if ((state.research || 0) < s.cost) { if (typeof showMsg === 'function') showMsg('RP 부족 (필요: ' + s.cost + ')', 2); sfx('hurt'); return; }
+  state.research -= s.cost;
+  state.ownedSkills[s.id] = maxLv;
+  // 액티브 스킬이면 자동 장착
+  if (s.slot !== 'passive' && !state.equippedSlots[s.slot]) state.equippedSlots[s.slot] = s.id;
+  if (typeof saveAccountData === 'function') saveAccountData();
+  if (typeof showMsg === 'function') showMsg('구매 완료: ' + s.name, 2.5);
+  sfx('level');
+}
+
+function _renderRewardPopup() {
+  const pop = facultyLobby.rewardPopup;
+  if (!pop) { window._rewardPopupRows = null; return; }
+  const set = FACULTY_REWARD_SKILLS[pop.facKey];
+  const fac = FACULTY_PROFESSORS[pop.facKey];
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, W*PX, H*PX);
+  const bx = 20, by = 18, bw = W - 40, bh = H - 36;
+  pxDraw(bx, by, bw, bh, '#1a0e2e');
+  pxDraw(bx, by, bw, 1, fac.color);
+  pxDraw(bx, by + bh - 1, bw, 1, fac.color);
+  pxDraw(bx, by, 1, bh, fac.color);
+  pxDraw(bx + bw - 1, by, 1, bh, fac.color);
+  // 헤더
+  const title = fac.name + ' — 사기 스킬 보상';
+  drawText(title, bx + bw/2 - textWidth(title)/2, by + 4, fac.color);
+  const rpText = '보유 RP: ' + (state.research || 0);
+  drawText(rpText, bx + bw - textWidth(rpText) - 6, by + 4, '#8bd8ff');
+  pxDraw(bx + 4, by + 14, bw - 8, 1, '#3a1e5c');
+
+  // 4 슬롯 행
+  window._rewardPopupRows = [];
+  const rowY0 = by + 20, rowH = 30;
+  for (let i = 0; i < _REWARD_SLOTS.length; i++) {
+    const slotKey = _REWARD_SLOTS[i];
+    const s = set[slotKey];
+    const ry = rowY0 + i * rowH;
+    const isSel = pop.cursor === i;
+    const owned = (state.ownedSkills[s.id] || 0) >= (s.maxLv || 1);
+    const canBuy = !owned && (state.research || 0) >= s.cost;
+    if (isSel) pxDraw(bx + 4, ry, bw - 8, rowH - 2, '#2a1548');
+    // 카테고리 라벨 (일반 공격 / 스킬 / 궁극기 / 패시브)
+    drawText('[' + _REWARD_LABELS[slotKey] + ']', bx + 8, ry + 2, fac.color);
+    // 이름
+    drawText(s.name, bx + 62, ry + 2, owned ? '#3ac762' : (isSel ? '#ffefa8' : '#e8d9b0'));
+    // 설명
+    drawText(s.desc, bx + 8, ry + 12, '#c8a8c8');
+    // 비용 + 상태
+    let stat = '';
+    let statCol = '#5a4a80';
+    if (owned)      { stat = '✓ 소유';        statCol = '#3ac762'; }
+    else if (canBuy){ stat = s.cost + ' RP';  statCol = '#ffefa8'; }
+    else            { stat = s.cost + ' RP';  statCol = '#c81616'; }
+    drawText(stat, bx + bw - textWidth(stat) - 8, ry + 6, statCol);
+    window._rewardPopupRows.push({ idx: i, x: bx + 4, y: ry, w: bw - 8, h: rowH - 2 });
+  }
+
+  // 하단 안내
+  drawText('WS/TAP SELECT   SPACE BUY   ESC/R BACK',
+    bx + bw/2 - textWidth('WS/TAP SELECT   SPACE BUY   ESC/R BACK')/2,
+    by + bh - 9, '#8a7ab5');
 }
 
 // buildRoom 에서 professor 모드일 때 호출: 선택된 계열의 두 교수를 좌/우로 스폰
@@ -386,17 +511,17 @@ function spawnFacultyProfessors(room) {
 // === 교장 스폰 ===
 function spawnPrincipal(room) {
   const def = PRINCIPAL_DEF;
-  const HP = 5000000000;    // 5B - 교수의 5배
+  const HP = 75000000000;    // 75B - 교수의 5배 × 15배 상향
   const boss = {
     x: room.x + room.w/2, y: room.y + 60, vx: 0, vy: 0,
     r: 15,
     kind: 'professor',
     hp: HP, maxHp: HP,
-    dmg: 250, speed: 60, xp: 0, gold: 0,
+    dmg: 3750, speed: 60, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
     _isPrincipal: true,
-    baseDmg: 12, cdMult: 0.45, mods: { fire: 2, ice: 2, lmbCd: 0.4, lmbDmg: 2 },
+    baseDmg: 180, cdMult: 0.45, mods: { fire: 2, ice: 2, lmbCd: 0.4, lmbDmg: 2 },
     slots: def.slots, cd: {},
     dmgReduction: 0.65, lifesteal: 0, thorns: 0, crit: 0.35, critMult: 3, mpCostMult: 0.25,
     perks: [], mp: 500, maxMp: 500, mpRegenBonus: 80,
@@ -440,10 +565,10 @@ function spawnFacultyProfessor(pos, def, fac, idx) {
     r: 11,
     kind: 'professor',
     hp: HP, maxHp: HP,
-    dmg: 100, speed: 50, xp: 0, gold: 0,
+    dmg: 1500, speed: 50, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
-    baseDmg: 5, cdMult: 0.65, mods: { fire:1.4, ice:1.4, lmbCd:0.65, lmbDmg:1.4 },
+    baseDmg: 75, cdMult: 0.65, mods: { fire:1.4, ice:1.4, lmbCd:0.65, lmbDmg:1.4 },
     slots: def.slots, cd: {},
     dmgReduction: 0.55, lifesteal: 0, thorns: 0, crit: 0.15, critMult: 2.5, mpCostMult: 0.5,
     perks: [], mp: 300, maxMp: 300, mpRegenBonus: 45,
