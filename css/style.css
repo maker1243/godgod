@@ -1,0 +1,47 @@
+﻿/* Grand Arcana Academy - extracted from monolithic HTML */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #05030a;
+  font-family: 'Courier New', 'Consolas', monospace;
+  color: #e8d9b0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+#wrap {
+  position: fixed; inset: 0;
+  display: flex; justify-content: center; align-items: center;
+  background:
+    radial-gradient(ellipse at center, #180b28 0%, #05030a 70%);
+}
+canvas {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  background: #000;
+  box-shadow:
+    0 0 0 2px #2a1a44,
+    0 0 60px rgba(120, 80, 200, 0.35);
+  cursor: crosshair;
+  max-width: 100vw;
+  max-height: 100vh;
+  touch-action: none;
+}
+#help {
+  position: fixed; left: 10px; bottom: 10px;
+  font-size: 11px; color: #7a6a99;
+  line-height: 1.4;
+  pointer-events: none;
+}
+/* 모바일: help 숨기고, 캔버스가 화면 꽉 채우도록 */
+@media (pointer: coarse), (max-width: 800px) {
+  #help { display: none; }
+  canvas { box-shadow: none; }
+  #wrap { background: #000; }
+}

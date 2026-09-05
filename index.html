@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>그랜드 아르카나 아카데미</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="960" height="600"></canvas>
+</div>
+<div id="help">
+  WASD 이동 · 마우스 조준 · 좌클릭 파이어볼 · 우클릭/Shift 방패(적중 직전 = 패리) ·<br>
+  Shift+이동 = 구르기 · Q 아이스볼트 · E 시간 정지 · R 후퇴 · Space 상호작용
+</div>
+
+<!--
+  Modules load top-to-bottom. Order matters - each script uses globals
+  defined by the ones above it. All declarations become top-level globals,
+  which is what the original monolithic file already relied on.
+-->
+
+<!-- core -->
+<script src="src/core/utils.js"></script>
+<script src="src/core/font.js"></script>
+<script src="src/core/draw.js"></script>
+<script src="src/core/sprites.js"></script>
+<script src="src/core/sound.js"></script>
+<script src="src/core/i18n.js"></script>
+
+<!-- data / state -->
+<script src="src/data/account.js"></script>
+<script src="src/data/skills.js"></script>
+<script src="src/data/skillTree.js"></script>
+<script src="src/data/maxSkills.js"></script>
+<script src="src/data/ultraSkills.js"></script>
+
+<!-- world -->
+<script src="src/world/rooms.js"></script>
+
+<!-- entities -->
+<script src="src/entities/update.js"></script>
+<script src="src/entities/enemies.js"></script>
+<script src="src/entities/trialBoss.js"></script>
+<script src="src/entities/bullets.js"></script>
+
+<!-- scenes -->
+<script src="src/scenes/levelup.js"></script>
+<script src="src/scenes/ending.js"></script>
+<script src="src/scenes/library.js"></script>
+<script src="src/scenes/classroom.js"></script>
+<script src="src/scenes/shop.js"></script>
+<script src="src/scenes/arena.js"></script>
+<script src="src/scenes/arenaMenu.js"></script>
+<script src="src/scenes/duel.js"></script>
+<script src="src/scenes/langSelect.js"></script>
+<script src="src/scenes/login.js"></script>
+
+<!-- rendering -->
+<script src="src/render/render.js"></script>
+<script src="src/render/bullets.js"></script>
+
+<!-- net + mobile -->
+<script src="src/net/multiplayer.js"></script>
+<script src="src/mobile/touch.js"></script>
+
+<!-- bootstrap -->
+<script src="src/main.js"></script>
+</body>
+</html>
