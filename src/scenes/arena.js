@@ -124,12 +124,23 @@ function updateArena(dt) {
   // PvP 매치 진행
   if (mp.pvp.active) {
     updatePvp(dt);
-    // 상대 총알 → 나 피격 판정 (수신된 hostileToMe 총알)
+    // 상대 총알 → 나 피격 판정. 데미지는 sender-authoritative(pvpHit)로 이미 처리되므로
+    // 여기서는 시각적 소비/파티클만 (중복 데미지 방지).
     for (let i = entities.bullets.length - 1; i >= 0; i--) {
       const b = entities.bullets[i];
-      if (b.hostileToMe && !player.invuln && !player.rolling && dist(b, player) < b.r + player.r) {
-        if (typeof damagePlayer === 'function') damagePlayer(b.dmg || 8, b);
-        else player.hp -= (b.dmg || 8);
+      if (b.hostileToMe && dist(b, player) < b.r + player.r) {
+        if (!b.remote) {
+          // remote가 아니면 (구 폴백 등) 로컬 판정
+          if (!player.invuln && !player.rolling) {
+            if (typeof damagePlayer === 'function') damagePlayer(b.dmg || 8, b);
+            else player.hp -= (b.dmg || 8);
+          }
+        } else {
+          // remote 총알: 시각 파티클만 - 데미지는 sender의 pvpHit이 담당
+          if (typeof spawnParticle === 'function') {
+            spawnParticle(b.x, b.y, b.kind === 'ice' ? '#8bd8ff' : '#ff9c3d', 0.3, 6, 50);
+          }
+        }
         entities.bullets.splice(i, 1);
       }
     }
@@ -277,29 +288,35 @@ function updatePlayerArena(dt) {
   const ang = angleTo(p, {x: aimX, y: aimY});
   p.facing = Math.cos(ang) >= 0 ? 1 : -1;
 
-  if (mouse.down && !p.shielding && p.rolling <= 0) {
-    if (castSlot(p, 'lmb', ang) && mp && mp.roomCode) {
-      const skillId = p.slots.lmb; const vis = skillId && SKILL_VISUAL[skillId];
-      const dmg = mp.pvp.active ? 8 : 0;
-      mpSend({ type: 'cast', kind: 'fire', ang, visual: vis || 'fireball', dmg });
+  // 시전 + 멀티플레이 브로드캐스트. cast 이전 bullets 스냅샷 → cast 후 새로 생긴 것들만
+  // 상대적 좌표/속도/속성으로 직렬화해 상대 클라가 그대로 재현.
+  function _castAndBroadcast(slot) {
+    const before = entities.bullets.length;
+    const ok = castSlot(p, slot, ang);
+    if (!ok || !(mp && mp.roomCode)) return;
+    const newBullets = [];
+    for (let i = before; i < entities.bullets.length; i++) {
+      const b = entities.bullets[i];
+      // 상대 위치 기준으로 relative offset. 최대 16개까지만 보냄 (프레임 페이로드 상한).
+      if (newBullets.length >= 16) break;
+      newBullets.push({
+        dx: Math.round((b.x - p.x) * 10) / 10,
+        dy: Math.round((b.y - p.y) * 10) / 10,
+        vx: Math.round(b.vx * 10) / 10, vy: Math.round(b.vy * 10) / 10,
+        r: b.r || 3, dmg: b.dmg,
+        li: Math.round(b.life * 100) / 100,
+        k: b.kind, v: b.visual || null,
+        pi: b.pierce ? 1 : 0, fr: b.freeze || 0,
+        kb: b.knockback || 0,
+        ex: b.explosive ? 1 : 0, er: b.explodeR || 0,
+        ho: b.homing ? 1 : 0, bo: b.bounces || 0,
+      });
     }
+    mpSend({ type: 'cast', ang, slot, bullets: newBullets });
   }
-  if (keys['KeyQ'] && !p.shielding && p.rolling <= 0) {
-    keys['KeyQ']=false;
-    if (castSlot(p, 'q', ang) && mp && mp.roomCode) {
-      const skillId = p.slots.q; const vis = skillId && SKILL_VISUAL[skillId];
-      const dmg = mp.pvp.active ? 18 : 0;
-      mpSend({ type: 'cast', kind: 'ice', ang, visual: vis || 'icebolt', dmg });
-    }
-  }
-  if (keys['KeyE'] && p.rolling <= 0) {
-    keys['KeyE'] = false;
-    if (castSlot(p, 'e', ang) && mp && mp.roomCode) {
-      const skillId = p.slots.e; const vis = skillId && SKILL_VISUAL[skillId];
-      const dmg = mp.pvp.active ? 35 : 0;
-      mpSend({ type: 'cast', kind: 'fire', ang, visual: vis || 'fireball', dmg });
-    }
-  }
+  if (mouse.down && !p.shielding && p.rolling <= 0) _castAndBroadcast('lmb');
+  if (keys['KeyQ'] && !p.shielding && p.rolling <= 0) { keys['KeyQ']=false; _castAndBroadcast('q'); }
+  if (keys['KeyE'] && p.rolling <= 0)                 { keys['KeyE']=false; _castAndBroadcast('e'); }
   if (keys['Digit1']) { keys['Digit1']=false; usePotionSlot(0); }
   if (keys['Digit2']) { keys['Digit2']=false; usePotionSlot(1); }
   if (keys['Digit3']) { keys['Digit3']=false; usePotionSlot(2); }

@@ -3,7 +3,7 @@
 // Caesar / Affine 두 종류 중 랜덤으로 출제. 성공 시 RP 보상, 실패는 페널티 없음.
 // =====================================================================
 
-const CIPHER_WALL_HOLD_SEC = 10;
+const CIPHER_WALL_HOLD_SEC = 2;
 
 // 후보 평문 (4~6글자 영문 대문자). 오답 선지 생성용으로도 사용.
 const CIPHER_WORDS = [

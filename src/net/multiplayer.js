@@ -189,17 +189,43 @@ function mpHandleMessage(m) {
   } else if (m.type === 'cast') {
     const p = mp.peers.get(m.id);
     if (p) { p.casting = 0.4; }
-    if (p && typeof m.ang === 'number') {
-      // PvP 매치 중이면 상대 발사체는 나에게 데미지 (내가 판정)
+    if (p) {
       const isPvp = mp.pvp.active && !mp.pvp.roundOver;
-      entities.bullets.push({
-        x: p.x, y: p.y,
-        vx: Math.cos(m.ang) * 140, vy: Math.sin(m.ang) * 140,
-        r: 3, dmg: isPvp ? (m.dmg || 8) : 0, life: 1.2, kind: m.kind || 'fire',
-        visual: m.visual || null, hits: 0, remote: true,
-        hostileToMe: isPvp,   // 이 표시가 있으면 플레이어 피격 판정에 포함
-      });
-      sfx(m.kind === 'ice' ? 'ice' : 'fire');
+      // 신규 포맷: 발사체 배열을 sender 가 그대로 직렬화 → 상대 위치에 상대적으로 재현
+      if (Array.isArray(m.bullets) && m.bullets.length) {
+        for (const b of m.bullets) {
+          entities.bullets.push({
+            x: p.x + (b.dx || 0), y: p.y + (b.dy || 0),
+            vx: b.vx, vy: b.vy,
+            r: b.r || 3,
+            dmg: b.dmg || 0,           // pvpHit 로 sender 가 데미지 처리하므로 로컬 dmg 는 표시용
+            life: b.li || 1.2,
+            kind: b.k || 'fire',
+            visual: b.v || null,
+            hits: 0,
+            pierce: !!b.pi,
+            freeze: b.fr || 0,
+            knockback: b.kb || 0,
+            explosive: !!b.ex,
+            explodeR: b.er || 0,
+            homing: !!b.ho,
+            bounces: b.bo || 0,
+            remote: true,
+            hostileToMe: isPvp,
+          });
+        }
+        sfx((m.bullets[0] && m.bullets[0].k === 'ice') ? 'ice' : 'fire');
+      } else if (typeof m.ang === 'number') {
+        // 구 포맷 폴백 (구버전 클라이언트 호환)
+        entities.bullets.push({
+          x: p.x, y: p.y,
+          vx: Math.cos(m.ang) * 140, vy: Math.sin(m.ang) * 140,
+          r: 3, dmg: isPvp ? (m.dmg || 8) : 0, life: 1.2, kind: m.kind || 'fire',
+          visual: m.visual || null, hits: 0, remote: true,
+          hostileToMe: isPvp,
+        });
+        sfx(m.kind === 'ice' ? 'ice' : 'fire');
+      }
     }
   } else if (m.type === 'pvpHit') {
     // 상대가 "너 맞았어(id=X, dmg=D)" 통지. 대상이 나면 자기 HP 감소.

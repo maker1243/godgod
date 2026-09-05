@@ -66,6 +66,22 @@ function setupDuel(enemy) {
   duel.outcome = null;
   duel.timerLeft = 90;
   state.cam.x = 0; state.cam.y = 0;
+
+  // 진 사람 버프: 시리즈에서 상대가 나보다 앞서 있으면 스택 수 만큼 강화.
+  // (aiEval win/lose 라운드 종료 후 startNextRound 로 진입한 뒤에 적용됨)
+  const behind = Math.max(0, (duel.enemyWins || 0) - (duel.playerWins || 0));
+  if (behind > 0) {
+    const hpBonus = 30 * behind;
+    const dmgMult = 1 + 0.25 * behind;
+    const spdMult = 1 + 0.08 * behind;
+    player.maxHp += hpBonus;
+    player.hp = player.maxHp;
+    player.baseDmg *= dmgMult;
+    player.speed *= spdMult;
+    player.dmgReduction = (player.dmgReduction || 0) + Math.min(0.35, 0.1 * behind);
+    showMsg('LOSER BUFF x' + behind + ' — +' + hpBonus + ' HP, DMG x' + dmgMult.toFixed(2), 3);
+  }
+
   showMsg('DUEL: ' + duel.enemy.name.toUpperCase(), 2.5);
   sfx('boss');
 }
