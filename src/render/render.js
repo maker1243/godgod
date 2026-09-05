@@ -26,6 +26,7 @@ function render() {
     case 'dead':      renderDungeon(); renderDeath(); break;
     case 'ending':    renderEnding(); break;
     case 'library':   renderLibrary(); break;
+    case 'codex':     renderCodex(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -275,7 +276,7 @@ function renderAcademyHUD() {
   }
 
   // 하단 힌트
-  drawText('WASD MOVE   [SPACE] INTERACT   [C] DIFFICULTY', 4, H - 10, '#5a4a80');
+  drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX', 4, H - 10, '#5a4a80');
 
   // 난이도 배너 (중앙 상단, 탭/클릭 시 사이클) - updateAcademy 가 히트 판정에 사용
   if (typeof currentDifficulty === 'function') {
@@ -526,6 +527,8 @@ function renderDungeon() {
 
   // 아군 발사체
   for (const b of entities.bullets) drawBullet(b);
+  // FX (링/슬래시 등 히트 이펙트)
+  if (typeof drawFx === 'function') drawFx();
 
   // 플레이어
   drawPlayer(player.x, player.y, true);

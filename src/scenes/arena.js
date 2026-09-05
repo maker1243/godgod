@@ -115,6 +115,7 @@ function updateArena(dt) {
   updateEnemies(dtEnemy);
   updateBullets(dtEnemy);
   updateEBullets(dtEnemy);
+  if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
   updatePickups(dt);
@@ -384,6 +385,7 @@ function renderArena() {
   }
   // 아군 발사체
   for (const b of entities.bullets) drawBullet(b);
+  if (typeof drawFx === 'function') drawFx();
   // 원격 플레이어(멀티플레이) - 자기보다 살짝 아래에서 그림
   if (mp && mp.roomCode) {
     const nowMs = performance.now();

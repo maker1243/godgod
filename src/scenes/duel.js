@@ -297,6 +297,7 @@ function updateAIDuel(dt) {
   // 발사체 이동/충돌
   updateBullets(dt);
   updateEBullets(dt);
+  if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
   // 상대 업데이트
@@ -360,6 +361,7 @@ function renderDuel() {
     pxDraw(b.x - 1, b.y - 1, 3, 3, '#7d4dbf');
   }
   for (const b of entities.bullets) drawBullet(b);
+  if (typeof drawFx === 'function') drawFx();
 
   // 상대 렌더링 - 반전된 플레이어 스프라이트
   const o = duel.enemy;

@@ -39,6 +39,7 @@ function update(dt) {
     case 'dead':      updateDead(dt); break;
     case 'ending':    updateEnding(dt); break;
     case 'library':   updateLibrary(dt); break;
+    case 'codex':     updateCodex(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -171,6 +172,12 @@ if (state.account) {
 }
 
 function updateAcademy(dt) {
+  // X 키 → 도감 씬 진입 (팝업/피커가 열려있지 않을 때만)
+  if (keys['KeyX'] && !window._diffPickerOpen && !(typeof cipherQuest !== 'undefined' && cipherQuest.active)) {
+    keys['KeyX'] = false;
+    goTo('codex');
+    return;
+  }
   // 암호 퀘스트: 팝업 활성이거나 벽 접촉 카운트 진행 중이면 그 결과에 따라 나머지 잠금
   if (typeof updateCipherQuestAcademy === 'function') {
     const blocked = updateCipherQuestAcademy(dt);
@@ -359,6 +366,7 @@ function updateDungeon(dt) {
   updateEnemies(dtEnemy);
   updateBullets(dtEnemy);
   updateEBullets(dtEnemy);
+  if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
   updatePickups(dt);

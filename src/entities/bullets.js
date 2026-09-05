@@ -3,6 +3,49 @@
 // =====================================================================
 
 // ---------- 발사체 ----------
+// 시각 이펙트 (링/슬래시/트레일) - 히트 시점의 폭발감 강화용
+function updateFx(dt) {
+  if (!entities.fx) return;
+  for (let i = entities.fx.length - 1; i >= 0; i--) {
+    const f = entities.fx[i];
+    f.life -= dt;
+    if (f.life <= 0) entities.fx.splice(i, 1);
+  }
+}
+function drawFx() {
+  if (!entities.fx) return;
+  for (const f of entities.fx) {
+    const t = 1 - (f.life / f.max);   // 0 → 1 progress
+    ctx.globalAlpha = Math.max(0, f.life / f.max);
+    if (f.type === 'ring') {
+      const r = f.r0 + (f.r1 - f.r0) * t;
+      ctx.strokeStyle = f.col;
+      ctx.lineWidth = PX * 2;
+      ctx.beginPath();
+      ctx.arc(f.x * PX, f.y * PX, r * PX, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (f.type === 'slash') {
+      const len = f.len * (0.6 + t * 0.6);
+      ctx.strokeStyle = f.col;
+      ctx.lineWidth = PX * 3;
+      ctx.beginPath();
+      ctx.moveTo((f.x + Math.cos(f.ang) * len)*PX, (f.y + Math.sin(f.ang) * len)*PX);
+      ctx.lineTo((f.x - Math.cos(f.ang) * len)*PX, (f.y - Math.sin(f.ang) * len)*PX);
+      ctx.stroke();
+    } else if (f.type === 'trail') {
+      pxDraw(f.x - 1, f.y - 1, 2, 2, f.col);
+    } else if (f.type === 'castRing') {
+      const r = f.r0 + (f.r1 - f.r0) * t;
+      ctx.strokeStyle = f.col;
+      ctx.lineWidth = PX;
+      ctx.beginPath();
+      ctx.arc(f.x * PX, f.y * PX, r * PX, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
 function updateBullets(dt) {
   const rm = rooms[currentRoom];
   if (!rm) return;
@@ -67,12 +110,29 @@ function updateBullets(dt) {
     for (const e of entities.enemies) {
       if (dist(b, e) < b.r + e.r) {
         let finalDmg = b.dmg * dmgMult;
-        // 인페르노 shielded 버프: 피해 감소
         if (e._dmgRed) finalDmg *= (1 - Math.min(0.9, e._dmgRed));
         e.hp -= finalDmg;
-        e.hitFlash = 0.12;
+        e.hitFlash = isCrit ? 0.22 : 0.14;
         spawnFloat(e.x, e.y - 6, Math.ceil(finalDmg), isCrit ? '#ffefa8' : '#ffefa8');
-        spawnParticle(b.x, b.y, b.kind === 'fire' ? '#ff9c3d' : '#8bd8ff', 0.3, 6, 50);
+
+        // === 강화된 히트 이펙트 ===
+        const baseCol = b.kind === 'ice' ? '#8bd8ff' : (b.kind === 'fire' ? '#ff9c3d' : '#c86ade');
+        const accCol  = b.kind === 'ice' ? '#ddf5ff' : (b.kind === 'fire' ? '#ffefa8' : '#ffb8ff');
+        const partCount = isCrit ? 14 : 8;
+        for (let i = 0; i < partCount; i++) {
+          const pa = Math.random() * Math.PI * 2;
+          const ps = 40 + Math.random() * 60;
+          spawnParticle(b.x + Math.cos(pa)*2, b.y + Math.sin(pa)*2, i % 2 ? accCol : baseCol, 0.4, 2 + Math.random()*2, ps);
+        }
+        // 링 임팩트 (짧게 확장하는 원)
+        if (typeof entities.fx !== 'undefined' && entities.fx) {
+          entities.fx.push({ type:'ring', x: b.x, y: b.y, life: 0.25, max: 0.25, r0: 3, r1: isCrit ? 16 : 10, col: accCol });
+        }
+        // 크리티컬 슬래시
+        if (isCrit && typeof entities.fx !== 'undefined' && entities.fx) {
+          const sa = Math.atan2(b.vy, b.vx);
+          entities.fx.push({ type:'slash', x: e.x, y: e.y, ang: sa, life: 0.22, max: 0.22, len: 20, col: '#ffefa8' });
+        }
 
         // 익스트림 방 버프: thorns (몹이 데미지 받으면 플레이어에게 반사)
         if (e._thorns && !player.invuln) {

@@ -1041,6 +1041,11 @@ function castSlot(p, slotName, ang) {
   _currentCastSlot = slotName;
   _currentCastVisual = SKILL_VISUAL[skillId] || null;
   try { s.cast(p, ang, lv); } finally { _currentCastSlot = null; _currentCastVisual = null; }
+  // 시전 링 이펙트 (슬롯별 색상)
+  if (typeof entities !== 'undefined' && entities.fx) {
+    const col = slotName === 'q' ? '#8bd8ff' : (slotName === 'e' ? '#ff2d80' : '#ffefa8');
+    entities.fx.push({ type: 'castRing', x: p.x, y: p.y, life: 0.3, max: 0.3, r0: 4, r1: 14, col });
+  }
   return true;
 }
 

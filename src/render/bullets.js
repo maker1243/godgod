@@ -14,6 +14,16 @@ function drawBullet(b) {
     spawnParticle(b.x, b.y, b.trail || '#ffefa8', 0.25, 2, 8);
   }
 
+  // === 전체 총알에 애프터이미지 (모션 강조) ===
+  if (b.vx || b.vy) {
+    const trailCol = b.color || (b.kind === 'ice' ? '#8bd8ff' : (b.kind === 'fire' ? '#ff9c3d' : '#c86ade'));
+    ctx.globalAlpha = 0.35;
+    pxDraw(b.x - Math.cos(ang)*3, b.y - Math.sin(ang)*3, (b.r || 3) - 1 || 2, (b.r || 3) - 1 || 2, trailCol);
+    ctx.globalAlpha = 0.2;
+    pxDraw(b.x - Math.cos(ang)*6, b.y - Math.sin(ang)*6, Math.max(1, (b.r || 3) - 2), Math.max(1, (b.r || 3) - 2), trailCol);
+    ctx.globalAlpha = 1;
+  }
+
   switch (v) {
     case 'fireball':
       // 큰 오렌지 파이어볼 + 노란 궤적 잔상
