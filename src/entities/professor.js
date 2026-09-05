@@ -139,18 +139,113 @@ function updateProfessor(e, dt, sm) {
       if (cast) {
         for (let i = entities.bullets.length - 1; i >= before; i--) {
           const b = entities.bullets[i];
-          // ebullets 로 변환 (플레이어 피격 판정에 편입) - 데미지 대폭 상향
+          // ebullets 로 변환. visual 은 학과 테마로 override (있으면).
           entities.ebullets.push({
             x: b.x, y: b.y, vx: b.vx, vy: b.vy,
-            r: b.r, dmg: Math.min(400, Math.max(35, Math.floor((b.dmg || 10) * 0.15))),
+            r: b.r,
+            dmg: Math.min(400, Math.max(35, Math.floor((b.dmg || 10) * 0.15))),
             life: b.life, kind: b.kind,
+            visual: (e._profDef && e._profDef.visual) || b.visual || null,
           });
           entities.bullets.splice(i, 1);
         }
       }
     }
-    e._profShootCd = 0.35 + Math.random() * 0.25;   // 시전 주기 단축
+    e._profShootCd = 0.35 + Math.random() * 0.25;
   }
+
+  // === 시그니처 스킬 (교수 학과 테마 독특 공격) ===
+  e._profSigCd = (e._profSigCd || 4) - dt;
+  if (e._profSigCd <= 0 && e._profDef && e._profDef.signature) {
+    _profSignatureCast(e, e._profDef.signature, angleTo(e, player));
+    e._profSigCd = 4 + Math.random() * 2;
+  }
+}
+
+// 학과별 시그니처 공격 - 각각 완전히 다른 패턴. 발사체는 학과 테마 visual 로.
+function _profSignatureCast(e, sig, ang) {
+  const vis = (e._profDef && e._profDef.visual) || null;
+  const col = (e._profDef && e._profDef.color) || '#ffefa8';
+  const dmg = 50 + Math.floor(Math.random() * 30);
+  const push = (opts) => entities.ebullets.push(Object.assign({
+    x: e.x, y: e.y, r: 3, dmg, life: 3, kind: 'fire', visual: vis
+  }, opts));
+
+  if (sig === 'burst' || sig === 'ring') {
+    // 방사형 8발
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 });
+    }
+  } else if (sig === 'spread' || sig === 'volley') {
+    // 조준 5발 부채꼴
+    for (let i = -2; i <= 2; i++) {
+      const a = ang + i * 0.18;
+      push({ vx: Math.cos(a) * 180, vy: Math.sin(a) * 180, r: 4 });
+    }
+  } else if (sig === 'wave' || sig === 'infloop') {
+    // 파도 3발 (물리 wave 로직은 visual 이 알아서)
+    for (let i = -1; i <= 1; i++) {
+      const a = ang + i * 0.12;
+      push({ vx: Math.cos(a) * 130, vy: Math.sin(a) * 130, r: 3, life: 4 });
+    }
+  } else if (sig === 'orbit') {
+    // 궤도 8발 (visual atom 이 spiral 이면 시각적으로 궤도 형태)
+    for (let i = 0; i < 8; i++) {
+      const a = ang + (i - 3.5) * 0.15;
+      push({ vx: Math.cos(a) * 160, vy: Math.sin(a) * 160 });
+    }
+  } else if (sig === 'stream') {
+    // 3연발 순차 (같은 각도, 짧은 딜레이는 시각적)
+    for (let i = 0; i < 3; i++) {
+      push({ vx: Math.cos(ang) * (180 + i*40), vy: Math.sin(ang) * (180 + i*40), r: 2 });
+    }
+  } else if (sig === 'saw') {
+    // 톱니바퀴 회전탄 - 원형 배치 + spin 회전 시각
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, r: 4, dmg: dmg * 1.2 });
+    }
+  } else if (sig === 'cross') {
+    // 4방향 대형 십자
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + Math.PI / 4;
+      push({ vx: Math.cos(a) * 200, vy: Math.sin(a) * 200, r: 5, dmg: dmg * 1.3 });
+    }
+  } else if (sig === 'toss') {
+    // 3방향 캡슐 (약병 던지기)
+    for (let i = -1; i <= 1; i++) {
+      const a = ang + i * 0.35;
+      push({ vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, r: 4, life: 2.5 });
+    }
+  } else if (sig === 'bounce') {
+    // 공 세 개 지그재그
+    for (let i = -1; i <= 1; i++) {
+      const a = ang + i * 0.25;
+      push({ vx: Math.cos(a) * 130, vy: Math.sin(a) * 130, r: 4, life: 3.5 });
+    }
+  } else if (sig === 'splash') {
+    // 방사형 랜덤 색상 12발
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * Math.PI * 2;
+      push({ vx: Math.cos(a) * (80 + Math.random()*120), vy: Math.sin(a) * (80 + Math.random()*120), r: 3 });
+    }
+  } else if (sig === 'chord') {
+    // 음표 화음 - 3개의 조준탄 다른 간격
+    for (const off of [-0.3, 0, 0.3]) {
+      const a = ang + off;
+      push({ vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 3, life: 3 });
+    }
+  } else {
+    // 폴백 - 8방향 링
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 });
+    }
+  }
+  spawnParticle(e.x, e.y, col, 0.5, 12, 60);
+  if (entities.fx) entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 0.4, max: 0.4, r0: 6, r1: 20, col });
+  sfx('boss');
 }
 
 // enemies 렌더에서 hook. 등장/사망 애니메이션 오버레이 + 스프라이트.

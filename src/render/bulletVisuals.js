@@ -247,6 +247,148 @@ const BULLET_VISUALS = {
   spark_ex:     _V(S.dot,     'gold'),
 };
 
+// =====================================================================
+// 학과 테마 투사체 (교수 전용). 각 학과의 상징을 픽셀로 표현.
+// =====================================================================
+function _drawDeptHangeul(b) {
+  // 한글 자소 - ㅁ 모양 (사각 테두리)
+  pxDraw(b.x - 3, b.y - 3, 7, 1, '#ffefa8');
+  pxDraw(b.x - 3, b.y + 2, 7, 1, '#ffefa8');
+  pxDraw(b.x - 3, b.y - 2, 1, 4, '#ffefa8');
+  pxDraw(b.x + 3, b.y - 2, 1, 4, '#ffefa8');
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#fff');
+}
+function _drawDeptInk(b) {
+  // 잉크방울 - 위쪽 뾰족, 아래쪽 둥근
+  pxDraw(b.x - 1, b.y - 3, 2, 1, '#3a1548');
+  pxDraw(b.x - 2, b.y - 2, 4, 2, '#4a1a5a');
+  pxDraw(b.x - 3, b.y, 6, 3, '#1a0a3a');
+  pxDraw(b.x - 1, b.y + 1, 2, 1, '#c86ade');
+}
+function _drawDeptChart(b, ang) {
+  // 상승 화살표 (경영)
+  const nx = Math.cos(ang), ny = Math.sin(ang);
+  pxDraw(b.x - 3, b.y, 7, 1, '#8bd8ff');
+  pxDraw(b.x + nx*2, b.y + ny*2 - 2, 1, 5, '#8bd8ff');
+  pxDraw(b.x + nx*3 - 1, b.y + ny*3 - 1, 3, 3, '#ffefa8');
+}
+function _drawDeptBrain(b) {
+  // 뇌 파동 - 세로 물결 3개
+  const off = Math.sin(state.time * 8 + b.x) * 1.5;
+  pxDraw(b.x - 3, b.y - 2 + off, 1, 5, '#c86ade');
+  pxDraw(b.x, b.y - 2 - off, 1, 5, '#ff80ff');
+  pxDraw(b.x + 3, b.y - 2 + off, 1, 5, '#c86ade');
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#fff');
+}
+function _drawDeptAtom(b) {
+  // 원자 궤도 - 회전하는 3개 궤도 + 핵
+  const t = state.time * 8;
+  for (let i = 0; i < 3; i++) {
+    const a = t + i * (Math.PI * 2 / 3);
+    pxDraw(b.x + Math.cos(a) * 3, b.y + Math.sin(a) * 3, 1, 1, '#8bd8ff');
+    pxDraw(b.x + Math.cos(a + Math.PI) * 3, b.y + Math.sin(a + Math.PI) * 3, 1, 1, '#5adcff');
+  }
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#ffefa8');
+}
+function _drawDeptBenzene(b) {
+  // 벤젠 링 (육각형)
+  const pts = 6;
+  for (let i = 0; i < pts; i++) {
+    const a = (i / pts) * Math.PI * 2;
+    pxDraw(b.x + Math.cos(a) * 3 - 0.5, b.y + Math.sin(a) * 3 - 0.5, 1, 1, '#3ac762');
+  }
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#5adc2a');
+}
+function _drawDeptBinary(b) {
+  // 0/1 픽셀
+  const bit = Math.floor(state.time * 12 + b.x) % 2;
+  pxDraw(b.x - 2, b.y - 3, 5, 6, '#0a0a10');
+  if (bit) {
+    // "1"
+    pxDraw(b.x - 1, b.y - 3, 1, 6, '#3ac762');
+    pxDraw(b.x, b.y - 2, 1, 1, '#3ac762');
+  } else {
+    // "0"
+    pxDraw(b.x - 2, b.y - 3, 5, 1, '#8bd8ff');
+    pxDraw(b.x - 2, b.y + 2, 5, 1, '#8bd8ff');
+    pxDraw(b.x - 2, b.y - 2, 1, 4, '#8bd8ff');
+    pxDraw(b.x + 2, b.y - 2, 1, 4, '#8bd8ff');
+  }
+}
+function _drawDeptGear(b) {
+  // 톱니바퀴 - 회전하는 사각 이빨 + 중앙 링
+  const t = state.time * 6;
+  for (let i = 0; i < 4; i++) {
+    const a = t + i * Math.PI / 2;
+    pxDraw(b.x + Math.cos(a) * 3 - 1, b.y + Math.sin(a) * 3 - 1, 2, 2, '#e8c547');
+  }
+  pxDraw(b.x - 2, b.y - 2, 4, 4, '#c8b898');
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#5a4a80');
+}
+function _drawDeptCross(b) {
+  // 의료 십자 (빨간 십자)
+  pxDraw(b.x - 3, b.y - 1, 7, 2, '#ff2020');
+  pxDraw(b.x - 1, b.y - 3, 2, 7, '#ff2020');
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#fff');
+}
+function _drawDeptPill(b) {
+  // 캡슐 (반반 색상)
+  pxDraw(b.x - 3, b.y - 1, 3, 3, '#ff9c3d');
+  pxDraw(b.x, b.y - 1, 3, 3, '#ffefa8');
+  pxDraw(b.x - 1, b.y, 2, 1, '#fff');
+}
+function _drawDeptInfinity(b) {
+  // ∞ 무한 기호
+  const t = state.time * 4;
+  const w = 2 + Math.sin(t) * 0.5;
+  pxDraw(b.x - 3, b.y - 1, 2, 2, '#c86ade');
+  pxDraw(b.x + 2, b.y - 1, 2, 2, '#c86ade');
+  pxDraw(b.x - 1, b.y, 3, 1, '#ff80ff');
+}
+function _drawDeptBall(b) {
+  // 공 (축구공 스타일 - 오각형 패턴 흉내)
+  const t = state.time * 5;
+  const c1 = Math.floor(t + b.x) % 2 ? '#fff' : '#1a1a1a';
+  pxDraw(b.x - 3, b.y - 3, 7, 7, '#fff');
+  pxDraw(b.x - 2, b.y - 2, 5, 5, c1);
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#fff');
+}
+function _drawDeptPaint(b) {
+  // 물감 방울 - 랜덤 색상
+  const t = Math.floor(state.time * 8 + b.x);
+  const cols = ['#ff2d80','#8bd8ff','#3ac762','#ffefa8','#c86ade','#ff9c3d'];
+  const col = cols[t % cols.length];
+  pxDraw(b.x - 2, b.y - 2, 4, 4, col);
+  pxDraw(b.x - 1, b.y - 1, 2, 2, '#fff');
+  // 스플래시
+  if (Math.random() < 0.3) spawnParticle(b.x + rand(-3,3), b.y + rand(-3,3), col, 0.4, 2, 30);
+}
+function _drawDeptNote(b) {
+  // 음표 - ♪ 모양
+  pxDraw(b.x - 2, b.y + 1, 3, 3, '#ffefa8');    // 머리
+  pxDraw(b.x + 1, b.y - 3, 1, 5, '#ffefa8');    // 스템
+  pxDraw(b.x + 1, b.y - 3, 3, 1, '#ffefa8');    // 깃발
+}
+
+const DEPT_VISUALS = {
+  dept_hangeul:  { draw: (b, ang) => _drawDeptHangeul(b) },
+  dept_ink:      { draw: (b, ang) => _drawDeptInk(b) },
+  dept_chart:    { draw: (b, ang) => _drawDeptChart(b, ang) },
+  dept_brain:    { draw: (b, ang) => _drawDeptBrain(b), move: _mWave },
+  dept_atom:     { draw: (b, ang) => _drawDeptAtom(b), move: _mSpiral },
+  dept_benzene:  { draw: (b, ang) => _drawDeptBenzene(b) },
+  dept_binary:   { draw: (b, ang) => _drawDeptBinary(b) },
+  dept_gear:     { draw: (b, ang) => _drawDeptGear(b) },
+  dept_medcross: { draw: (b, ang) => _drawDeptCross(b), move: _mPulse },
+  dept_pill:     { draw: (b, ang) => _drawDeptPill(b) },
+  dept_infinity: { draw: (b, ang) => _drawDeptInfinity(b), move: _mWave },
+  dept_ball:     { draw: (b, ang) => _drawDeptBall(b), move: _mZigzag },
+  dept_paint:    { draw: (b, ang) => _drawDeptPaint(b) },
+  dept_note:     { draw: (b, ang) => _drawDeptNote(b), move: _mWave },
+};
+// BULLET_VISUALS 에 병합
+for (const k of Object.keys(DEPT_VISUALS)) BULLET_VISUALS[k] = DEPT_VISUALS[k];
+
 // --- 스킬 이름 → visual 자동 매핑 ---
 // 우선순위: 긴 키워드 먼저. 대문자 비교.
 const VIS_KEYWORDS = [

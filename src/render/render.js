@@ -497,6 +497,12 @@ function renderDungeon() {
 
   // 적 발사체
   for (const b of entities.ebullets) {
+    // 교수 학과 테마 발사체: BULLET_VISUALS 등록된 visual 우선
+    if (b.visual && typeof BULLET_VISUALS !== 'undefined' && BULLET_VISUALS[b.visual]) {
+      const ang = Math.atan2(b.vy, b.vx);
+      try { BULLET_VISUALS[b.visual].draw(b, ang); } catch(_) {}
+      continue;
+    }
     // 시련 보스 발사체: 카테고리별 완전히 다른 시각
     if (b.bossVis) {
       const cat = b.bossVis;

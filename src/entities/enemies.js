@@ -26,10 +26,29 @@ function updateEnemies(dt) {
       updateProfessor(e, dt, speedMod);
       if (e._profDeathT > 0) continue;
       if (e.hp <= 0 && e._profDeathT <= 0 && e._profEntryT <= 0) {
-        // 교수 처치 기록 - splice 전에 개별 기록 (여러 교수 중 각각 남기 위해)
+        // 교수 처치 기록 + 관련 스킬 잠금 해제
         if (e._profDef && e._profDef.key) {
           state.professorsBeaten = state.professorsBeaten || {};
           state.professorsBeaten[e._profDef.key] = (state.professorsBeaten[e._profDef.key] || 0) + 1;
+          // rewardSkills: 각 스킬을 maxLv 로 즉시 소유 (이미 max 면 스킵)
+          const rewards = e._profDef.rewardSkills || [];
+          let unlockedNames = [];
+          for (const sid of rewards) {
+            const s = (typeof SKILL_BY_ID !== 'undefined') ? SKILL_BY_ID[sid] : null;
+            if (!s) continue;
+            const maxLv = s.maxLv || 1;
+            const cur = state.ownedSkills[sid] || 0;
+            if (cur < maxLv) {
+              state.ownedSkills[sid] = maxLv;
+              unlockedNames.push(s.name);
+            }
+          }
+          if (unlockedNames.length && typeof showMsg === 'function') {
+            showMsg('스킬 해금: ' + unlockedNames.join(', '), 4);
+          }
+          if (unlockedNames.length && typeof spawnFloat === 'function' && player) {
+            spawnFloat(player.x, player.y - 12, 'UNLOCK: ' + unlockedNames.length + ' SKILL', '#ffefa8');
+          }
         }
         onEnemyDeath(e);
         entities.enemies.splice(i, 1);

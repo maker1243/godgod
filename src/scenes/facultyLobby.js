@@ -9,52 +9,65 @@
 const FACULTY_PROFESSORS = {
   humanities: {
     name:'인문계열', title:'HUMANITIES', color:'#c8a888',
-    // 원형 배치용 각도(rad). 0 = 오른쪽, PI/2 = 아래
     profs: [
-      { key:'kor',   name:'李 교수', dept:'국어국문학과',   spriteKind:'lich',   color:'#c8a888', slots:{ lmb:'m01', q:'m05', e:'m14' } },
-      { key:'eng',   name:'金 교수', dept:'영어영문학과',   spriteKind:'wraith', color:'#a88860', slots:{ lmb:'m11', q:'m22', e:'m18' } },
+      { key:'kor',   name:'李 교수', dept:'국어국문학과',   spriteKind:'lich',   color:'#c8a888', slots:{ lmb:'m01', q:'m05', e:'m14' },
+        visual:'dept_hangeul', signature:'burst',   rewardSkills:['m01','m02','m03'] },
+      { key:'eng',   name:'金 교수', dept:'영어영문학과',   spriteKind:'wraith', color:'#a88860', slots:{ lmb:'m11', q:'m22', e:'m18' },
+        visual:'dept_ink',     signature:'spread',  rewardSkills:['m05','m06'] },
     ]
   },
   social: {
     name:'사회과학계열', title:'SOCIAL SCIENCE', color:'#8bd8ff',
     profs: [
-      { key:'biz',   name:'朴 교수', dept:'경영학과',       spriteKind:'lich',    color:'#8bd8ff', slots:{ lmb:'e21', q:'e22', e:'e29' } },
-      { key:'psy',   name:'崔 교수', dept:'심리학과',       spriteKind:'seer',    color:'#5aa0dc', slots:{ lmb:'c01', q:'c05', e:'c09' } },
+      { key:'biz',   name:'朴 교수', dept:'경영학과',       spriteKind:'lich',    color:'#8bd8ff', slots:{ lmb:'e21', q:'e22', e:'e29' },
+        visual:'dept_chart',   signature:'volley',  rewardSkills:['e01','e02','e03'] },
+      { key:'psy',   name:'崔 교수', dept:'심리학과',       spriteKind:'seer',    color:'#5aa0dc', slots:{ lmb:'c01', q:'c05', e:'c09' },
+        visual:'dept_brain',   signature:'wave',    rewardSkills:['c01','c02'] },
     ]
   },
   natural: {
     name:'자연과학계열', title:'NATURAL SCIENCE', color:'#5adcdc',
     profs: [
-      { key:'phys',  name:'鄭 교수', dept:'물리학과',       spriteKind:'wraith',  color:'#8bd8ff', slots:{ lmb:'m11', q:'m22', e:'m10' } },
-      { key:'chem',  name:'姜 교수', dept:'화학과',         spriteKind:'seer',    color:'#5adcac', slots:{ lmb:'n01', q:'n06', e:'e25' } },
+      { key:'phys',  name:'鄭 교수', dept:'물리학과',       spriteKind:'wraith',  color:'#8bd8ff', slots:{ lmb:'m11', q:'m22', e:'m10' },
+        visual:'dept_atom',    signature:'orbit',   rewardSkills:['m11','m12'] },
+      { key:'chem',  name:'姜 교수', dept:'화학과',         spriteKind:'seer',    color:'#5adcac', slots:{ lmb:'n01', q:'n06', e:'e25' },
+        visual:'dept_benzene', signature:'ring',    rewardSkills:['n01','n02','n06'] },
     ]
   },
   engineering: {
     name:'공학계열', title:'ENGINEERING', color:'#e8c547',
     profs: [
-      { key:'cs',    name:'趙 교수', dept:'컴퓨터공학과',   spriteKind:'colossus', color:'#8bd8ff', slots:{ lmb:'e15', q:'e34', e:'e46' } },
-      { key:'robot', name:'尹 교수', dept:'로봇공학과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'e16', q:'e22', e:'e29' } },
+      { key:'cs',    name:'趙 교수', dept:'컴퓨터공학과',   spriteKind:'colossus', color:'#8bd8ff', slots:{ lmb:'e15', q:'e34', e:'e46' },
+        visual:'dept_binary',  signature:'stream',  rewardSkills:['e15','e21','e28'] },
+      { key:'robot', name:'尹 교수', dept:'로봇공학과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'e16', q:'e22', e:'e29' },
+        visual:'dept_gear',    signature:'saw',     rewardSkills:['e16','e22'] },
     ]
   },
   medicine: {
     name:'의약계열', title:'MEDICINE', color:'#3ac762',
     profs: [
-      { key:'med',   name:'林 교수', dept:'의예과',         spriteKind:'wraith',   color:'#ffffff', slots:{ lmb:'o01', q:'o06', e:'o11' } },
-      { key:'phar',  name:'吳 교수', dept:'약학과',         spriteKind:'seer',     color:'#5adc2a', slots:{ lmb:'n01', q:'n06', e:'n11' } },
+      { key:'med',   name:'林 교수', dept:'의예과',         spriteKind:'wraith',   color:'#ffffff', slots:{ lmb:'o01', q:'o06', e:'o11' },
+        visual:'dept_medcross',signature:'cross',   rewardSkills:['o01','o02'] },
+      { key:'phar',  name:'吳 교수', dept:'약학과',         spriteKind:'seer',     color:'#5adc2a', slots:{ lmb:'n01', q:'n06', e:'n11' },
+        visual:'dept_pill',    signature:'toss',    rewardSkills:['n01','n06','n11'] },
     ]
   },
   education: {
     name:'사범계열', title:'EDUCATION', color:'#c86ade',
     profs: [
-      { key:'math',  name:'韓 교수', dept:'수학교육과',     spriteKind:'lich',     color:'#c86ade', slots:{ lmb:'m07', q:'m22', e:'m14' } },
-      { key:'pe',    name:'徐 교수', dept:'체육교육과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'n01', q:'n06', e:'n11' } },
+      { key:'math',  name:'韓 교수', dept:'수학교육과',     spriteKind:'lich',     color:'#c86ade', slots:{ lmb:'m07', q:'m22', e:'m14' },
+        visual:'dept_infinity',signature:'infloop', rewardSkills:['m07','m22'] },
+      { key:'pe',    name:'徐 교수', dept:'체육교육과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'n01', q:'n06', e:'n11' },
+        visual:'dept_ball',    signature:'bounce',  rewardSkills:['n01','n06'] },
     ]
   },
   arts: {
     name:'예체능계열', title:'ARTS', color:'#ff80ff',
     profs: [
-      { key:'paint', name:'黃 교수', dept:'회화과',         spriteKind:'seer',     color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' } },
-      { key:'vocal', name:'申 교수', dept:'성악과',         spriteKind:'wraith',   color:'#ffefa8', slots:{ lmb:'o05', q:'o06', e:'o11' } },
+      { key:'paint', name:'黃 교수', dept:'회화과',         spriteKind:'seer',     color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' },
+        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m07'] },
+      { key:'vocal', name:'申 교수', dept:'성악과',         spriteKind:'wraith',   color:'#ffefa8', slots:{ lmb:'o05', q:'o06', e:'o11' },
+        visual:'dept_note',    signature:'chord',   rewardSkills:['o01','o05','o06'] },
     ]
   },
 };
@@ -251,7 +264,11 @@ function spawnFacultyProfessor(pos, def, fac, idx) {
       spriteKind: def.spriteKind || 'lich',
       key: def.key,
       faculty: fac.name,
+      visual: def.visual || null,           // 학과 테마 투사체
+      signature: def.signature || null,     // 시그니처 스킬 키
+      rewardSkills: def.rewardSkills || [], // 처치 시 잠금 해제할 스킬 id 들
     },
+    _profSigCd: 3 + Math.random() * 2,       // 시그니처 스킬 쿨다운
     _profEntryT: (typeof PROFESSOR_ENTRY_SEC !== 'undefined' ? PROFESSOR_ENTRY_SEC : 1.6),
     _profDeathT: 0,
     _profShootCd: 0.3 + idx * 0.15,   // 두 교수의 시전 타이밍 어긋나게 (더 빠르게)

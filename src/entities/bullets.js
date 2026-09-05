@@ -189,6 +189,8 @@ function updateEBullets(dt) {
     const b = entities.ebullets[i];
     b.x += b.vx * dt;
     b.y += b.vy * dt;
+    // 교수 학과 테마 발사체는 커스텀 모션 (wave/spiral/pulse 등)도 적용
+    if (typeof applyBulletVisualMotion === 'function') applyBulletVisualMotion(b, dt);
     b.life -= dt;
     if (b.x < rm.x || b.x > rm.x + rm.w || b.y < rm.y || b.y > rm.y + rm.h) b.life = 0;
 
