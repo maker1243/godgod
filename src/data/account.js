@@ -32,6 +32,7 @@ const state = {
   trialStage: 1,                   // 현재 진행 중인 시련 단계 (1 또는 2)
   trialBanUntil: 0,                // Date.now() ms. 1단계 시련 재도전 불가 시각 (실패 페널티 5분).
   ultraTrialBanUntil: 0,           // 2단계(ULTRA) 시련 재도전 불가 시각 (실패 페널티 10분).
+  cipherSolvedCount: 0,            // CIPHER 문에서 성공한 횟수. >0 이면 PROF 문 해금.
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -103,6 +104,7 @@ function loadAccountData() {
     if (d.ultraCleared && typeof d.ultraCleared === 'object') state.ultraCleared = d.ultraCleared;
     if (typeof d.trialBanUntil === 'number') state.trialBanUntil = d.trialBanUntil;
     if (typeof d.ultraTrialBanUntil === 'number') state.ultraTrialBanUntil = d.ultraTrialBanUntil;
+    if (typeof d.cipherSolvedCount === 'number') state.cipherSolvedCount = d.cipherSolvedCount;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -139,6 +141,7 @@ function saveAccountData() {
     ultraCleared: state.ultraCleared || {},
     trialBanUntil: state.trialBanUntil || 0,
     ultraTrialBanUntil: state.ultraTrialBanUntil || 0,
+    cipherSolvedCount: state.cipherSolvedCount || 0,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

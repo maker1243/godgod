@@ -212,21 +212,50 @@ function renderAcademy() {
     }
   }
 
-  // 문 7개 (EXTRA/EXTREME/INFERNO는 조건부 해금)
-  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor];
-  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff'];
+  // 문 9개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
+  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor];
+  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
-    const isExtra = d.kind === 'extra';
+    const isExtra   = d.kind === 'extra';
     const isExtreme = d.kind === 'extreme';
     const isInferno = d.kind === 'inferno';
-    const locked = (isExtra && state.finalCleared < 1) || (isExtreme && state.finalCleared < 2) || (isInferno && state.finalCleared < 3);
+    const isCipher  = d.kind === 'cipher';
+    const isProf    = d.kind === 'professor';
+    const locked =
+      (isExtra   && state.finalCleared < 1) ||
+      (isExtreme && state.finalCleared < 2) ||
+      (isInferno && state.finalCleared < 3) ||
+      (isProf    && !(state.cipherSolvedCount > 0));
     if (locked) ctx.globalAlpha = 0.35;
     drawSprite(SPR_DOOR, DOOR_PAL, d.x, d.y);
     const label = locked ? '?????' : d.label;
     const col = locked ? '#5a4a80' : doorCols[i];
     drawText(label, d.x + 6 - textWidth(label)/2, d.y - 8, col);
-    // 해금됐고 특수 문이면 반짝임
+    // CIPHER 문: 강렬한 붉은 오라 + 붉은 배경 광원 (주변보다 훨씬 붉게)
+    if (isCipher) {
+      const glow = 0.55 + Math.sin(state.time * 6) * 0.35;
+      // 배경 붉은 광원 오버레이
+      ctx.fillStyle = 'rgba(255, 0, 0, ' + (0.18 + glow*0.25).toFixed(2) + ')';
+      ctx.fillRect((d.x - 10)*PX, (d.y - 10)*PX, (d.w + 20)*PX, (d.h + 20)*PX);
+      ctx.strokeStyle = 'rgba(255, 0, 0, ' + glow.toFixed(2) + ')';
+      ctx.lineWidth = PX * 3;
+      ctx.strokeRect((d.x - 3)*PX, (d.y - 3)*PX, (d.w + 6)*PX, (d.h + 6)*PX);
+      // 안쪽 링 추가
+      ctx.strokeStyle = 'rgba(255, 80, 80, ' + (glow * 0.7).toFixed(2) + ')';
+      ctx.lineWidth = PX;
+      ctx.strokeRect((d.x - 6)*PX, (d.y - 6)*PX, (d.w + 12)*PX, (d.h + 12)*PX);
+    }
+    // PROF 문: 해금 시 시원한 푸른 오라
+    if (isProf && !locked) {
+      const glow = 0.5 + Math.sin(state.time * 4) * 0.35;
+      ctx.fillStyle = 'rgba(0, 200, 255, ' + (0.15 + glow*0.2).toFixed(2) + ')';
+      ctx.fillRect((d.x - 10)*PX, (d.y - 10)*PX, (d.w + 20)*PX, (d.h + 20)*PX);
+      ctx.strokeStyle = 'rgba(0, 200, 255, ' + glow.toFixed(2) + ')';
+      ctx.lineWidth = PX * 3;
+      ctx.strokeRect((d.x - 3)*PX, (d.y - 3)*PX, (d.w + 6)*PX, (d.h + 6)*PX);
+    }
+    // 기존 특수 문 반짝임
     if ((isExtra || isExtreme || isInferno) && !locked) {
       const glow = 0.4 + Math.sin(state.time * (isInferno ? 5 : 3)) * (isInferno ? 0.5 : 0.3);
       ctx.strokeStyle = isInferno

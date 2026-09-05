@@ -105,7 +105,8 @@ function startCipherQuest() {
 function _cipherFinish(correct) {
   if (correct) {
     state.research = (state.research || 0) + cipherQuest.rewardRp;
-    cipherQuest.message = 'CORRECT! +' + cipherQuest.rewardRp + ' RP';
+    state.cipherSolvedCount = (state.cipherSolvedCount || 0) + 1;
+    cipherQuest.message = 'CORRECT! +' + cipherQuest.rewardRp + ' RP  (PROF DOOR UNLOCKED)';
     if (typeof sfx === 'function') sfx('level');
     if (typeof spawnFloat === 'function' && player) spawnFloat(player.x, player.y - 10, '+' + cipherQuest.rewardRp + ' RP', '#8bd8ff');
     if (typeof saveAccountData === 'function') saveAccountData();
@@ -115,7 +116,7 @@ function _cipherFinish(correct) {
   }
   cipherQuest.messageT = 2.5;
   cipherQuest.active = false;
-  cipherQuest.cooldown = 30;   // 다음 시도 30초 후
+  cipherQuest.cooldown = 5;
   cipherQuest.wallHoldT = 0;
 }
 
@@ -152,20 +153,8 @@ function updateCipherQuestAcademy(dt) {
     return true;   // 팝업 활성 = 아카데미 이동/문 잠금
   }
 
-  if (cipherQuest.cooldown > 0) return false;
-
-  // 벽 접촉 감지
-  const p = player;
-  const r = academy.room;
-  const near = 4;
-  const touchingWall = (p.x - r.x < near) || (r.x + r.w - p.x < near) || (p.y - r.y < near) || (r.y + r.h - p.y < near);
-  if (touchingWall) cipherQuest.wallHoldT += dt;
-  else cipherQuest.wallHoldT = Math.max(0, cipherQuest.wallHoldT - dt * 0.5);
-
-  if (cipherQuest.wallHoldT >= CIPHER_WALL_HOLD_SEC) {
-    startCipherQuest();
-    return true;
-  }
+  // 벽 접촉 트리거는 제거됨. 이제 아카데미 로비의 CIPHER 문(붉은색)에서 SPACE로 시작.
+  cipherQuest.wallHoldT = 0;
   return false;
 }
 

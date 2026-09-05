@@ -227,6 +227,12 @@ function drawEnemy(e) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  // === 교수: 등장/사망 애니메이션 + 종파 오라 ===
+  if (e.isProfessor && typeof drawProfessor === 'function') {
+    drawProfessor(e);
+    return;
+  }
+
   // === 시련 보스: 카테고리별 시각적으로 완전히 다르게 ===
   if (e.isTrialBoss) {
     const t = state.time;

@@ -133,6 +133,8 @@ const academy = {
   extraDoor: { x: 42,  y: 152, w: 12, h: 18, kind: 'extra',     label: 'EXTRA'    },
   extremeDoor:{x: 140, y: 152, w: 12, h: 18, kind: 'extreme',   label: 'EXTREME'  },
   infernoDoor:{x: 204, y: 152, w: 12, h: 18, kind: 'inferno',   label: 'INFERNO'  },
+  cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER'   },
+  profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF'     },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -298,7 +300,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor];
     for (const d of doors) {
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
         // 잠금 확인
@@ -314,11 +316,17 @@ function updateAcademy(dt) {
           showMsg('CLEAR THE EXTREME DUNGEON FIRST', 3);
           sfx('hurt'); return;
         }
+        if (d.kind === 'professor' && !(state.cipherSolvedCount > 0)) {
+          showMsg('SOLVE THE CIPHER FIRST', 3);
+          sfx('hurt'); return;
+        }
         sfx('door');
         if (d.kind === 'dungeon')      { state.dungeonMode = 'normal';  goTo('dungeon'); }
         else if (d.kind === 'extra')   { state.dungeonMode = 'extra';   goTo('dungeon'); }
         else if (d.kind === 'extreme') { state.dungeonMode = 'extreme'; goTo('dungeon'); }
         else if (d.kind === 'inferno') { state.dungeonMode = 'inferno'; goTo('dungeon'); }
+        else if (d.kind === 'professor'){ state.dungeonMode = 'professor'; goTo('dungeon'); }
+        else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
         else if (d.kind === 'arena')     goTo('arena');
@@ -394,6 +402,21 @@ function updateDungeon(dt) {
       sfx('level');
       state.shake = 12;
       if (floor >= currentFloorTotal()) {
+        // 교수 층 클리어: 해당 교수 처치 기록 + 아카데미 복귀
+        if (state.dungeonMode === 'professor') {
+          const boss = entities.enemies.find(e => e.isProfessor);
+          const pk = boss && boss._profDef ? boss._profDef.key : null;
+          if (pk) {
+            state.professorsBeaten = state.professorsBeaten || {};
+            state.professorsBeaten[pk] = (state.professorsBeaten[pk] || 0) + 1;
+            showMsg('교수 ' + boss._profDef.name + ' 격파!', 3);
+          }
+          state.research += 500;
+          state.gold += 300;
+          if (typeof saveAccountData === 'function') saveAccountData();
+          setTimeout(() => { state.dungeonMode = 'normal'; goTo('academy'); }, 2200);
+          return;
+        }
         // 시련 클리어: 단계별로 다른 해금
         if (state.dungeonMode === 'trial') {
           const cat = state.trialCategory || 'magic';

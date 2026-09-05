@@ -179,7 +179,14 @@ const TRIAL_FLOOR_DATA = [
     enemies:['imp','wraith','cultist'], isTrial: true },
 ];
 
+// === 교수 층 (Floor 2) - CIPHER 문 통과 후 PROF 문으로 진입 ===
+const PROFESSOR_FLOOR_DATA = [
+  { name:'2층: 교수 연구실', subtitle:'THE FACULTY WING', boss:'professor', bossName:'THE FACULTY',
+    wall:'#3a3a5a', wallLight:'#6a6a9a', floor:'#0a0a1a', floorAlt:'#1a1a2a', enemies:['imp'] },
+];
+
 function currentFloorData() {
+  if (state.dungeonMode === 'professor') return PROFESSOR_FLOOR_DATA[0];
   if (state.dungeonMode === 'trial')   return TRIAL_FLOOR_DATA[0];
   if (state.dungeonMode === 'inferno') return INFERNO_FLOOR_DATA[floor - 1];
   if (state.dungeonMode === 'extreme') return EXTREME_FLOOR_DATA[floor - 1];
@@ -187,6 +194,7 @@ function currentFloorData() {
   return FLOOR_DATA[floor - 1];
 }
 function currentFloorTotal() {
+  if (state.dungeonMode === 'professor') return PROFESSOR_FLOOR_DATA.length;
   if (state.dungeonMode === 'trial')   return TRIAL_FLOOR_DATA.length;   // 1
   if (state.dungeonMode === 'inferno') return INFERNO_FLOOR_DATA.length;
   if (state.dungeonMode === 'extreme') return EXTREME_FLOOR_DATA.length;
@@ -233,9 +241,10 @@ function clearEntities() {
 // 방 구조: 벽으로 둘러싸인 사각형 방, 문은 벽에 위치
 function buildRoom(roomIndex) {
   clearEntities();
-  // 시련 모드: 방 하나 = 보스방. 5방 대신 즉시 보스.
+  // 시련/교수 모드: 방 하나 = 보스방. 5방 대신 즉시 보스.
   const isTrial = state.dungeonMode === 'trial';
-  const isBoss = isTrial ? true : (roomIndex === 5);
+  const isProf  = state.dungeonMode === 'professor';
+  const isBoss = (isTrial || isProf) ? true : (roomIndex === 5);
   const w = isBoss ? 300 : 260 + randi(0, 40);
   const h = isBoss ? 180 : 150 + randi(0, 30);
 
@@ -259,7 +268,9 @@ function buildRoom(roomIndex) {
 
   // 적 스폰
   if (isBoss) {
-    if (state.dungeonMode === 'trial' && typeof spawnTrialBoss === 'function') {
+    if (state.dungeonMode === 'professor' && typeof spawnProfessor === 'function') {
+      spawnProfessor(room, roomIndex);
+    } else if (state.dungeonMode === 'trial' && typeof spawnTrialBoss === 'function') {
       spawnTrialBoss(room);
     } else {
       spawnBoss(room);

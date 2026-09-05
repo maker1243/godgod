@@ -22,6 +22,17 @@ function updateEnemies(dt) {
     if (e.isTrialBoss && typeof updateTrialBoss === 'function') {
       updateTrialBoss(e, dt, speedMod);
     }
+    else if (e.isProfessor && typeof updateProfessor === 'function') {
+      updateProfessor(e, dt, speedMod);
+      // 교수 사망 애니메이션 중이면 여기서 사이클 종료 (hp<=0 splice 안 함)
+      if (e._profDeathT > 0) continue;
+      // 애니메이션이 끝났으면 splice
+      if (e.hp <= 0 && e._profDeathT <= 0 && e._profEntryT <= 0) {
+        onEnemyDeath(e);
+        entities.enemies.splice(i, 1);
+      }
+      continue;
+    }
     else if (e.kind === 'slime')    updateSlime(e, dt, speedMod);
     else if (e.kind === 'skeleton') updateSkeleton(e, dt, speedMod);
     else if (e.kind === 'wraith')   updateWraith(e, dt, speedMod);
