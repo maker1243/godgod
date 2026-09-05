@@ -406,14 +406,19 @@ function updateDungeon(dt) {
         // 교수 층 클리어: 계열 시련 통과 → 보상 + 로비 복귀
         if (state.dungeonMode === 'professor') {
           const facKey = state.facultyKey;
-          if (facKey) {
+          if (facKey === 'principal') {
+            state.principalDefeated = (state.principalDefeated || 0) + 1;
+            state.research += 20000;
+            state.gold += 5000;
+            showMsg('교장 격파! 아카데미의 진실이 밝혀졌습니다.', 5);
+          } else if (facKey) {
             state.facultyCleared = state.facultyCleared || {};
             state.facultyCleared[facKey] = (state.facultyCleared[facKey] || 0) + 1;
             const facName = (typeof FACULTY_PROFESSORS !== 'undefined' && FACULTY_PROFESSORS[facKey]) ? FACULTY_PROFESSORS[facKey].name : facKey;
             showMsg(facName + ' 교수진 전원 격파!', 4);
+            state.research += 1500;
+            state.gold += 500;
           }
-          state.research += 1500;
-          state.gold += 500;
           if (typeof saveAccountData === 'function') saveAccountData();
           setTimeout(() => {
             state.dungeonMode = 'normal';

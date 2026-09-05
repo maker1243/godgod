@@ -68,11 +68,57 @@ function spawnProfessor(room, roomIndex) {
 // updateEnemies dispatch 훅. 사망/등장 애니메이션 + AI.
 // 반환값: true 면 표준 사망 처리 건너뛰기 (이 함수가 사망 애니를 다룸).
 function updateProfessor(e, dt, sm) {
+  // 페이즈 전환 배너 카운트다운
+  if (e._profPhaseT > 0) e._profPhaseT -= dt;
   // 등장 애니메이션 - 무적, 이동/시전 없음
   if (e._profEntryT > 0) {
     e._profEntryT -= dt;
     e.invuln = 0.05;
     return;
+  }
+  // 페이즈 2 전환: HP 50% 이하 + 아직 phase 1이면 → phase 2 진입
+  if (e._profPhase === 1 && e.hp > 0 && e.hp <= e.maxHp * 0.5) {
+    e._profPhase = 2;
+    e._profPhaseT = 2.5;
+    // 페이즈 버프: DMG +50%, 시전 속도 +50%
+    e.baseDmg *= 1.5;
+    e.cdMult *= 0.6;
+    if (e.mods) { e.mods.fire = (e.mods.fire || 1) * 1.4; e.mods.ice = (e.mods.ice || 1) * 1.4; }
+    e.dmgReduction = Math.min(0.8, (e.dmgReduction || 0) + 0.15);
+    e.invuln = 0.6;   // 짧은 무적으로 임팩트
+    // 폭발 이펙트
+    if (entities.fx) {
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 0.8, max: 0.8, r0: 4, r1: 40, col: e._profDef.color });
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 1.0, max: 1.0, r0: 8, r1: 60, col: '#ff2d80' });
+    }
+    for (let i = 0; i < 24; i++) {
+      const a = Math.random() * Math.PI * 2;
+      spawnParticle(e.x, e.y, i % 2 ? e._profDef.color : '#ff2d80', 0.7, 3, 80);
+    }
+    state.shake = 14;
+    sfx('boss');
+    if (typeof showMsg === 'function') showMsg(e._profDef.name + ' — PHASE 2!', 2.5);
+  }
+  // 교장은 페이즈 3까지
+  if (e._isPrincipal && e._profPhase === 2 && e.hp > 0 && e.hp <= e.maxHp * 0.25) {
+    e._profPhase = 3;
+    e._profPhaseT = 3;
+    e.baseDmg *= 1.8;
+    e.cdMult *= 0.5;
+    if (e.mods) { e.mods.fire = (e.mods.fire || 1) * 1.6; e.mods.ice = (e.mods.ice || 1) * 1.6; }
+    e.invuln = 1.0;
+    e.hp = Math.max(e.hp, e.maxHp * 0.25);   // 잠깐 무적으로 최소 유지
+    if (entities.fx) {
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 1.4, max: 1.4, r0: 6, r1: 80, col: '#ff0000' });
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 1.8, max: 1.8, r0: 10, r1: 120, col: '#ffffff' });
+    }
+    for (let i = 0; i < 60; i++) {
+      const a = Math.random() * Math.PI * 2;
+      spawnParticle(e.x, e.y, i % 2 ? '#ff2020' : '#ffffff', 1.2, 4, 120);
+    }
+    state.shake = 24;
+    sfx('boss');
+    if (typeof showMsg === 'function') showMsg(e._profDef.name + ' — FINAL PHASE!', 3);
   }
   // 사망 애니메이션 진행 중이면 위치/AI 정지, 카운트만 감소
   if (e._profDeathT > 0) {
@@ -292,10 +338,54 @@ function drawProfessor(e) {
   // 이름표
   drawText(def.name, e.x - textWidth(def.name)/2, e.y - e.r - 16, def.color);
   drawText('[' + def.title + ']', e.x - textWidth('[' + def.title + ']')/2, e.y - e.r - 8, '#c8b898');
-  // 등장 시 "APPEARING" 배너
-  if (e._profEntryT > 0) {
+  // 페이즈 배너 (전환 순간)
+  if (e._profPhaseT > 0) {
+    const p = 'PHASE ' + e._profPhase;
+    ctx.globalAlpha = Math.min(1, e._profPhaseT / 0.6);
+    drawText(p, e.x - textWidth(p, 2)/2, e.y - e.r - 26, '#ff2d80', 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // === 업적 소개 애니메이션 (등장 페이즈) ===
+  if (e._profEntryT > 0 && e._profDef.achievements && e._profDef.achievements.length) {
+    const total = e._profEntryTotal || PROFESSOR_ENTRY_SEC;
+    const elapsed = total - e._profEntryT;
+    // 화면 하단 중앙에 업적 카드 UI
+    const cardX = 24, cardY = H - 68, cardW = W - 48, cardH = 62;
+    // 카드 반투명 슬라이드 인 (0.4s)
+    const inA = Math.min(1, elapsed / 0.4);
+    ctx.globalAlpha = inA;
+    pxDraw(cardX, cardY, cardW, cardH, '#050310');
+    pxDraw(cardX, cardY, cardW, 1, def.color);
+    pxDraw(cardX, cardY + cardH - 1, cardW, 1, def.color);
+    pxDraw(cardX, cardY, 1, cardH, def.color);
+    pxDraw(cardX + cardW - 1, cardY, 1, cardH, def.color);
+    // 헤더: 이름 · 학과 · 계열
+    drawText(def.name + ' — ' + def.title, cardX + 6, cardY + 4, def.color);
+    drawText('[' + (def.faculty || '') + ']', cardX + cardW - textWidth('[' + (def.faculty || '') + ']') - 6, cardY + 4, '#8a7ab5');
+    pxDraw(cardX + 4, cardY + 12, cardW - 8, 1, '#3a1e5c');
+    // 업적 리스트 - 순차적으로 fade-in
+    const perLine = Math.max(0.35, (total - 0.4) / (e._profDef.achievements.length + 1));
+    let ly = cardY + 16;
+    for (let i = 0; i < e._profDef.achievements.length; i++) {
+      const showAt = 0.4 + i * perLine;
+      if (elapsed < showAt) break;
+      const lineA = Math.min(1, (elapsed - showAt) / 0.35);
+      ctx.globalAlpha = inA * lineA;
+      drawText('• ' + e._profDef.achievements[i], cardX + 8, ly, '#e8d9b0');
+      ly += 9;
+    }
+    ctx.globalAlpha = inA;
+    // "출강 준비 중..." 하단 안내
+    if (elapsed > 0.6) {
+      const eta = Math.max(0, e._profEntryT);
+      const s = eta > 0.1 ? '전투 시작까지... ' + eta.toFixed(1) + 's' : '전투 시작!';
+      drawText(s, cardX + cardW/2 - textWidth(s)/2, cardY + cardH - 9, '#ffefa8');
+    }
+    ctx.globalAlpha = 1;
+  } else if (e._profEntryT > 0) {
+    // 폴백 (업적 없음): 기존 배너
     const s = 'ENTERING...';
     drawText(s, e.x - textWidth(s)/2, e.y + e.r + 6, '#ffefa8');
   }
-  ctx.globalAlpha = 1;
 }

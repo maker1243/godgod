@@ -65,19 +65,120 @@ const FACULTY_PROFESSORS = {
     name:'예체능계열', title:'ARTS', color:'#ff80ff',
     profs: [
       { key:'paint', name:'黃 교수', dept:'회화과',         spriteKind:'seer',     color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' },
-        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m07'] },
+        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m07'],
+        achievements:['국제 미술제 3회 대상','현대미술관 개인전 5회','시공간의 색채 이론 저술'] },
       { key:'vocal', name:'申 교수', dept:'성악과',         spriteKind:'wraith',   color:'#ffefa8', slots:{ lmb:'o05', q:'o06', e:'o11' },
-        visual:'dept_note',    signature:'chord',   rewardSkills:['o01','o05','o06'] },
+        visual:'dept_note',    signature:'chord',   rewardSkills:['o01','o05','o06'],
+        achievements:['국립 오페라단 수석 소프라노','벨칸토 창법 마스터','국제 성악 콩쿠르 우승'] },
+    ]
+  },
+  divinity: {
+    name:'종교철학계열', title:'DIVINITY & PHILOSOPHY', color:'#c8b898',
+    profs: [
+      { key:'phil',  name:'黃 교수', dept:'철학과',         spriteKind:'lich',     color:'#c8b898', slots:{ lmb:'m01', q:'c05', e:'m14' },
+        visual:'dept_hangeul', signature:'burst',   rewardSkills:['c01','c05','c09'],
+        achievements:['형이상학 3부작 저자','스콜라 철학 재해석','존재론 국제 학회장'] },
+      { key:'rel',   name:'洪 교수', dept:'종교학과',       spriteKind:'wraith',   color:'#a89848', slots:{ lmb:'o01', q:'o06', e:'o11' },
+        visual:'dept_medcross',signature:'cross',   rewardSkills:['o01','o02','o03'],
+        achievements:['비교종교학 학회 창설자','세계 종교 백과사전 편찬','종교 대화 UN 자문위원'] },
+    ]
+  },
+  info: {
+    name:'정보통신계열', title:'INFO & COMMUNICATION', color:'#5adcff',
+    profs: [
+      { key:'lib',   name:'白 교수', dept:'문헌정보학과',   spriteKind:'seer',     color:'#5adcff', slots:{ lmb:'e15', q:'e22', e:'e46' },
+        visual:'dept_binary',  signature:'stream',  rewardSkills:['e15','e21'],
+        achievements:['국립도서관 디지털 아카이브 설계','정보 검색 알고리즘 특허 12건','디지털 도서관 국제상 수상'] },
+      { key:'media', name:'孫 교수', dept:'미디어커뮤니케이션학과', spriteKind:'lich', color:'#8bd8ff', slots:{ lmb:'m11', q:'c05', e:'e29' },
+        visual:'dept_chart',   signature:'volley',  rewardSkills:['c01','e21'],
+        achievements:['방송 저널리즘 이론서 저술','뉴미디어 대상 3회','SNS 여론 형성 연구 권위자'] },
+    ]
+  },
+  design: {
+    name:'미술디자인계열', title:'ART & DESIGN', color:'#ffb8ff',
+    profs: [
+      { key:'sculpt',name:'柳 교수', dept:'조소과',         spriteKind:'colossus', color:'#a08050', slots:{ lmb:'e16', q:'e22', e:'e50' },
+        visual:'dept_gear',    signature:'saw',     rewardSkills:['n06','e22'],
+        achievements:['공공 조형물 대상 5회','청동 캐스팅 마스터','국제 조각 심포지엄 상임회장'] },
+      { key:'vdesign',name:'高 교수', dept:'시각디자인학과', spriteKind:'seer',    color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' },
+        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m18'],
+        achievements:['글로벌 브랜드 아이덴티티 100+ 프로젝트','타이포그래피 정본 저술','레드닷 디자인 어워드 다수 수상'] },
+    ]
+  },
+  language: {
+    name:'외국어문학계열', title:'FOREIGN LITERATURE', color:'#dcac60',
+    profs: [
+      { key:'chn',   name:'呂 교수', dept:'중어중문학과',   spriteKind:'lich',    color:'#e8c547', slots:{ lmb:'m01', q:'m22', e:'m10' },
+        visual:'dept_hangeul', signature:'spread',  rewardSkills:['m01','m05'],
+        achievements:['논어 · 도덕경 완역','고전 한문 학회장','중국 사회과학원 명예교수'] },
+      { key:'jpn',   name:'秋 교수', dept:'일어일문학과',   spriteKind:'wraith',  color:'#ff9c3d', slots:{ lmb:'m11', q:'m22', e:'m18' },
+        visual:'dept_ink',     signature:'wave',    rewardSkills:['m11','m22'],
+        achievements:['헤이안 시대 문학 전문가','겐지모노가타리 새 번역','일한 비교문학 정론 발표'] },
     ]
   },
 };
 
-const FACULTY_KEYS = ['humanities','social','natural','engineering','medicine','education','arts'];
+// 기존 7 계열에도 achievements 필드 추가 (없는 곳은 spawn 시 폴백)
+(function _addAchievements(){
+  const ACH = {
+    kor:  ['국립국어원 자문위원','한국 고전문학 연구 30년','국제 한국학 학회장'],
+    eng:  ['셰익스피어 전집 새 번역','현대 영문학 이론서 3권','옥스포드 방문 교수'],
+    biz:  ['글로벌 500대 기업 컨설팅','전략경영 표준 교재 집필','MBA 최우수 강의상 5회'],
+    psy:  ['인지행동치료 국내 도입','임상심리 학회장','트라우마 치료 매뉴얼 저술'],
+    phys: ['양자장론 국제 논문 200편','노벨 물리학상 후보 지명','LIGH 협력 연구원'],
+    chem: ['유기합성 신반응 발견','왕립화학회 명예회원','친환경 촉매 특허 40건'],
+    cs:   ['분산 시스템 표준 저술','ACM 튜링상 수상 후보','오픈소스 커널 커미터'],
+    robot:['휴머노이드 국제 대회 1위','로봇 팔 특허 25건','산업로봇 표준 위원'],
+    med:  ['외과 수술법 세 가지 개발','WHO 자문의사','국내 최다 이식 수술 집도'],
+    phar: ['신약 임상 3상 성공 2회','부작용 데이터베이스 구축','약제학회 학술상 수상'],
+    math: ['정수론 미해결 문제 부분 증명','필즈상 최종 후보','수학 올림피아드 대표팀 감독'],
+    pe:   ['국가대표 축구 전 감독','스포츠과학 학회장','아시안게임 금메달 3개'],
+  };
+  for (const facKey of Object.keys(FACULTY_PROFESSORS)) {
+    const fac = FACULTY_PROFESSORS[facKey];
+    for (const p of fac.profs) {
+      if (!p.achievements && ACH[p.key]) p.achievements = ACH[p.key];
+      if (!p.achievements) p.achievements = ['우수 강의상 다수','국제 학회 초청 강연','산학 협력 프로젝트 리더'];
+    }
+  }
+})();
+
+const FACULTY_KEYS = ['humanities','social','natural','engineering','medicine','education','arts','divinity','info','design','language'];
 
 const facultyLobby = {
-  cursor: 0,        // 어떤 계열에 커서
+  cursor: 0,        // 어떤 계열에 커서 (또는 -1 = 중앙 교장)
   hoverT: 0,
 };
+
+// 교장 정의 - 모든 계열 클리어 시 오염된 트리 중앙에 등장
+const PRINCIPAL_DEF = {
+  key: 'principal',
+  name: '崔 총장',
+  dept: '교장 · 아카데미 총장',
+  faculty: '아카데미 최고 권위',
+  spriteKind: 'lich',
+  color: '#ff0080',
+  slots: { lmb: 'm11', q: 'e50', e: 'm14' },   // LIGHTNING / ANNIHILATE / TIMESTOP
+  visual: 'omega_shot',
+  signature: 'ring',
+  rewardSkills: ['e50','m14','n11','c09','o11'],
+  achievements: [
+    '아카데미 총장 재임 20년',
+    '7 계열 통합 학제 창설자',
+    '노벨상 수상자 12명 지도',
+    '금지된 스킬 트리 봉인 해제',
+    '오염된 마법 이론의 최고 권위',
+  ],
+};
+
+function allFacultiesCleared() {
+  if (!state.facultyCleared) return false;
+  for (const k of FACULTY_KEYS) {
+    if (!state.facultyCleared[k]) return false;
+  }
+  return true;
+}
+function principalDefeated() { return state.principalDefeated > 0; }
 
 function facultyDeg(idx) {
   // 7 계열을 원형으로 배치. 12시 방향부터 시계 방향.
@@ -98,6 +199,7 @@ function updateFacultyLobby(dt) {
   // SPACE/Enter/노드 클릭 → 시련 시작
   const cx = W/2, cy = H/2 + 6, R = 60;
   let clickedIdx = -1;
+  let clickedPrincipal = false;
   if (mouse.down) {
     for (let i = 0; i < n; i++) {
       const a = facultyDeg(i);
@@ -105,11 +207,30 @@ function updateFacultyLobby(dt) {
       const ny = cy + Math.sin(a) * R;
       if (Math.hypot(mouse.x - nx, mouse.y - ny) < 12) { clickedIdx = i; break; }
     }
+    // 중앙 교장 노드 (전 계열 클리어 후 등장)
+    if (clickedIdx < 0 && allFacultiesCleared() && Math.hypot(mouse.x - cx, mouse.y - cy) < 14) {
+      clickedPrincipal = true;
+    }
   }
-  const enter = keys['Space'] || keys['Enter'] || clickedIdx >= 0;
+  const enter = keys['Space'] || keys['Enter'] || clickedIdx >= 0 || clickedPrincipal;
   if (enter) {
     keys['Space']=false; keys['Enter']=false;
     if (clickedIdx >= 0) { facultyLobby.cursor = clickedIdx; mouse.down = false; }
+    if (clickedPrincipal || facultyLobby.cursor === -1) {
+      // 교장 전투 진입 - 모든 계열 클리어 필요
+      if (!allFacultiesCleared()) {
+        if (typeof showMsg === 'function') showMsg('모든 계열을 먼저 정복해야 합니다', 3);
+        sfx('hurt');
+        return;
+      }
+      mouse.down = false;
+      state.facultyKey = 'principal';
+      state.dungeonMode = 'professor';
+      if (typeof showMsg === 'function') showMsg('교장 ' + PRINCIPAL_DEF.name + ' 등장!', 4);
+      sfx('boss');
+      goTo('dungeon');
+      return;
+    }
     const key = FACULTY_KEYS[facultyLobby.cursor];
     state.facultyKey = key;
     state.dungeonMode = 'professor';
@@ -147,21 +268,40 @@ function renderFacultyLobby() {
 
   const cx = W/2, cy = H/2 + 6, R = 60;
 
-  // 중앙 코어 (오염된 심장)
-  const pulse = 0.4 + Math.sin(facultyLobby.hoverT * 3) * 0.3;
-  ctx.fillStyle = 'rgba(255, 45, 128, ' + pulse.toFixed(2) + ')';
-  ctx.beginPath();
-  ctx.arc(cx * PX, cy * PX, 14 * PX, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#1a0e2e';
-  ctx.beginPath();
-  ctx.arc(cx * PX, cy * PX, 8 * PX, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#ff2d80';
-  ctx.lineWidth = PX * 2;
-  ctx.beginPath();
-  ctx.arc(cx * PX, cy * PX, 12 * PX, 0, Math.PI * 2);
-  ctx.stroke();
+  // 중앙 코어 (오염된 심장 / 교장 노드)
+  const allCleared = allFacultiesCleared();
+  const pulse = 0.4 + Math.sin(facultyLobby.hoverT * (allCleared ? 6 : 3)) * (allCleared ? 0.5 : 0.3);
+  if (allCleared) {
+    // 교장 노드 활성 - 붉게 타오르는 심장
+    ctx.fillStyle = 'rgba(255, 0, 60, ' + (pulse + 0.2).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 20 * PX, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3a0510';
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 12 * PX, 0, Math.PI * 2); ctx.fill();
+    // 외곽 반짝이는 링
+    ctx.strokeStyle = '#ff0060';
+    ctx.lineWidth = PX * 3;
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 16 * PX, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 255, 255, ' + pulse.toFixed(2) + ')';
+    ctx.lineWidth = PX;
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 22 * PX, 0, Math.PI * 2); ctx.stroke();
+    // "PRINCIPAL" 라벨
+    drawText('교장 崔', cx - textWidth('교장 崔')/2, cy - 3, '#ffefa8');
+    // 아래 힌트
+    const hint = principalDefeated() ? '재도전' : '[SPACE] 도전!';
+    drawText(hint, cx - textWidth(hint)/2, cy + R + 12, '#ff2d80');
+  } else {
+    ctx.fillStyle = 'rgba(255, 45, 128, ' + pulse.toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 14 * PX, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1a0e2e';
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 8 * PX, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ff2d80';
+    ctx.lineWidth = PX * 2;
+    ctx.beginPath(); ctx.arc(cx * PX, cy * PX, 12 * PX, 0, Math.PI * 2); ctx.stroke();
+    // 진행 상황 표시
+    let done = 0;
+    for (const k of FACULTY_KEYS) if (state.facultyCleared && state.facultyCleared[k]) done++;
+    drawText(done + '/' + FACULTY_KEYS.length, cx - textWidth(done + '/' + FACULTY_KEYS.length)/2, cy - 3, '#c8a8c8');
+  }
 
   // 코어 → 각 노드 연결선
   for (let i = 0; i < FACULTY_KEYS.length; i++) {
@@ -227,6 +367,7 @@ function renderFacultyLobby() {
 // buildRoom 에서 professor 모드일 때 호출: 선택된 계열의 두 교수를 좌/우로 스폰
 function spawnFacultyProfessors(room) {
   const key = state.facultyKey || 'humanities';
+  if (key === 'principal') { spawnPrincipal(room); return true; }
   const fac = FACULTY_PROFESSORS[key];
   if (!fac) return false;
   const positions = [
@@ -240,6 +381,55 @@ function spawnFacultyProfessors(room) {
   }
   showMsg(fac.name + ' 교수진 등장!', 3);
   return true;
+}
+
+// === 교장 스폰 ===
+function spawnPrincipal(room) {
+  const def = PRINCIPAL_DEF;
+  const HP = 5000000000;    // 5B - 교수의 5배
+  const boss = {
+    x: room.x + room.w/2, y: room.y + 60, vx: 0, vy: 0,
+    r: 15,
+    kind: 'professor',
+    hp: HP, maxHp: HP,
+    dmg: 250, speed: 60, xp: 0, gold: 0,
+    hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
+    isBoss: true, isProfessor: true,
+    _isPrincipal: true,
+    baseDmg: 12, cdMult: 0.45, mods: { fire: 2, ice: 2, lmbCd: 0.4, lmbDmg: 2 },
+    slots: def.slots, cd: {},
+    dmgReduction: 0.65, lifesteal: 0, thorns: 0, crit: 0.35, critMult: 3, mpCostMult: 0.25,
+    perks: [], mp: 500, maxMp: 500, mpRegenBonus: 80,
+    _profDef: {
+      name: def.name,
+      title: def.dept,
+      color: def.color,
+      spriteKind: def.spriteKind,
+      key: def.key,
+      faculty: def.faculty,
+      visual: def.visual,
+      signature: def.signature,
+      rewardSkills: def.rewardSkills,
+      achievements: def.achievements,
+    },
+    _profEntryT: 6,       // 교장 등장은 훨씬 김 (업적 많음)
+    _profEntryTotal: 6,
+    _profDeathT: 0,
+    _profShootCd: 0.2,
+    _profSigCd: 2,
+    _profMoveAng: 0,
+    _profMoveT: 0,
+    _profPhase: 1,
+    _profPhaseT: 0,
+  };
+  entities.enemies.push(boss);
+  showMsg('교장 ' + def.name + ' 등장! — 극한의 적', 4);
+  sfx('boss');
+  state.shake = 25;
+  if (entities.fx) {
+    entities.fx.push({ type:'ring', x: boss.x, y: boss.y, life: 2.0, max: 2.0, r0: 4, r1: 80, col: '#ff0060' });
+    entities.fx.push({ type:'ring', x: boss.x, y: boss.y, life: 2.4, max: 2.4, r0: 8, r1: 120, col: '#ffffff' });
+  }
 }
 
 function spawnFacultyProfessor(pos, def, fac, idx) {
@@ -259,17 +449,21 @@ function spawnFacultyProfessor(pos, def, fac, idx) {
     perks: [], mp: 300, maxMp: 300, mpRegenBonus: 45,
     _profDef: {
       name: def.name,
-      title: def.dept,        // 학과명을 title 로 노출 (기존 drawProfessor 에서 사용)
+      title: def.dept,
       color: def.color || fac.color,
       spriteKind: def.spriteKind || 'lich',
       key: def.key,
       faculty: fac.name,
-      visual: def.visual || null,           // 학과 테마 투사체
-      signature: def.signature || null,     // 시그니처 스킬 키
-      rewardSkills: def.rewardSkills || [], // 처치 시 잠금 해제할 스킬 id 들
+      visual: def.visual || null,
+      signature: def.signature || null,
+      rewardSkills: def.rewardSkills || [],
+      achievements: def.achievements || [],
     },
-    _profSigCd: 3 + Math.random() * 2,       // 시그니처 스킬 쿨다운
-    _profEntryT: (typeof PROFESSOR_ENTRY_SEC !== 'undefined' ? PROFESSOR_ENTRY_SEC : 1.6),
+    _profSigCd: 3 + Math.random() * 2,
+    _profPhase: 1,        // 현재 페이즈 (1 또는 2)
+    _profPhaseT: 0,       // 페이즈 전환 배너 남은 시간
+    _profEntryT: 4.5,     // 업적 소개 애니메이션 시간 (기본 1.6 → 4.5)
+    _profEntryTotal: 4.5,
     _profDeathT: 0,
     _profShootCd: 0.3 + idx * 0.15,   // 두 교수의 시전 타이밍 어긋나게 (더 빠르게)
     _profMoveAng: 0,
