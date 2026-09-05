@@ -40,6 +40,7 @@ function update(dt) {
     case 'ending':    updateEnding(dt); break;
     case 'library':   updateLibrary(dt); break;
     case 'codex':     updateCodex(dt); break;
+    case 'facultyLobby': updateFacultyLobby(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -325,7 +326,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'extra')   { state.dungeonMode = 'extra';   goTo('dungeon'); }
         else if (d.kind === 'extreme') { state.dungeonMode = 'extreme'; goTo('dungeon'); }
         else if (d.kind === 'inferno') { state.dungeonMode = 'inferno'; goTo('dungeon'); }
-        else if (d.kind === 'professor'){ state.dungeonMode = 'professor'; goTo('dungeon'); }
+        else if (d.kind === 'professor'){ goTo('facultyLobby'); }
         else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
@@ -402,19 +403,23 @@ function updateDungeon(dt) {
       sfx('level');
       state.shake = 12;
       if (floor >= currentFloorTotal()) {
-        // 교수 층 클리어: 해당 교수 처치 기록 + 아카데미 복귀
+        // 교수 층 클리어: 계열 시련 통과 → 보상 + 로비 복귀
         if (state.dungeonMode === 'professor') {
-          const boss = entities.enemies.find(e => e.isProfessor);
-          const pk = boss && boss._profDef ? boss._profDef.key : null;
-          if (pk) {
-            state.professorsBeaten = state.professorsBeaten || {};
-            state.professorsBeaten[pk] = (state.professorsBeaten[pk] || 0) + 1;
-            showMsg('교수 ' + boss._profDef.name + ' 격파!', 3);
+          const facKey = state.facultyKey;
+          if (facKey) {
+            state.facultyCleared = state.facultyCleared || {};
+            state.facultyCleared[facKey] = (state.facultyCleared[facKey] || 0) + 1;
+            const facName = (typeof FACULTY_PROFESSORS !== 'undefined' && FACULTY_PROFESSORS[facKey]) ? FACULTY_PROFESSORS[facKey].name : facKey;
+            showMsg(facName + ' 교수진 전원 격파!', 4);
           }
-          state.research += 500;
-          state.gold += 300;
+          state.research += 1500;
+          state.gold += 500;
           if (typeof saveAccountData === 'function') saveAccountData();
-          setTimeout(() => { state.dungeonMode = 'normal'; goTo('academy'); }, 2200);
+          setTimeout(() => {
+            state.dungeonMode = 'normal';
+            state.facultyKey = null;
+            goTo(facKey ? 'facultyLobby' : 'academy');
+          }, 2500);
           return;
         }
         // 시련 클리어: 단계별로 다른 해금

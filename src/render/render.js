@@ -27,6 +27,7 @@ function render() {
     case 'ending':    renderEnding(); break;
     case 'library':   renderLibrary(); break;
     case 'codex':     renderCodex(); break;
+    case 'facultyLobby': renderFacultyLobby(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;

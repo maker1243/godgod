@@ -268,7 +268,10 @@ function buildRoom(roomIndex) {
 
   // 적 스폰
   if (isBoss) {
-    if (state.dungeonMode === 'professor' && typeof spawnProfessor === 'function') {
+    if (state.dungeonMode === 'professor' && state.facultyKey && typeof spawnFacultyProfessors === 'function') {
+      // 계열 시련 - 두 교수 동시 스폰
+      spawnFacultyProfessors(room);
+    } else if (state.dungeonMode === 'professor' && typeof spawnProfessor === 'function') {
       spawnProfessor(room, roomIndex);
     } else if (state.dungeonMode === 'trial' && typeof spawnTrialBoss === 'function') {
       spawnTrialBoss(room);
