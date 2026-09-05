@@ -171,6 +171,11 @@ if (state.account) {
 }
 
 function updateAcademy(dt) {
+  // 암호 퀘스트: 팝업 활성이거나 벽 접촉 카운트 진행 중이면 그 결과에 따라 나머지 잠금
+  if (typeof updateCipherQuestAcademy === 'function') {
+    const blocked = updateCipherQuestAcademy(dt);
+    if (blocked) return;
+  }
   // 난이도 피커 팝업 UI: window._diffPickerOpen 이 true 면 티어 목록에서 직접 선택
   if (window._diffPickerOpen) {
     const tiers = DIFFICULTY_TIERS;

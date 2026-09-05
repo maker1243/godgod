@@ -369,6 +369,9 @@ function renderAcademyHUD() {
   } else {
     window._diffPickerRows = null;
   }
+
+  // 암호 퀘스트 오버레이 (게이지/팝업/결과 메시지)
+  if (typeof renderCipherQuestOverlay === 'function') renderCipherQuestOverlay();
 }
 
 // ---------- Dungeon ----------
