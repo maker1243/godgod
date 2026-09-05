@@ -13,10 +13,11 @@ const codex = {
 };
 
 const CODEX_TABS = [
-  { id:'perks',  name:'PERKS'      },
-  { id:'skills', name:'SKILLS'     },
-  { id:'tiers',  name:'DIFFICULTY' },
-  { id:'trials', name:'TRIALS'     },
+  { id:'perks',   name:'PERKS'      },
+  { id:'skills',  name:'SKILLS'     },
+  { id:'tiers',   name:'DIFFICULTY' },
+  { id:'trials',  name:'TRIALS'     },
+  { id:'visuals', name:'VISUALS'    },
 ];
 
 function codexSetTab(id) {
@@ -61,6 +62,25 @@ function codexEntries() {
         out.push({ title: t.name.toUpperCase() + ' (' + t.id + ')', sub: parts.join('  ·  '), color: t.color });
       }
     }
+  } else if (codex.tab === 'visuals') {
+    if (typeof BULLET_VISUALS !== 'undefined') {
+      const names = Object.keys(BULLET_VISUALS).sort();
+      for (const n of names) {
+        // 이 visual 을 사용하는 스킬 목록 찾기
+        const users = [];
+        if (typeof SKILL_TREE !== 'undefined' && typeof SKILL_VISUAL !== 'undefined') {
+          for (const cat of Object.keys(SKILL_TREE)) {
+            for (const s of SKILL_TREE[cat].skills) {
+              if (SKILL_VISUAL[s.id] === n) users.push(s.name);
+              if (users.length >= 4) break;
+            }
+            if (users.length >= 4) break;
+          }
+        }
+        const sub = users.length ? users.slice(0, 3).join(', ') + (users.length > 3 ? ' ...' : '') : 'no skill uses this yet';
+        out.push({ title: n, sub, color: '#8bd8ff', isVisual: true, visualName: n });
+      }
+    }
   } else if (codex.tab === 'trials') {
     if (typeof TRIAL_BOSS_DEFS !== 'undefined') {
       for (const cat of Object.keys(TRIAL_BOSS_DEFS)) {
@@ -100,6 +120,7 @@ function updateCodex(dt) {
   if (keys['Digit2']) { keys['Digit2']=false; codexSetTab('skills'); sfx('hit'); }
   if (keys['Digit3']) { keys['Digit3']=false; codexSetTab('tiers');  sfx('hit'); }
   if (keys['Digit4']) { keys['Digit4']=false; codexSetTab('trials'); sfx('hit'); }
+  if (keys['Digit5']) { keys['Digit5']=false; codexSetTab('visuals'); sfx('hit'); }
   if (keys['Tab'])    { keys['Tab']=false; const idx = CODEX_TABS.findIndex(t => t.id === codex.tab); codexSetTab(CODEX_TABS[(idx+1) % CODEX_TABS.length].id); sfx('hit'); }
   // 커서/스크롤
   if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; codex.cursor = Math.max(0, codex.cursor - 1); }
@@ -185,11 +206,37 @@ function renderCodex() {
     const ry = bodyY + 2 + vi * rowH;
     const isSel = codex.cursor === i;
     if (isSel) pxDraw(bodyX + 2, ry, bodyW - 4, rowH - 1, '#2a1548');
-    drawText(e.title, bodyX + 6, ry, e.color || '#e8d9b0');
-    drawText(e.sub, bodyX + 6, ry + 6, '#8a7ab5');
+    // 텍스트: visual 탭이면 좌측 프리뷰 자리 확보
+    const textX = e.isVisual ? bodyX + 42 : bodyX + 6;
+    drawText(e.title, textX, ry, e.color || '#e8d9b0');
+    drawText(e.sub, textX, ry + 6, '#8a7ab5');
     if (typeof e.owned === 'number' && e.maxLv >= 1) {
       const own = 'LV ' + e.owned + '/' + e.maxLv;
       drawText(own, bodyX + bodyW - textWidth(own) - 6, ry, e.owned >= e.maxLv ? '#3ac762' : '#c8b898');
+    }
+    // === 투사체 미리보기 (visuals 탭) - 왼쪽에 애니메이션 샘플 ===
+    if (e.isVisual && typeof BULLET_VISUALS !== 'undefined') {
+      const v = BULLET_VISUALS[e.visualName];
+      if (v && v.draw) {
+        const px = bodyX + 20;
+        const py = ry + rowH / 2 - 1;
+        // 배경 박스
+        pxDraw(bodyX + 6, ry, 30, rowH - 1, '#050510');
+        // motion 시각화용 fake bullet (좌→우 이동 궤적 시뮬)
+        const t = state.time * 60;
+        const travel = (t + i * 7) % 24;   // 좌→우 반복
+        const startX = bodyX + 8, endX = bodyX + 32;
+        const bx = startX + travel;
+        // motion 오프셋 미리보기용 fake bullet 상태
+        const fake = { x: bx, y: py, vx: 60, vy: 0, r: 3, kind: 'fire', _age: state.time + i };
+        // move 함수가 있으면 y 오프셋을 한 프레임 시뮬해서 보여줌
+        if (v.move) {
+          const savedY = fake.y;
+          try { v.move(fake, 1/60); } catch(_) {}
+          fake.y = savedY + (fake.y - savedY) * 3;   // 살짝 과장
+        }
+        try { v.draw(fake, 0); } catch(_) {}
+      }
     }
     window._codexRowRects.push({ idx: i, x: bodyX, y: ry - 1, w: bodyW, h: rowH });
   }
