@@ -11,64 +11,64 @@ const FACULTY_PROFESSORS = {
     name:'인문계열', title:'HUMANITIES', color:'#c8a888',
     profs: [
       { key:'kor',   name:'李 교수', dept:'국어국문학과',   spriteKind:'lich',   color:'#c8a888', slots:{ lmb:'m01', q:'m05', e:'m14' },
-        visual:'dept_hangeul', signature:'burst',   rewardSkills:['m01','m02','m03'] },
+        visual:'dept_hangeul', signature:'lit_ripple', rewardSkills:['m01','m02','m03'] },
       { key:'eng',   name:'金 교수', dept:'영어영문학과',   spriteKind:'wraith', color:'#a88860', slots:{ lmb:'m11', q:'m22', e:'m18' },
-        visual:'dept_ink',     signature:'spread',  rewardSkills:['m05','m06'] },
+        visual:'dept_ink',     signature:'ink_spread',  rewardSkills:['m05','m06'] },
     ]
   },
   social: {
     name:'사회과학계열', title:'SOCIAL SCIENCE', color:'#8bd8ff',
     profs: [
       { key:'biz',   name:'朴 교수', dept:'경영학과',       spriteKind:'lich',    color:'#8bd8ff', slots:{ lmb:'e21', q:'e22', e:'e29' },
-        visual:'dept_chart',   signature:'volley',  rewardSkills:['e01','e02','e03'] },
+        visual:'dept_chart',   signature:'media_broadcast', rewardSkills:['e01','e02','e03'] },
       { key:'psy',   name:'崔 교수', dept:'심리학과',       spriteKind:'seer',    color:'#5aa0dc', slots:{ lmb:'c01', q:'c05', e:'c09' },
-        visual:'dept_brain',   signature:'wave',    rewardSkills:['c01','c02'] },
+        visual:'dept_brain',   signature:'psy_brain', rewardSkills:['c01','c02'] },
     ]
   },
   natural: {
     name:'자연과학계열', title:'NATURAL SCIENCE', color:'#5adcdc',
     profs: [
       { key:'phys',  name:'鄭 교수', dept:'물리학과',       spriteKind:'wraith',  color:'#8bd8ff', slots:{ lmb:'m11', q:'m22', e:'m10' },
-        visual:'dept_atom',    signature:'orbit',   rewardSkills:['m11','m12'] },
+        visual:'dept_atom',    signature:'atom_orbit', rewardSkills:['m11','m12'] },
       { key:'chem',  name:'姜 교수', dept:'화학과',         spriteKind:'seer',    color:'#5adcac', slots:{ lmb:'n01', q:'n06', e:'e25' },
-        visual:'dept_benzene', signature:'ring',    rewardSkills:['n01','n02','n06'] },
+        visual:'dept_benzene', signature:'benzene_hex', rewardSkills:['n01','n02','n06'] },
     ]
   },
   engineering: {
     name:'공학계열', title:'ENGINEERING', color:'#e8c547',
     profs: [
       { key:'cs',    name:'趙 교수', dept:'컴퓨터공학과',   spriteKind:'colossus', color:'#8bd8ff', slots:{ lmb:'e15', q:'e34', e:'e46' },
-        visual:'dept_binary',  signature:'stream',  rewardSkills:['e15','e21','e28'] },
+        visual:'dept_binary',  signature:'binary_stream_x', rewardSkills:['e15','e21','e28'] },
       { key:'robot', name:'尹 교수', dept:'로봇공학과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'e16', q:'e22', e:'e29' },
-        visual:'dept_gear',    signature:'saw',     rewardSkills:['e16','e22'] },
+        visual:'dept_gear',    signature:'gear_saw', rewardSkills:['e16','e22'] },
     ]
   },
   medicine: {
     name:'의약계열', title:'MEDICINE', color:'#3ac762',
     profs: [
       { key:'med',   name:'林 교수', dept:'의예과',         spriteKind:'wraith',   color:'#ffffff', slots:{ lmb:'o01', q:'o06', e:'o11' },
-        visual:'dept_medcross',signature:'cross',   rewardSkills:['o01','o02'] },
+        visual:'dept_medcross',signature:'med_cross_big', rewardSkills:['o01','o02'] },
       { key:'phar',  name:'吳 교수', dept:'약학과',         spriteKind:'seer',     color:'#5adc2a', slots:{ lmb:'n01', q:'n06', e:'n11' },
-        visual:'dept_pill',    signature:'toss',    rewardSkills:['n01','n06','n11'] },
+        visual:'dept_pill',    signature:'pill_toss3', rewardSkills:['n01','n06','n11'] },
     ]
   },
   education: {
     name:'사범계열', title:'EDUCATION', color:'#c86ade',
     profs: [
       { key:'math',  name:'韓 교수', dept:'수학교육과',     spriteKind:'lich',     color:'#c86ade', slots:{ lmb:'m07', q:'m22', e:'m14' },
-        visual:'dept_infinity',signature:'infloop', rewardSkills:['m07','m22'] },
+        visual:'dept_infinity',signature:'math_infinite', rewardSkills:['m07','m22'] },
       { key:'pe',    name:'徐 교수', dept:'체육교육과',     spriteKind:'colossus', color:'#e8c547', slots:{ lmb:'n01', q:'n06', e:'n11' },
-        visual:'dept_ball',    signature:'bounce',  rewardSkills:['n01','n06'] },
+        visual:'dept_ball',    signature:'pe_bounce3', rewardSkills:['n01','n06'] },
     ]
   },
   arts: {
     name:'예체능계열', title:'ARTS', color:'#ff80ff',
     profs: [
       { key:'paint', name:'黃 교수', dept:'회화과',         spriteKind:'seer',     color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' },
-        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m07'],
+        visual:'dept_paint',   signature:'paint_splash15', rewardSkills:['m13','m07'],
         achievements:['국제 미술제 3회 대상','현대미술관 개인전 5회','시공간의 색채 이론 저술'] },
       { key:'vocal', name:'申 교수', dept:'성악과',         spriteKind:'wraith',   color:'#ffefa8', slots:{ lmb:'o05', q:'o06', e:'o11' },
-        visual:'dept_note',    signature:'chord',   rewardSkills:['o01','o05','o06'],
+        visual:'dept_note',    signature:'vocal_chord5', rewardSkills:['o01','o05','o06'],
         achievements:['국립 오페라단 수석 소프라노','벨칸토 창법 마스터','국제 성악 콩쿠르 우승'] },
     ]
   },
@@ -76,10 +76,10 @@ const FACULTY_PROFESSORS = {
     name:'종교철학계열', title:'DIVINITY & PHILOSOPHY', color:'#c8b898',
     profs: [
       { key:'phil',  name:'黃 교수', dept:'철학과',         spriteKind:'lich',     color:'#c8b898', slots:{ lmb:'m01', q:'c05', e:'m14' },
-        visual:'dept_hangeul', signature:'burst',   rewardSkills:['c01','c05','c09'],
+        visual:'dept_hangeul', signature:'philosophy_void', rewardSkills:['c01','c05','c09'],
         achievements:['형이상학 3부작 저자','스콜라 철학 재해석','존재론 국제 학회장'] },
       { key:'rel',   name:'洪 교수', dept:'종교학과',       spriteKind:'wraith',   color:'#a89848', slots:{ lmb:'o01', q:'o06', e:'o11' },
-        visual:'dept_medcross',signature:'cross',   rewardSkills:['o01','o02','o03'],
+        visual:'dept_medcross',signature:'religion_cross_x2', rewardSkills:['o01','o02','o03'],
         achievements:['비교종교학 학회 창설자','세계 종교 백과사전 편찬','종교 대화 UN 자문위원'] },
     ]
   },
@@ -87,10 +87,10 @@ const FACULTY_PROFESSORS = {
     name:'정보통신계열', title:'INFO & COMMUNICATION', color:'#5adcff',
     profs: [
       { key:'lib',   name:'白 교수', dept:'문헌정보학과',   spriteKind:'seer',     color:'#5adcff', slots:{ lmb:'e15', q:'e22', e:'e46' },
-        visual:'dept_binary',  signature:'stream',  rewardSkills:['e15','e21'],
+        visual:'dept_binary',  signature:'library_burst16', rewardSkills:['e15','e21'],
         achievements:['국립도서관 디지털 아카이브 설계','정보 검색 알고리즘 특허 12건','디지털 도서관 국제상 수상'] },
       { key:'media', name:'孫 교수', dept:'미디어커뮤니케이션학과', spriteKind:'lich', color:'#8bd8ff', slots:{ lmb:'m11', q:'c05', e:'e29' },
-        visual:'dept_chart',   signature:'volley',  rewardSkills:['c01','e21'],
+        visual:'dept_chart',   signature:'media_broadcast', rewardSkills:['c01','e21'],
         achievements:['방송 저널리즘 이론서 저술','뉴미디어 대상 3회','SNS 여론 형성 연구 권위자'] },
     ]
   },
@@ -98,10 +98,10 @@ const FACULTY_PROFESSORS = {
     name:'미술디자인계열', title:'ART & DESIGN', color:'#ffb8ff',
     profs: [
       { key:'sculpt',name:'柳 교수', dept:'조소과',         spriteKind:'colossus', color:'#a08050', slots:{ lmb:'e16', q:'e22', e:'e50' },
-        visual:'dept_gear',    signature:'saw',     rewardSkills:['n06','e22'],
+        visual:'dept_gear',    signature:'sculpt_chisel', rewardSkills:['n06','e22'],
         achievements:['공공 조형물 대상 5회','청동 캐스팅 마스터','국제 조각 심포지엄 상임회장'] },
       { key:'vdesign',name:'高 교수', dept:'시각디자인학과', spriteKind:'seer',    color:'#ff80ff', slots:{ lmb:'m13', q:'m07', e:'m18' },
-        visual:'dept_paint',   signature:'splash',  rewardSkills:['m13','m18'],
+        visual:'dept_paint',   signature:'design_frame', rewardSkills:['m13','m18'],
         achievements:['글로벌 브랜드 아이덴티티 100+ 프로젝트','타이포그래피 정본 저술','레드닷 디자인 어워드 다수 수상'] },
     ]
   },
@@ -109,10 +109,10 @@ const FACULTY_PROFESSORS = {
     name:'외국어문학계열', title:'FOREIGN LITERATURE', color:'#dcac60',
     profs: [
       { key:'chn',   name:'呂 교수', dept:'중어중문학과',   spriteKind:'lich',    color:'#e8c547', slots:{ lmb:'m01', q:'m22', e:'m10' },
-        visual:'dept_hangeul', signature:'spread',  rewardSkills:['m01','m05'],
+        visual:'dept_hangeul', signature:'chinese_char', rewardSkills:['m01','m05'],
         achievements:['논어 · 도덕경 완역','고전 한문 학회장','중국 사회과학원 명예교수'] },
       { key:'jpn',   name:'秋 교수', dept:'일어일문학과',   spriteKind:'wraith',  color:'#ff9c3d', slots:{ lmb:'m11', q:'m22', e:'m18' },
-        visual:'dept_ink',     signature:'wave',    rewardSkills:['m11','m22'],
+        visual:'dept_ink',     signature:'japanese_haiku', rewardSkills:['m11','m22'],
         achievements:['헤이안 시대 문학 전문가','겐지모노가타리 새 번역','일한 비교문학 정론 발표'] },
     ]
   },

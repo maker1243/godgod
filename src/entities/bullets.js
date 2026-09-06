@@ -114,6 +114,10 @@ function updateBullets(dt) {
         let finalDmg = b.dmg * dmgMult;
         if (e._dmgRed) finalDmg *= (1 - Math.min(0.9, e._dmgRed));
         e.hp -= finalDmg;
+        // 코업 게스트: 실제 데미지는 호스트가 처리. mobHit 로 통지.
+        if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && !mp.coop.isHost && e._syncId != null) {
+          if (typeof mpSend === 'function') mpSend({ type:'mobHit', i: e._syncId, dmg: finalDmg });
+        }
         e.hitFlash = isCrit ? 0.22 : 0.14;
         spawnFloat(e.x, e.y - 6, Math.ceil(finalDmg), isCrit ? '#ffefa8' : '#ffefa8');
 

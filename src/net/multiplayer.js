@@ -83,8 +83,17 @@ const mp = {
     partner: null,    // { id, name }
     invites: {},      // invites[peerId] = { mode, difficulty, ts }
     lastInviteMs: 0,
+    isHost: false,    // 이 클라이언트가 mob 시뮬 권위자인지
+    lastMobSent: 0,
+    nextSyncId: 1,
   },
 };
+
+// 코업 호스트 판정: myId 와 partner.id 알파벳순으로 낮은 쪽이 host.
+function _coopComputeHost() {
+  if (!mp.coop.active || !mp.coop.partner) return false;
+  return (mp.myId + '') < (mp.coop.partner.id + '');
+}
 
 // Try to remember prefs
 try {
@@ -249,7 +258,46 @@ function mpHandleMessage(m) {
     // 상대가 coop 매칭 성공 알림 → 나도 coop 활성
     mp.coop.active = true;
     mp.coop.partner = { id: m.id, name: m.name || 'PARTNER' };
-    if (typeof showMsg === 'function') showMsg('COOP 매칭: ' + (m.name || 'PARTNER') + '와 함께!', 4);
+    mp.coop.isHost = _coopComputeHost();
+    mp.coop.nextSyncId = 1;
+    if (typeof showMsg === 'function') showMsg('COOP 매칭: ' + (m.name || 'PARTNER') + '  (' + (mp.coop.isHost ? 'HOST' : 'GUEST') + ')', 4);
+    // 이미 던전에 있으면 (초대자 쪽) — 몹을 sync id 로 다시 만들도록 재진입
+    if (state.scene === 'dungeon' && typeof goTo === 'function') {
+      // 방/몹 초기화 후 재진입
+      entities.enemies = []; entities.bullets = []; entities.ebullets = [];
+      goTo('dungeon');
+    }
+  } else if (m.type === 'mobState') {
+    // 호스트가 몹 스냅샷 브로드캐스트 → 게스트는 로컬 entities.enemies 를 미러링
+    if (mp.coop.active && !mp.coop.isHost && Array.isArray(m.enemies)) {
+      const byId = {};
+      for (const e of entities.enemies) if (e._syncId != null) byId[e._syncId] = e;
+      const nextList = [];
+      for (const e of m.enemies) {
+        let target = byId[e.i];
+        if (!target) {
+          // 신규 미러 엔티티 생성 (렌더/피격 판정용 최소 필드)
+          target = { _syncId: e.i, kind: e.k || 'slime', hitFlash: 0, freeze: 0, slow: 0, stun: 0,
+                     r: e.r || 5, isBoss: !!e.b, isProfessor: !!e.p, isElite: !!e.el };
+          if (target.isProfessor) {
+            // 교수 미러: 임시 def (색만) - 화면상 스프라이트 그림용
+            target._profDef = { name: e.n || '', title: '', color: e.c || '#ffefa8', spriteKind: 'lich', key: '', faculty: '', achievements: [] };
+            target._profEntryT = 0; target._profEntryTotal = 0; target._profDeathT = 0; target._profPhase = 1;
+          }
+        }
+        target.x = e.x; target.y = e.y; target.hp = e.hp; target.maxHp = e.mx || target.hp || 100;
+        target.r = e.r || target.r || 5;
+        target._synced = true;
+        nextList.push(target);
+      }
+      entities.enemies = nextList;
+    }
+  } else if (m.type === 'mobHit') {
+    // 게스트가 로컬에서 mob 을 맞췄음을 통지 → 호스트가 실제 데미지 적용
+    if (mp.coop.active && mp.coop.isHost) {
+      const target = entities.enemies.find(e => e._syncId === m.i);
+      if (target && target.hp > 0) target.hp -= (m.dmg || 0);
+    }
   } else if (m.type === 'pvpHit') {
     // 상대가 "너 맞았어(id=X, dmg=D)" 통지. 대상이 나면 자기 HP 감소.
     // (권위 위임 - 사수(shooter) 가 본 히트를 신뢰. anti-cheat 은 프로토타입 밖의 문제.)

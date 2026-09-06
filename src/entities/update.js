@@ -480,7 +480,23 @@ function updateDungeon(dt) {
   if (timeStopT > 0) timeStopT -= dt;
 
   updatePlayer(dtLogic);
-  updateEnemies(dtEnemy);
+  // 코업 게스트: 몹 AI 실행 안 함 (호스트가 시뮬 후 mobState 로 넘겨줌)
+  const _coopGuest = (typeof mp !== 'undefined' && mp.coop && mp.coop.active && !mp.coop.isHost);
+  if (!_coopGuest) updateEnemies(dtEnemy);
+  // 코업 호스트: 매 100ms 몹 스냅샷 방송
+  if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && mp.coop.isHost) {
+    const now = performance.now();
+    if (!mp.coop.lastMobSent || now - mp.coop.lastMobSent > 100) {
+      mp.coop.lastMobSent = now;
+      const enemies = entities.enemies.map(e => ({
+        i: e._syncId, x: Math.round(e.x*10)/10, y: Math.round(e.y*10)/10,
+        hp: e.hp, mx: e.maxHp, r: e.r, k: e.kind, b: !!e.isBoss, p: !!e.isProfessor, el: !!e.isElite,
+        n: (e._profDef && e._profDef.name) || '',
+        c: (e._profDef && e._profDef.color) || '',
+      })).filter(x => x.i != null).slice(0, 30);
+      if (typeof mpSend === 'function') mpSend({ type:'mobState', enemies });
+    }
+  }
   updateBullets(dtEnemy);
   updateEBullets(dtEnemy);
   if (typeof updateFx === 'function') updateFx(dt);

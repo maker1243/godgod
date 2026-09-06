@@ -508,6 +508,138 @@ function _profSignatureCast(e, sig, ang) {
       const a = ang + off;
       push({ vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 3, life: 3 });
     }
+  } else if (sig === 'psy_brain') {
+    // 심리: 뇌 파동 3발 (파도) + 좌우 2발
+    for (let i = -1; i <= 1; i++) push({ vx: Math.cos(ang + i * 0.15) * 160, vy: Math.sin(ang + i * 0.15) * 160, r: 3, life: 4 });
+    for (let s = -1; s <= 1; s += 2) push({ vx: Math.cos(ang + s * Math.PI/4) * 200, vy: Math.sin(ang + s * Math.PI/4) * 200, r: 4 });
+  } else if (sig === 'lit_ripple') {
+    // 국문/영문: 자소가 파도처럼 퍼져 - 3중 원
+    for (let ring = 0; ring < 3; ring++) {
+      const cnt = 6 + ring * 3;
+      const speed = 100 + ring * 40;
+      for (let i = 0; i < cnt; i++) {
+        const a = (i / cnt) * Math.PI * 2 + ring * 0.2;
+        push({ vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 3 - ring * 0.3 });
+      }
+    }
+  } else if (sig === 'ink_spread') {
+    // 잉크가 조준+양쪽 확산: 조준 3발 + 좌우 부채꼴 각 3발
+    for (let i = -1; i <= 1; i++) push({ vx: Math.cos(ang + i * 0.05) * 240, vy: Math.sin(ang + i * 0.05) * 240, r: 3 });
+    for (let s = -1; s <= 1; s += 2) {
+      const base = ang + s * Math.PI / 3;
+      for (let i = -1; i <= 1; i++) push({ vx: Math.cos(base + i * 0.15) * 160, vy: Math.sin(base + i * 0.15) * 160 });
+    }
+  } else if (sig === 'atom_orbit') {
+    // 물리: 궤도 파동 (8발이 나선 시작)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, r: 3 });
+    }
+    setTimeout(() => {
+      if (!entities.enemies.includes(e)) return;
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+        entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 180, vy: Math.sin(a) * 180, r: 3, dmg: dmg * 1.2, life: 3, kind: 'fire', visual: vis });
+      }
+    }, 300);
+  } else if (sig === 'benzene_hex') {
+    // 화학: 육각형 6점 + 중앙 확산
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, r: 4 });
+    }
+    push({ vx: Math.cos(ang) * 260, vy: Math.sin(ang) * 260, r: 5, dmg: dmg * 1.5 });
+  } else if (sig === 'binary_stream_x') {
+    // 컴퓨터: 매우 빠른 3발 연속 + 후속 2발
+    for (let i = 0; i < 3; i++) push({ vx: Math.cos(ang) * (280 + i * 60), vy: Math.sin(ang) * (280 + i * 60), r: 2 });
+    for (let i = -1; i <= 1; i += 2) push({ vx: Math.cos(ang + i * 0.2) * 200, vy: Math.sin(ang + i * 0.2) * 200 });
+  } else if (sig === 'gear_saw') {
+    // 로봇: 회전 6발 + 4방향 대각 십자
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + state.time;
+      push({ vx: Math.cos(a) * 100, vy: Math.sin(a) * 100, r: 4, dmg: dmg * 1.2 });
+    }
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + Math.PI / 4;
+      push({ vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 3 });
+    }
+  } else if (sig === 'med_cross_big') {
+    // 의예: 4방향 크게 관통 십자
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2;
+      push({ vx: Math.cos(a) * 250, vy: Math.sin(a) * 250, r: 6, dmg: dmg * 1.5, life: 4 });
+    }
+  } else if (sig === 'pill_toss3') {
+    // 약학: 유도 3발 캡슐
+    for (let i = -1; i <= 1; i++) push({ vx: Math.cos(ang + i * 0.35) * 140, vy: Math.sin(ang + i * 0.35) * 140, r: 4, life: 3.5 });
+  } else if (sig === 'math_infinite') {
+    // 수학교육: 뒤로 무한 루프 (앞뒤로 3발 씩)
+    for (const dir of [ang, ang + Math.PI]) {
+      for (let i = -1; i <= 1; i++) push({ vx: Math.cos(dir + i * 0.12) * 160, vy: Math.sin(dir + i * 0.12) * 160, r: 3, life: 4 });
+    }
+  } else if (sig === 'pe_bounce3') {
+    // 체육: 3방향 공 + 벽 반사
+    for (let i = -1; i <= 1; i++) push({ vx: Math.cos(ang + i * 0.3) * 180, vy: Math.sin(ang + i * 0.3) * 180, r: 4, life: 4 });
+  } else if (sig === 'paint_splash15') {
+    // 회화: 랜덤 15방향
+    for (let i = 0; i < 15; i++) {
+      const a = Math.random() * Math.PI * 2;
+      push({ vx: Math.cos(a) * (60 + Math.random() * 160), vy: Math.sin(a) * (60 + Math.random() * 160), r: 3 });
+    }
+  } else if (sig === 'vocal_chord5') {
+    // 성악: 5화음 조준 (음표)
+    for (let i = -2; i <= 2; i++) push({ vx: Math.cos(ang + i * 0.1) * 200, vy: Math.sin(ang + i * 0.1) * 200, r: 3, life: 3 });
+  } else if (sig === 'philosophy_void') {
+    // 철학: 8방향 반전 (뒤에서 앞으로)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      push({ x: e.x + Math.cos(a) * 40, y: e.y + Math.sin(a) * 40, vx: -Math.cos(a) * 150, vy: -Math.sin(a) * 150 });
+    }
+  } else if (sig === 'religion_cross_x2') {
+    // 종교: 십자 두 번 (회전 오프셋)
+    for (const off of [0, Math.PI / 4]) {
+      for (let i = 0; i < 4; i++) {
+        const a = off + i * Math.PI / 2;
+        push({ vx: Math.cos(a) * 200, vy: Math.sin(a) * 200, r: 5 });
+      }
+    }
+  } else if (sig === 'library_burst16') {
+    // 문헌정보: 16방향 방사형 (책이 쏟아짐)
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, r: 3 });
+    }
+  } else if (sig === 'media_broadcast') {
+    // 미디어: 부채꼴 넓게 (안테나 방출)
+    for (let i = -4; i <= 4; i++) push({ vx: Math.cos(ang + i * 0.1) * 240, vy: Math.sin(ang + i * 0.1) * 240, r: 3 });
+  } else if (sig === 'sculpt_chisel') {
+    // 조소: 무거운 2발 + 파편 6개
+    for (let i = -1; i <= 1; i += 2) push({ vx: Math.cos(ang + i * 0.1) * 240, vy: Math.sin(ang + i * 0.1) * 240, r: 6, dmg: dmg * 1.8 });
+    for (let i = 0; i < 6; i++) {
+      const a = ang + (i - 2.5) * 0.4;
+      push({ vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, r: 2, dmg: dmg * 0.6 });
+    }
+  } else if (sig === 'design_frame') {
+    // 시각디자인: 4방향 대각 프레임 - 4구석에서 중앙으로 회귀
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + Math.PI / 4;
+      push({ x: e.x + Math.cos(a) * 30, y: e.y + Math.sin(a) * 30, vx: -Math.cos(a) * 180, vy: -Math.sin(a) * 180, r: 4 });
+    }
+  } else if (sig === 'chinese_char') {
+    // 중어중문: 十(십)자 방향 8발
+    for (const d of [0, Math.PI/2, Math.PI, -Math.PI/2]) {
+      push({ vx: Math.cos(d) * 200, vy: Math.sin(d) * 200, r: 4 });
+      push({ vx: Math.cos(d) * 130, vy: Math.sin(d) * 130, r: 3 });
+    }
+  } else if (sig === 'japanese_haiku') {
+    // 일어일문: 5-7-5 느낌 (5+7+5 파도)
+    for (const off of [-0.3, 0, 0.3]) {
+      const cnt = off === 0 ? 7 : 5;
+      for (let i = 0; i < cnt; i++) {
+        const a = ang + off + (i - (cnt-1)/2) * 0.06;
+        push({ vx: Math.cos(a) * 190, vy: Math.sin(a) * 190, r: 3 });
+      }
+    }
   } else {
     // 폴백 - 8방향 링
     for (let i = 0; i < 8; i++) {

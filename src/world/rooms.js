@@ -382,6 +382,11 @@ function spawnEnemy(kind, room) {
     base._eliteRp = Math.max(50, Math.floor(20 * Math.pow(2, DIFFICULTY_TIERS.findIndex(d => d.id === (state.difficulty || 'normal')))));
   }
   base.maxHp = base.hp;
+  // 코업 모드: 호스트만 실제 스폰. 게스트는 mobState 로 미러링됨.
+  if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && !mp.coop.isHost) return;
+  if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && mp.coop.isHost) {
+    base._syncId = mp.coop.nextSyncId++;
+  }
   entities.enemies.push(base);
 }
 
