@@ -99,6 +99,10 @@ const DIFFICULTY_TIERS = [
   { id:'infinity',  name:'무한',            color:'#f0ffff', hpBase:5e15,               dmgMult:2.5e7,    bossHpMult:8e7,       rpPerKill:5e7,      gpaPerKill:150000, rpBossMult:3e7,     gpaFinalMult:2e7     },
   { id:'primeone',  name:'원초의 자',       color:'#ff00c0', hpBase:2.5e16,             dmgMult:6e7,      bossHpMult:2e8,       rpPerKill:1.2e8,    gpaPerKill:350000, rpBossMult:7e7,     gpaFinalMult:5e7     },
   { id:'unmaker',   name:'파훼자',          color:'#000000', hpBase:1e17,               dmgMult:1.5e8,    bossHpMult:5e8,       rpPerKill:3e8,      gpaPerKill:800000, rpBossMult:1.7e8,   gpaFinalMult:1.2e8   },
+  // === APEX (극한) — 잡몹 HP 가 플레이어 baseDmg × 400 으로 매번 재계산됨. ===
+  // 항상 이론상 300~500 히트가 필요하도록 스케일링. 6e+66 데미지의 플레이어도 이 티어에서는
+  // 몹이 2.4e+69 HP 로 나옴 → 유의미한 전투. hpBase 는 -1 이면 spawnEnemy 에서 adaptive.
+  { id:'apex',      name:'극한 (적응)',     color:'#ff0080', hpBase:-1,                 dmgMult:1e9,      bossHpMult:1e9,       rpPerKill:1e9,      gpaPerKill:3e6,    rpBossMult:5e8,     gpaFinalMult:5e8     },
 ];
 function currentDifficulty() {
   const id = state.difficulty || 'normal';
@@ -371,6 +375,11 @@ function spawnEnemy(kind, room) {
   // 전역 난이도 적용: hpBase 지정된 티어면 잡몹 HP 를 그 값으로 오버라이드.
   const diff = currentDifficulty();
   if (diff.hpBase > 0) base.hp = diff.hpBase;
+  // APEX 티어: 플레이어의 실제 공격력에 맞춰 적응. baseDmg × 400 을 목표 총 필요 데미지로.
+  if (diff.hpBase < 0 && typeof player !== 'undefined' && player) {
+    const est = (player.baseDmg || 1) * 400 * (player.mods && player.mods.fire ? player.mods.fire : 1);
+    base.hp = Math.max(base.hp || 100, est);
+  }
   if (diff.dmgMult !== 1) base.dmg = Math.round((base.dmg || 0) * diff.dmgMult);
   // 엘리트 몹: 5% 확률. HP×3, DMG×1.5, 크게 그림, 처치 시 RP 조각 확정 드롭.
   if (Math.random() < 0.05) {
@@ -430,6 +439,11 @@ function spawnBoss(room) {
   // 전역 난이도 적용: 보스 HP/DMG 스케일
   const diff = currentDifficulty();
   if (diff.bossHpMult !== 1) boss.hp *= diff.bossHpMult;
+  // APEX 티어 보스: 플레이어 baseDmg × 4000 (잡몹의 10배) 로 스케일
+  if (diff.hpBase < 0 && typeof player !== 'undefined' && player) {
+    const est = (player.baseDmg || 1) * 4000 * (player.mods && player.mods.fire ? player.mods.fire : 1);
+    boss.hp = Math.max(boss.hp, est);
+  }
   if (diff.dmgMult !== 1) boss.dmg = Math.round((boss.dmg || 0) * diff.dmgMult);
   boss.maxHp = boss.hp;
   boss.hitFlash = 0; boss.freeze = 0; boss.slow = 0; boss.stun = 0;

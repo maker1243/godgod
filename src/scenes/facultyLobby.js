@@ -545,7 +545,7 @@ function spawnFacultyProfessors(room) {
 // === 교장 스폰 ===
 function spawnPrincipal(room) {
   const def = PRINCIPAL_DEF;
-  const HP = 2625000000000;    // 2.6T - 교장 × 35배 상향
+  const HP = 26250000000000;   // 26.25T - 교장 × 350배 총 상향
   const boss = {
     x: room.x + room.w/2, y: room.y + 60, vx: 0, vy: 0,
     r: 15,

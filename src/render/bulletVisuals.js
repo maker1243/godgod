@@ -389,6 +389,14 @@ const DEPT_VISUALS = {
 // BULLET_VISUALS 에 병합
 for (const k of Object.keys(DEPT_VISUALS)) BULLET_VISUALS[k] = DEPT_VISUALS[k];
 
+// 학과 visual 의 슬롯 변형: Q 는 파도 모션, E 는 나선 모션 (교수 보상 스킬용).
+// 원본 draw 는 그대로 재사용하고 move 만 붙임.
+for (const k of Object.keys(DEPT_VISUALS)) {
+  const base = DEPT_VISUALS[k];
+  BULLET_VISUALS[k + '_q'] = { draw: base.draw, move: _mWave };
+  BULLET_VISUALS[k + '_e'] = { draw: base.draw, move: _mSpiral };
+}
+
 // --- 스킬 이름 → visual 자동 매핑 ---
 // 우선순위: 긴 키워드 먼저. 대문자 비교.
 const VIS_KEYWORDS = [
