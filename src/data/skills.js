@@ -57,6 +57,11 @@ function createPlayer() {
     }
   } catch(e) { /* SKILL_BY_ID 아직 정의 전 - 첫 초기화 시점 */ }
 
+  // Legacy / Artifacts / Traits 영구 효과 적용 (정의 파일이 없으면 스킵)
+  try { if (typeof applyLegacyToPlayer    === 'function') applyLegacyToPlayer(base); } catch(_){}
+  try { if (typeof applyArtifactsToPlayer === 'function') applyArtifactsToPlayer(base); } catch(_){}
+  try { if (typeof applyTraitsToPlayer    === 'function') applyTraitsToPlayer(base); } catch(_){}
+
   return base;
 }
 

@@ -43,6 +43,9 @@ const state = {
   academyTruthSeen: false,         // 진실 컷씬 시청 여부
   tutorialSeen: false,             // 튜토리얼 첫 노출 여부
   deathPouch: null,                // 사망 지점 유품 (다음 던전 재진입 시 회수)
+  legacy: {},                      // { pillarId: level } RP 로 산 영구 스탯
+  artifacts: null,                 // { owned:{id:true}, equipped:[id..], rotationDay, rotationOffers } 초기 null → 씬 진입 시 생성
+  traits: null,                    // { owned:{id:true}, equipped:[id..] } 초기 null
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -76,6 +79,9 @@ function resetGameData() {
   state.ownedSkills = { 'm01': 1 };
   state.equippedSlots = { lmb: 'm01', q: null, e: null };
   state.perks = { hp: 0, mp: 0, dmg: 0, cd: 0 };
+  state.legacy = {};
+  state.artifacts = null;
+  state.traits = null;
   state.research = 0;
   state.gold = 20;
   state.gpa = 3.5;
@@ -125,6 +131,9 @@ function loadAccountData() {
     if (typeof d.academyTruthSeen === 'boolean') state.academyTruthSeen = d.academyTruthSeen;
     if (typeof d.tutorialSeen === 'boolean') state.tutorialSeen = d.tutorialSeen;
     if (d.deathPouch && typeof d.deathPouch === 'object') state.deathPouch = d.deathPouch;
+    if (d.legacy && typeof d.legacy === 'object') state.legacy = d.legacy;
+    if (d.artifacts && typeof d.artifacts === 'object') state.artifacts = d.artifacts;
+    if (d.traits && typeof d.traits === 'object') state.traits = d.traits;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -172,6 +181,9 @@ function saveAccountData() {
     academyTruthSeen: !!state.academyTruthSeen,
     tutorialSeen: !!state.tutorialSeen,
     deathPouch: state.deathPouch || null,
+    legacy: state.legacy || {},
+    artifacts: state.artifacts || null,
+    traits: state.traits || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

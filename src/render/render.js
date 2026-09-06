@@ -30,6 +30,7 @@ function render() {
     case 'facultyLobby': renderFacultyLobby(); break;
     case 'academyTruth': renderAcademyTruth(); break;
     case 'training':     renderTraining(); break;
+    case 'legacyLobby':  renderLegacyLobby(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -216,8 +217,8 @@ function renderAcademy() {
   }
 
   // 문 10개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
-  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor];
-  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762'];
+  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
+  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762', '#ffefa8'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
     if (d.hidden) continue;   // 완전히 숨겨진 문은 렌더/상호작용 제외

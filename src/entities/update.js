@@ -43,6 +43,7 @@ function update(dt) {
     case 'facultyLobby': updateFacultyLobby(dt); break;
     case 'academyTruth': updateAcademyTruth(dt); break;
     case 'training':     updateTraining(dt); break;
+    case 'legacyLobby':  updateLegacyLobby(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -139,6 +140,7 @@ const academy = {
   cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER',    hidden:true },
   profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
   trainDoor: { x: 160, y: 95,  w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
+  legacyDoor:{ x: 120, y: 60,  w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -181,7 +183,7 @@ if (state.account) {
 function _placeCipherDoorRandom() {
   const r = academy.room;
   const w = 12, h = 18;
-  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor];
+  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
   for (let t = 0; t < 40; t++) {
     const x = Math.floor(r.x + 10 + Math.random() * (r.w - w - 20));
     const y = Math.floor(r.y + 20 + Math.random() * (r.h - h - 40));
@@ -381,7 +383,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -436,6 +438,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'professor'){ goTo('facultyLobby'); }
         else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
         else if (d.kind === 'training')  { goTo('training'); }
+        else if (d.kind === 'legacy')    { goTo('legacyLobby'); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
         else if (d.kind === 'arena')     goTo('arena');
