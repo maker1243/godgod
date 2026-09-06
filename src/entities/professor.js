@@ -6,6 +6,161 @@
 
 const PROFESSOR_HP = 15000000000;       // 15B (기존 1B → 15배)
 
+// =====================================================================
+// 교수 등장 서사 애니메이션 — 각 교수가 살았던 시대의 짧은 실루엣 씬.
+// 학과 키 → 배경(setting) 매핑. 실루엣은 pxDraw 로 그리는 간단한 픽셀 아트.
+// 4.5s(교장 6s) 동안 STORY_FRAGMENTS 의 라인이 아래쪽에 순차 나레이션.
+// =====================================================================
+const PROF_ERA_SETTING = {
+  kor:'library', eng:'library', chn:'library', jpn:'library',
+  biz:'court', media:'court',
+  psy:'chapel', phil:'chapel', rel:'chapel',
+  phys:'lab', chem:'lab',
+  cs:'workshop', robot:'workshop', vdesign:'workshop', info:'workshop', lib:'library',
+  math:'observatory',
+  pe:'gym',
+  paint:'studio', sculpt:'studio', vocal:'chapel',
+  med:'chapel', phar:'chapel',
+  principal:'throne',
+};
+
+// 실루엣 씬 렌더러 — 배경 + 소품 + 교수 실루엣. (cx, cy)는 씬 중앙.
+// t: 0..1 진행률. def: 교수 정의 (색 사용).
+function _drawEraScene(setting, cx, cy, w, h, t, def) {
+  // 어두운 배경 그라디언트
+  const grad = ctx.createLinearGradient(0, cy*PX, 0, (cy + h/2)*PX);
+  grad.addColorStop(0, '#050310');
+  grad.addColorStop(1, '#1a0e2e');
+  ctx.fillStyle = grad;
+  ctx.fillRect((cx - w/2)*PX, (cy - h/2)*PX, w*PX, h*PX);
+
+  const col = def && def.color || '#8bd8ff';
+  const acc = def && def.accent || col;
+  const dark = '#0a0510';
+
+  // 배경별 실루엣
+  if (setting === 'library') {
+    // 책장 줄줄이 + 촛불
+    for (let i = 0; i < 4; i++) {
+      const bx = cx - w/2 + 8 + i * (w/4);
+      pxDraw(bx, cy - h/2 + 8, w/4 - 4, h - 20, dark);
+      for (let r = 0; r < 4; r++) pxDraw(bx + 1, cy - h/2 + 10 + r * 6, w/4 - 6, 1, col);
+    }
+    // 촛불 (깜박임)
+    const flick = Math.sin(t * 30) * 0.5 + 0.5;
+    pxDraw(cx - w/2 + 4, cy + h/2 - 12, 2, 6, acc);
+    pxDraw(cx - w/2 + 4, cy + h/2 - 14 - flick, 2, 2, '#ffefa8');
+    pxDraw(cx + w/2 - 6, cy + h/2 - 12, 2, 6, acc);
+    pxDraw(cx + w/2 - 6, cy + h/2 - 14 - flick, 2, 2, '#ffefa8');
+  } else if (setting === 'lab') {
+    // 실험 테이블 + 플라스크 + 방울
+    pxDraw(cx - w/2 + 6, cy + h/2 - 12, w - 12, 3, dark);
+    for (let i = 0; i < 3; i++) {
+      const fx = cx - w/2 + 12 + i * (w/3);
+      pxDraw(fx, cy + h/2 - 20, 5, 6, col);
+      pxDraw(fx + 1, cy + h/2 - 22, 3, 2, acc);
+      if (Math.random() < 0.4) spawnParticle(fx + 2, cy + h/2 - 24, acc, 0.5, 1, 20);
+    }
+    // 배경 격자
+    for (let i = 0; i < 6; i++) pxDraw(cx - w/2 + i * (w/6), cy - h/2 + 4, 1, h - 12, dark);
+  } else if (setting === 'workshop') {
+    // 톱니바퀴 + 회로 라인
+    const t2 = t * 6;
+    for (let i = 0; i < 3; i++) {
+      const gx = cx - w/2 + 8 + i * (w/3);
+      const gy = cy;
+      for (let g = 0; g < 4; g++) {
+        const ga = t2 + g * Math.PI/2;
+        pxDraw(gx + Math.cos(ga) * 4 - 1, gy + Math.sin(ga) * 4 - 1, 2, 2, col);
+      }
+      pxDraw(gx - 1, gy - 1, 2, 2, acc);
+    }
+    // 회로 라인
+    for (let y = cy - h/2 + 6; y < cy + h/2 - 6; y += 6) pxDraw(cx - w/2 + 4, y, w - 8, 1, dark);
+  } else if (setting === 'studio') {
+    // 이젤 + 팔레트 + 물감 방울
+    pxDraw(cx - 6, cy - 4, 12, 14, dark);
+    for (let i = 0; i < 4; i++) {
+      const px = cx - 5 + i * 3;
+      pxDraw(px, cy - 2, 2, 2, i % 2 ? col : acc);
+    }
+    // 이젤 다리
+    pxDraw(cx - 2, cy + 10, 1, 8, dark);
+    pxDraw(cx + 1, cy + 10, 1, 8, dark);
+    // 물감 파티클
+    if (Math.random() < 0.5) spawnParticle(cx + rand(-w/2, w/2), cy + rand(-h/2, h/2), Math.random() < 0.5 ? col : acc, 0.5, 2, 20);
+  } else if (setting === 'chapel') {
+    // 십자가 + 아치 + 촛불
+    pxDraw(cx - 1, cy - h/2 + 6, 2, 20, col);
+    pxDraw(cx - 5, cy - h/2 + 12, 10, 2, col);
+    // 아치 (외곽)
+    for (let a = 0; a < Math.PI; a += 0.2) {
+      pxDraw(cx + Math.cos(a) * (w/2 - 6) - 0.5, cy - h/2 + 6 - Math.sin(a) * 8 - 0.5, 1, 1, dark);
+    }
+    // 광배
+    const glow = (Math.sin(t * 4) + 1) * 0.3 + 0.2;
+    ctx.fillStyle = 'rgba(255, 239, 168, ' + glow.toFixed(2) + ')';
+    ctx.fillRect((cx - 8) * PX, (cy - h/2 + 4) * PX, 16 * PX, 12 * PX);
+  } else if (setting === 'observatory') {
+    // 밤하늘 + 별 + 망원경
+    for (let i = 0; i < 20; i++) {
+      const sx = cx - w/2 + Math.random() * w;
+      const sy = cy - h/2 + Math.random() * (h - 10);
+      pxDraw(sx, sy, 1, 1, Math.random() < 0.5 ? col : '#ffefa8');
+    }
+    // 망원경 (기울어진 관)
+    pxDraw(cx - 8, cy + h/2 - 6, 16, 3, dark);
+    pxDraw(cx + 4, cy + h/2 - 12, 6, 6, dark);
+  } else if (setting === 'gym') {
+    // 트랙 라인 + 러너 실루엣
+    pxDraw(cx - w/2 + 4, cy + h/2 - 4, w - 8, 1, col);
+    for (let i = 0; i < 3; i++) pxDraw(cx - w/2 + 6 + i * (w/3), cy + h/2 - 8, 4, 4, dark);
+  } else if (setting === 'court') {
+    // 법정/이사회 - 사각 테이블 + 의자 + 판사석
+    pxDraw(cx - w/2 + 6, cy, w - 12, 4, dark);   // 테이블
+    for (let i = 0; i < 5; i++) {
+      pxDraw(cx - w/2 + 8 + i * (w/5), cy + 6, 3, 6, dark);   // 의자
+    }
+    pxDraw(cx - 4, cy - h/2 + 6, 8, 4, col);   // 판사봉/문양
+  } else if (setting === 'throne') {
+    // 옥좌 + 붉은 카펫 + 어두운 왕관
+    pxDraw(cx - 8, cy, 16, 14, dark);   // 옥좌
+    pxDraw(cx - 2, cy - 4, 4, 4, '#ff0060');   // 왕관 심장
+    pxDraw(cx - 6, cy - 8, 12, 2, dark);   // 왕관 밴드
+    pxDraw(cx - 5, cy - 10, 1, 2, dark);
+    pxDraw(cx, cy - 12, 1, 4, dark);
+    pxDraw(cx + 4, cy - 10, 1, 2, dark);
+    // 붉은 카펫
+    pxDraw(cx - w/2 + 4, cy + h/2 - 3, w - 8, 3, '#7a1010');
+  }
+
+  // 좌하단 시대 배경 안내 텍스트 (부제)
+  const settingLabel = (state.lang === 'en') ? _ERA_LABEL_EN[setting] : _ERA_LABEL_KO[setting];
+  if (settingLabel) drawText(settingLabel, cx - w/2 + 4, cy + h/2 - 8, '#8a7ab5');
+
+  // 교수 실루엣 (씬 중앙, 흔들림)
+  const swayX = Math.sin(t * 3) * 2;
+  const sil = _profPalette(def);
+  // 실루엣 톤 (더 어둡게)
+  const shadow = Object.assign({}, sil);
+  for (const k of Object.keys(shadow)) shadow[k] = _shade(sil[k], -60);
+  // 실루엣 백라이트
+  ctx.fillStyle = col + '55';
+  ctx.fillRect((cx - 8 + swayX) * PX, (cy - 12) * PX, 16 * PX, 16 * PX);
+  drawSprite(SPR_PLAYER_S1, shadow, cx - 6 + swayX, cy - 7);
+}
+
+const _ERA_LABEL_KO = {
+  library:'~ 도서관에서 ~', lab:'~ 실험실에서 ~', workshop:'~ 공방에서 ~',
+  studio:'~ 아틀리에에서 ~', chapel:'~ 예배당에서 ~', observatory:'~ 천문대에서 ~',
+  gym:'~ 훈련장에서 ~', court:'~ 이사회에서 ~', throne:'~ 총장실에서 ~',
+};
+const _ERA_LABEL_EN = {
+  library:'~ In the Library ~', lab:'~ In the Laboratory ~', workshop:'~ In the Workshop ~',
+  studio:'~ In the Atelier ~', chapel:'~ In the Chapel ~', observatory:'~ In the Observatory ~',
+  gym:'~ In the Training Hall ~', court:'~ In the Boardroom ~', throne:'~ In the Principal\'s Office ~',
+};
+
 // hex 색상을 약간 어둡게/밝게 조정 (팔레트용).
 function _shade(hex, amt) {
   const c = hex.replace('#','');
@@ -435,6 +590,35 @@ function _profExtraPattern(e) {
 function drawProfessor(e) {
   const def = e._profDef;
   const t = state.time;
+  // === 등장 서사 애니메이션 (프레임당 1회) ===
+  // 이 교수가 이 프레임의 첫 professor 이면 화면 전체 배경으로 시대 씬을 그린다.
+  if (e._profEntryT > 0 && e._profEntryTotal) {
+    const first = entities.enemies.find(x => x.isProfessor && x._profEntryT > 0);
+    if (first === e) {
+      const setting = PROF_ERA_SETTING[def.key] || 'library';
+      const p = 1 - (e._profEntryT / e._profEntryTotal);   // 0 → 1
+      // 화면 전체 커버 (방 크기 기준)
+      const rm = rooms[currentRoom] || { x: 0, y: 0, w: W, h: H };
+      _drawEraScene(setting, rm.x + rm.w/2, rm.y + rm.h/2, rm.w, rm.h - 20, p, def);
+      // 상단 헤더: 학과명 · 이름 (크게)
+      const headerY = rm.y + 6;
+      drawText(def.name + ' — ' + def.title, rm.x + rm.w/2 - textWidth(def.name + ' — ' + def.title)/2, headerY, def.color);
+      // 나레이션 - STORY_FRAGMENTS 의 라인을 phase 별로 순차 표시
+      const frag = (typeof _pickStoryLang === 'function') ? _pickStoryLang(def.key) : null;
+      if (frag && frag.lines && frag.lines.length) {
+        const lineCount = frag.lines.length;
+        const perLine = 1 / (lineCount + 0.4);
+        const idx = Math.min(lineCount - 1, Math.floor(p / perLine));
+        const line = frag.lines[idx];
+        const lineY = rm.y + rm.h - 26;
+        // 반투명 박스
+        const tw = textWidth(line);
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect((rm.x + rm.w/2 - tw/2 - 4) * PX, (lineY - 2) * PX, (tw + 8) * PX, 10 * PX);
+        drawText(line, rm.x + rm.w/2 - tw/2, lineY, '#e8d9b0');
+      }
+    }
+  }
   // 등장 애니메이션: 3단계 시네마틱 인트로
   //  A: 포털 오픈 (0~30% 진행) - 어두운 오버레이 + 확장 링 + 하강 광선
   //  B: 소환 (30~70%) - 스프라이트 페이드 인 + 회전 파티클 + 위로 튀는 광채
