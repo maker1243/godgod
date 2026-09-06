@@ -545,17 +545,17 @@ function spawnFacultyProfessors(room) {
 // === 교장 스폰 ===
 function spawnPrincipal(room) {
   const def = PRINCIPAL_DEF;
-  const HP = 75000000000;    // 75B - 교수의 5배 × 15배 상향
+  const HP = 2625000000000;    // 2.6T - 교장 × 35배 상향
   const boss = {
     x: room.x + room.w/2, y: room.y + 60, vx: 0, vy: 0,
     r: 15,
     kind: 'professor',
     hp: HP, maxHp: HP,
-    dmg: 3750, speed: 60, xp: 0, gold: 0,
+    dmg: 131250, speed: 60, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
     _isPrincipal: true,
-    baseDmg: 180, cdMult: 0.45, mods: { fire: 2, ice: 2, lmbCd: 0.4, lmbDmg: 2 },
+    baseDmg: 6300, cdMult: 0.45, mods: { fire: 2, ice: 2, lmbCd: 0.4, lmbDmg: 2 },
     slots: def.slots, cd: {},
     dmgReduction: 0.65, lifesteal: 0, thorns: 0, crit: 0.35, critMult: 3, mpCostMult: 0.25,
     perks: [], mp: 500, maxMp: 500, mpRegenBonus: 80,
@@ -599,10 +599,10 @@ function spawnFacultyProfessor(pos, def, fac, idx) {
     r: 11,
     kind: 'professor',
     hp: HP, maxHp: HP,
-    dmg: 1500, speed: 50, xp: 0, gold: 0,
+    dmg: 52500, speed: 50, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
-    baseDmg: 75, cdMult: 0.65, mods: { fire:1.4, ice:1.4, lmbCd:0.65, lmbDmg:1.4 },
+    baseDmg: 2625, cdMult: 0.65, mods: { fire:1.4, ice:1.4, lmbCd:0.65, lmbDmg:1.4 },
     slots: def.slots, cd: {},
     dmgReduction: 0.55, lifesteal: 0, thorns: 0, crit: 0.15, critMult: 2.5, mpCostMult: 0.5,
     perks: [], mp: 300, maxMp: 300, mpRegenBonus: 45,

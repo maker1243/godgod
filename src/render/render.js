@@ -29,6 +29,7 @@ function render() {
     case 'codex':     renderCodex(); break;
     case 'facultyLobby': renderFacultyLobby(); break;
     case 'academyTruth': renderAcademyTruth(); break;
+    case 'training':     renderTraining(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -214,9 +215,9 @@ function renderAcademy() {
     }
   }
 
-  // 문 9개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
-  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor];
-  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff'];
+  // 문 10개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
+  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor];
+  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
     if (d.hidden) continue;   // 완전히 숨겨진 문은 렌더/상호작용 제외
@@ -309,6 +310,28 @@ function renderAcademyHUD() {
 
   // 하단 힌트
   drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX  [H] HELP', 4, H - 10, '#5a4a80');
+  // 로비 프리센스: 같은 난이도 사람 수 + coop 초대 활성 표시
+  if (typeof mp !== 'undefined' && mp && mp.connected && mp.roomCode) {
+    const diff = state.difficulty || 'normal';
+    let sameDiff = 0, otherAcademy = 0;
+    for (const pid of Object.keys(mp.presence || {})) {
+      const pr = mp.presence[pid];
+      if (pr.scene === 'academy') otherAcademy++;
+      if (pr.difficulty === diff) sameDiff++;
+    }
+    const s = 'LOBBY: ' + otherAcademy + '명 · 같은 난이도 ' + sameDiff + '명';
+    drawText(s, 4, 22, '#8bd8ff');
+    // coop 초대가 있으면
+    const invIds = Object.keys(mp.coop.invites || {});
+    if (invIds.length) {
+      const inv = mp.coop.invites[invIds[0]];
+      const rem = Math.max(0, 5 - (performance.now() - inv.ts) / 1000);
+      drawText('COOP 초대: ' + inv.mode + '/' + inv.difficulty + '  ' + rem.toFixed(1) + 's', 4, 30, '#ffefa8');
+    }
+    if (mp.coop && mp.coop.active && mp.coop.partner) {
+      drawText('★ COOP: ' + mp.coop.partner.name, W - textWidth('★ COOP: ' + mp.coop.partner.name) - 4, 22, '#3ac762');
+    }
+  }
   // 좌상단 [?] 버튼 (도움말)
   const helpBtn = { x: W - 18, y: 14, w: 14, h: 10 };
   pxDraw(helpBtn.x, helpBtn.y, helpBtn.w, helpBtn.h, '#1a0e2e');

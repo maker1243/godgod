@@ -42,6 +42,7 @@ function update(dt) {
     case 'codex':     updateCodex(dt); break;
     case 'facultyLobby': updateFacultyLobby(dt); break;
     case 'academyTruth': updateAcademyTruth(dt); break;
+    case 'training':     updateTraining(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -137,6 +138,7 @@ const academy = {
   infernoDoor:{x: 204, y: 152, w: 12, h: 18, kind: 'inferno',   label: 'INFERNO'  },
   cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER',    hidden:true },
   profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
+  trainDoor: { x: 160, y: 95,  w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -235,6 +237,24 @@ function updateAcademy(dt) {
   }
   // 스토리 조각 대사 패널 카운트다운
   if (typeof updateStoryPanel === 'function') updateStoryPanel(dt);
+
+  // === Coop 프리센스: 3초마다 방송 (mp 서버에 접속됐을 때만) ===
+  if (typeof mp !== 'undefined' && mp && mp.connected && mp.roomCode) {
+    const now = performance.now();
+    if (!mp.lastPresenceSent || now - mp.lastPresenceSent > 3000) {
+      mp.lastPresenceSent = now;
+      const name = (state.account && state.account.name) || mp.playerName || 'PLAYER';
+      mpSend({ type:'presence', name, scene:'academy', difficulty: state.difficulty || 'normal' });
+    }
+    // 오래된 프리센스 정리 (10초 이상)
+    for (const pid of Object.keys(mp.presence || {})) {
+      if (now - mp.presence[pid].ts > 10000) delete mp.presence[pid];
+    }
+    // 오래된 coop invite 정리 (5초 이상)
+    for (const pid of Object.keys(mp.coop.invites || {})) {
+      if (now - mp.coop.invites[pid].ts > 5000) delete mp.coop.invites[pid];
+    }
+  }
   // X 키 → 도감 씬 진입 (팝업/피커가 열려있지 않을 때만)
   if (keys['KeyX'] && !window._diffPickerOpen && !(typeof cipherQuest !== 'undefined' && cipherQuest.active)) {
     keys['KeyX'] = false;
@@ -361,7 +381,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -383,12 +403,39 @@ function updateAcademy(dt) {
           sfx('hurt'); return;
         }
         sfx('door');
+        // === COOP 매칭: 던전류 문 진입 시 최근 5초 이내 같은 mode+diff invite 가 있으면 함께 ===
+        const coopMode =
+          d.kind === 'dungeon' ? 'normal' :
+          d.kind === 'extra'   ? 'extra'  :
+          d.kind === 'extreme' ? 'extreme':
+          d.kind === 'inferno' ? 'inferno': null;
+        if (coopMode && typeof mp !== 'undefined' && mp.connected && mp.roomCode) {
+          const diff = state.difficulty || 'normal';
+          const now = performance.now();
+          let match = null;
+          for (const pid of Object.keys(mp.coop.invites || {})) {
+            const inv = mp.coop.invites[pid];
+            if (inv.mode === coopMode && inv.difficulty === diff && (now - inv.ts) < 5000) { match = pid; break; }
+          }
+          if (match) {
+            mp.coop.active = true;
+            mp.coop.partner = { id: match, name: (mp.peers.get(match) && mp.peers.get(match).name) || 'PARTNER' };
+            mpSend({ type:'coopStart', name: (state.account && state.account.name) || mp.playerName || 'PLAYER' });
+            delete mp.coop.invites[match];
+            if (typeof showMsg === 'function') showMsg('COOP: ' + mp.coop.partner.name + '와 함께 진입!', 4);
+          } else {
+            // 나도 초대 방송
+            const nm = (state.account && state.account.name) || mp.playerName || 'PLAYER';
+            mpSend({ type:'coopInvite', name: nm, mode: coopMode, difficulty: diff });
+          }
+        }
         if (d.kind === 'dungeon')      { state.dungeonMode = 'normal';  goTo('dungeon'); }
         else if (d.kind === 'extra')   { state.dungeonMode = 'extra';   goTo('dungeon'); }
         else if (d.kind === 'extreme') { state.dungeonMode = 'extreme'; goTo('dungeon'); }
         else if (d.kind === 'inferno') { state.dungeonMode = 'inferno'; goTo('dungeon'); }
         else if (d.kind === 'professor'){ goTo('facultyLobby'); }
         else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
+        else if (d.kind === 'training')  { goTo('training'); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
         else if (d.kind === 'arena')     goTo('arena');

@@ -4,7 +4,7 @@
 // 등장 모션(투명→불투명 + 링 이펙트) / 사망 모션(폭발 파티클 + 페이드아웃).
 // =====================================================================
 
-const PROFESSOR_HP = 15000000000;       // 15B (기존 1B → 15배)
+const PROFESSOR_HP = 525000000000;      // 525B (기존 15B → 35배)
 
 // =====================================================================
 // 교수 등장 서사 애니메이션 — 각 교수가 살았던 시대의 짧은 실루엣 씬.
@@ -254,10 +254,10 @@ function spawnProfessor(room, roomIndex) {
     r: 12,
     kind: 'professor',
     hp: PROFESSOR_HP, maxHp: PROFESSOR_HP,
-    dmg: 1800, speed: 55, xp: 0, gold: 0,
+    dmg: 63000, speed: 55, xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true, isProfessor: true,
-    baseDmg: 90, cdMult: 0.6, mods: { fire:1.5, ice:1.5, lmbCd:0.6, lmbDmg:1.5 },
+    baseDmg: 3150, cdMult: 0.6, mods: { fire:1.5, ice:1.5, lmbCd:0.6, lmbDmg:1.5 },
     slots: def.slots, cd: {},
     dmgReduction: 0.55, lifesteal: 0, thorns: 0, crit: 0.2, critMult: 2.5, mpCostMult: 0.5,
     perks: [], mp: 300, maxMp: 300, mpRegenBonus: 50,
@@ -411,7 +411,7 @@ function updateProfessor(e, dt, sm) {
           entities.ebullets.push({
             x: b.x, y: b.y, vx: b.vx, vy: b.vy,
             r: b.r,
-            dmg: Math.min(6000, Math.max(500, Math.floor((b.dmg || 10) * 0.15))),
+            dmg: Math.min(210000, Math.max(17500, Math.floor((b.dmg || 10) * 5.25))),
             life: b.life, kind: b.kind,
             visual: (e._profDef && e._profDef.visual) || b.visual || null,
           });
@@ -438,7 +438,7 @@ function updateProfessor(e, dt, sm) {
 function _profSignatureCast(e, sig, ang) {
   const vis = (e._profDef && e._profDef.visual) || null;
   const col = (e._profDef && e._profDef.color) || '#ffefa8';
-  const dmg = 750 + Math.floor(Math.random() * 450);
+  const dmg = 26250 + Math.floor(Math.random() * 15750);
   const push = (opts) => entities.ebullets.push(Object.assign({
     x: e.x, y: e.y, r: 3, dmg, life: 3, kind: 'fire', visual: vis
   }, opts));
@@ -554,7 +554,7 @@ function _profSignatureCast(e, sig, ang) {
 function _profExtraPattern(e) {
   const sig = (e._profDef && e._profDef.signature) || null;
   const vis = (e._profDef && e._profDef.visual) || null;
-  const dmg = 300 + Math.floor(Math.random() * 200);
+  const dmg = 10500 + Math.floor(Math.random() * 7000);
   const ang = angleTo(e, player);
   const rand = Math.random();
   const push = (opts) => entities.ebullets.push(Object.assign({

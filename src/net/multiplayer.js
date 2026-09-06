@@ -73,6 +73,17 @@ const mp = {
     myRoundResult: null,    // 'win' | 'lose' | null
     postRoundT: 0,          // 라운드 종료 후 대기
   },
+  // === Coop 프리센스 ===
+  // presence[peerId] = { name, scene, difficulty, ts }  — 다른 플레이어의 현재 상태 스냅샷.
+  presence: {},
+  lastPresenceSent: 0,
+  // coop 초대: 최근 5초 이내에 같은 mode+difficulty 로 던전 진입한 다른 플레이어가 있으면 자동 매칭.
+  coop: {
+    active: false,
+    partner: null,    // { id, name }
+    invites: {},      // invites[peerId] = { mode, difficulty, ts }
+    lastInviteMs: 0,
+  },
 };
 
 // Try to remember prefs
@@ -227,6 +238,18 @@ function mpHandleMessage(m) {
         sfx(m.kind === 'ice' ? 'ice' : 'fire');
       }
     }
+  } else if (m.type === 'presence') {
+    // 다른 플레이어의 현재 상태 (아카데미/난이도 등)
+    mp.presence[m.id] = { name: m.name || 'PLAYER', scene: m.scene || '?', difficulty: m.difficulty || 'normal', ts: performance.now() };
+  } else if (m.type === 'coopInvite') {
+    // 같은 mode+difficulty 로 던전 진입 - 5초 안에 나도 같은 조건이면 함께 진입
+    mp.coop.invites[m.id] = { mode: m.mode, difficulty: m.difficulty, ts: performance.now() };
+    if (typeof showMsg === 'function') showMsg('coop 초대: ' + (m.name || 'PLAYER') + ' (' + m.difficulty + ')  5초 안에 같은 문으로!', 4);
+  } else if (m.type === 'coopStart') {
+    // 상대가 coop 매칭 성공 알림 → 나도 coop 활성
+    mp.coop.active = true;
+    mp.coop.partner = { id: m.id, name: m.name || 'PARTNER' };
+    if (typeof showMsg === 'function') showMsg('COOP 매칭: ' + (m.name || 'PARTNER') + '와 함께!', 4);
   } else if (m.type === 'pvpHit') {
     // 상대가 "너 맞았어(id=X, dmg=D)" 통지. 대상이 나면 자기 HP 감소.
     // (권위 위임 - 사수(shooter) 가 본 히트를 신뢰. anti-cheat 은 프로토타입 밖의 문제.)
