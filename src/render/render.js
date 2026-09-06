@@ -28,6 +28,7 @@ function render() {
     case 'library':   renderLibrary(); break;
     case 'codex':     renderCodex(); break;
     case 'facultyLobby': renderFacultyLobby(); break;
+    case 'academyTruth': renderAcademyTruth(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -306,7 +307,20 @@ function renderAcademyHUD() {
   }
 
   // 하단 힌트
-  drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX', 4, H - 10, '#5a4a80');
+  drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX  [H] HELP', 4, H - 10, '#5a4a80');
+  // 좌상단 [?] 버튼 (도움말)
+  const helpBtn = { x: W - 18, y: 14, w: 14, h: 10 };
+  pxDraw(helpBtn.x, helpBtn.y, helpBtn.w, helpBtn.h, '#1a0e2e');
+  pxDraw(helpBtn.x, helpBtn.y, helpBtn.w, 1, '#ffefa8');
+  pxDraw(helpBtn.x, helpBtn.y + helpBtn.h - 1, helpBtn.w, 1, '#ffefa8');
+  pxDraw(helpBtn.x, helpBtn.y, 1, helpBtn.h, '#ffefa8');
+  pxDraw(helpBtn.x + helpBtn.w - 1, helpBtn.y, 1, helpBtn.h, '#ffefa8');
+  drawText('?', helpBtn.x + helpBtn.w/2 - 2, helpBtn.y + 2, '#ffefa8');
+  window._academyHelpBtn = helpBtn;
+  // 스토리 조각 패널
+  if (typeof renderStoryPanel === 'function') renderStoryPanel();
+  // 튜토리얼 오버레이 (마지막에 그려서 최상위)
+  if (typeof renderOnboarding === 'function') renderOnboarding();
 
   // 난이도 배너 (중앙 상단, 탭/클릭 시 사이클) - updateAcademy 가 히트 판정에 사용
   if (typeof currentDifficulty === 'function') {

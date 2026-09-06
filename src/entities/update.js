@@ -41,6 +41,7 @@ function update(dt) {
     case 'library':   updateLibrary(dt); break;
     case 'codex':     updateCodex(dt); break;
     case 'facultyLobby': updateFacultyLobby(dt); break;
+    case 'academyTruth': updateAcademyTruth(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -175,6 +176,29 @@ if (state.account) {
 }
 
 function updateAcademy(dt) {
+  // 첫 진입 시 튜토리얼 자동 표시
+  if (typeof onboarding !== 'undefined' && !state.tutorialSeen && !onboarding.active) {
+    onboarding.active = true;
+    onboarding.page = 0;
+  }
+  // 튜토리얼 오버레이가 활성이면 다른 조작 잠금
+  if (typeof updateOnboarding === 'function' && updateOnboarding(dt)) return;
+  // H 키 → 튜토리얼 열기 (또는 좌상단 [?] 버튼 클릭)
+  if (keys['KeyH']) {
+    keys['KeyH'] = false;
+    if (typeof toggleOnboarding === 'function') toggleOnboarding();
+    return;
+  }
+  if (mouse.down && window._academyHelpBtn) {
+    const b = window._academyHelpBtn;
+    if (mouse.x >= b.x && mouse.x <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) {
+      mouse.down = false;
+      if (typeof toggleOnboarding === 'function') toggleOnboarding();
+      return;
+    }
+  }
+  // 스토리 조각 대사 패널 카운트다운
+  if (typeof updateStoryPanel === 'function') updateStoryPanel(dt);
   // X 키 → 도감 씬 진입 (팝업/피커가 열려있지 않을 때만)
   if (keys['KeyX'] && !window._diffPickerOpen && !(typeof cipherQuest !== 'undefined' && cipherQuest.active)) {
     keys['KeyX'] = false;
@@ -410,6 +434,8 @@ function updateDungeon(dt) {
             state.principalDefeated = (state.principalDefeated || 0) + 1;
             state.research += 20000;
             state.gold += 5000;
+            if (typeof statAdd === 'function') { statAdd('principalKills', 1); statAdd('rpEarnedTotal', 20000); statAdd('goldEarnedTotal', 5000); }
+            if (typeof unlockStoryFragment === 'function') unlockStoryFragment('principal');
             showMsg('교장 격파! 아카데미의 진실이 밝혀졌습니다.', 5);
           } else if (facKey) {
             state.facultyCleared = state.facultyCleared || {};
@@ -418,7 +444,10 @@ function updateDungeon(dt) {
             showMsg(facName + ' 교수진 전원 격파!', 4);
             state.research += 1500;
             state.gold += 500;
+            if (typeof statAdd === 'function') { statAdd('rpEarnedTotal', 1500); statAdd('goldEarnedTotal', 500); }
           }
+          if (typeof checkAchievements === 'function') checkAchievements();
+          if (typeof checkDailies === 'function') checkDailies();
           if (typeof saveAccountData === 'function') saveAccountData();
           setTimeout(() => {
             state.dungeonMode = 'normal';
@@ -435,15 +464,19 @@ function updateDungeon(dt) {
             state.ultraCleared = state.ultraCleared || {};
             state.ultraCleared[cat] = true;
             state.ultraTrialBanUntil = 0;
+            if (typeof statAdd === 'function') statAdd('ultraTrialWins', 1);
             showMsg(cat.toUpperCase() + ' ULTRA 스킬 해금!', 4);
           } else {
             state.trialCleared = state.trialCleared || {};
             state.trialCleared[cat] = true;
             state.maxUnlocked = true;
             state.trialBanUntil = 0;
+            if (typeof statAdd === 'function') statAdd('trialWins', 1);
             showMsg(cat.toUpperCase() + ' MAX 해금!', 4);
           }
           state.trialStage = 1;
+          if (typeof checkAchievements === 'function') checkAchievements();
+          if (typeof checkDailies === 'function') checkDailies();
           if (typeof saveAccountData === 'function') saveAccountData();
           setTimeout(() => { state.dungeonMode = 'normal'; goTo('academy'); }, 1500);
           return;
@@ -460,6 +493,13 @@ function updateDungeon(dt) {
           saveAccountData();
         }
         state.runResult = 'final';
+        if (typeof statAdd === 'function') statAdd('dungeonsCleared', 1);
+        if (typeof currentDifficulty === 'function') {
+          const idx = DIFFICULTY_TIERS.findIndex(t => t.id === (state.difficulty || 'normal'));
+          if (typeof statMax === 'function') statMax('maxTierBeaten', idx);
+        }
+        if (typeof checkAchievements === 'function') checkAchievements();
+        if (typeof checkDailies === 'function') checkDailies();
         setTimeout(() => goTo('ending'), 1200);
         return;
       }

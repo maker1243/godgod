@@ -13,11 +13,14 @@ const codex = {
 };
 
 const CODEX_TABS = [
-  { id:'perks',   name:'PERKS'      },
-  { id:'skills',  name:'SKILLS'     },
-  { id:'tiers',   name:'DIFFICULTY' },
-  { id:'trials',  name:'TRIALS'     },
-  { id:'visuals', name:'VISUALS'    },
+  { id:'perks',    name:'PERKS'      },
+  { id:'skills',   name:'SKILLS'     },
+  { id:'tiers',    name:'DIFFICULTY' },
+  { id:'trials',   name:'TRIALS'     },
+  { id:'visuals',  name:'VISUALS'    },
+  { id:'achieve',  name:'ACHIEVE'    },
+  { id:'daily',    name:'DAILY'      },
+  { id:'story',    name:'STORY'      },
 ];
 
 function codexSetTab(id) {
@@ -81,6 +84,55 @@ function codexEntries() {
         out.push({ title: n, sub, color: '#8bd8ff', isVisual: true, visualName: n });
       }
     }
+  } else if (codex.tab === 'achieve') {
+    if (typeof ACHIEVEMENTS !== 'undefined') {
+      state.achievementsUnlocked = state.achievementsUnlocked || {};
+      let done = 0;
+      for (const a of ACHIEVEMENTS) {
+        const unlocked = !!state.achievementsUnlocked[a.id];
+        if (unlocked) done++;
+        out.push({
+          title: (unlocked ? '★ ' : '☆ ') + a.name,
+          sub: a.desc + '   (보상 +' + (a.rewardRp || 0) + ' RP)',
+          color: unlocked ? '#3ac762' : '#8a7ab5',
+        });
+      }
+      out.unshift({ title: '진행: ' + done + ' / ' + ACHIEVEMENTS.length, sub: '별 표시된 업적은 이미 달성.', color: '#ffefa8' });
+    }
+  } else if (codex.tab === 'daily') {
+    if (typeof todaysDailies === 'function') {
+      const today = todaysDailies();
+      const key = dailyDateKey();
+      const day = (state.dailyDone && state.dailyDone[key]) || {};
+      out.push({ title: '오늘의 도전 (' + key + ')', sub: '자정에 갱신 · 3개 랜덤 · 완료 시 RP 보상.', color: '#ffefa8' });
+      for (const d of today) {
+        const prog = dailyProgress(d);
+        const done = !!day[d.id];
+        const pct = Math.min(100, Math.floor(prog * 100 / d.goal));
+        out.push({
+          title: (done ? '★ ' : '☆ ') + d.name + '  ' + Math.min(prog, d.goal) + ' / ' + d.goal + '  (' + pct + '%)',
+          sub: d.desc + '   보상 +' + d.rewardRp + ' RP',
+          color: done ? '#3ac762' : '#e8d9b0',
+        });
+      }
+    }
+  } else if (codex.tab === 'story') {
+    if (typeof STORY_FRAGMENTS !== 'undefined') {
+      state.storyFragments = state.storyFragments || {};
+      const keys = Object.keys(STORY_FRAGMENTS);
+      let owned = 0;
+      for (const k of keys) if (state.storyFragments[k]) owned++;
+      out.push({ title: '이야기 조각: ' + owned + ' / ' + keys.length + (state.academyTruthSeen ? '  [진실 목격]' : ''), sub: '조각을 모으면 아카데미의 진실이 밝혀집니다.', color: '#ffefa8' });
+      for (const k of keys) {
+        const frag = STORY_FRAGMENTS[k];
+        const has = !!state.storyFragments[k];
+        out.push({
+          title: (has ? '📖 ' : '🔒 ') + frag.title,
+          sub: has ? frag.lines[0] : '???',
+          color: has ? '#c8b898' : '#5a4a80',
+        });
+      }
+    }
   } else if (codex.tab === 'trials') {
     if (typeof TRIAL_BOSS_DEFS !== 'undefined') {
       for (const cat of Object.keys(TRIAL_BOSS_DEFS)) {
@@ -121,6 +173,9 @@ function updateCodex(dt) {
   if (keys['Digit3']) { keys['Digit3']=false; codexSetTab('tiers');  sfx('hit'); }
   if (keys['Digit4']) { keys['Digit4']=false; codexSetTab('trials'); sfx('hit'); }
   if (keys['Digit5']) { keys['Digit5']=false; codexSetTab('visuals'); sfx('hit'); }
+  if (keys['Digit6']) { keys['Digit6']=false; codexSetTab('achieve'); sfx('hit'); }
+  if (keys['Digit7']) { keys['Digit7']=false; codexSetTab('daily');   sfx('hit'); }
+  if (keys['Digit8']) { keys['Digit8']=false; codexSetTab('story');   sfx('hit'); }
   if (keys['Tab'])    { keys['Tab']=false; const idx = CODEX_TABS.findIndex(t => t.id === codex.tab); codexSetTab(CODEX_TABS[(idx+1) % CODEX_TABS.length].id); sfx('hit'); }
   // 커서/스크롤
   if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; codex.cursor = Math.max(0, codex.cursor - 1); }
@@ -170,7 +225,7 @@ function renderCodex() {
   drawText('[TAB] SWITCH  [1-4] TAB  [R/ESC/X] BACK', W - textWidth('[TAB] SWITCH  [1-4] TAB  [R/ESC/X] BACK') - 4, 3, '#8a7ab5');
 
   // 탭 4개
-  const tabW = 60, tabY = 14, tabH = 10;
+  const tabW = 38, tabY = 14, tabH = 10;
   window._codexTabRects = [];
   for (let i = 0; i < CODEX_TABS.length; i++) {
     const t = CODEX_TABS[i];

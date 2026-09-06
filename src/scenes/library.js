@@ -207,6 +207,9 @@ function updateLibrary(dt) {
     if (state.research < s.cost) { libFlash('NEED ' + s.cost + ' RESEARCH'); sfx('hurt'); return; }
     state.research -= s.cost;
     state.ownedSkills[s.id] = lv + 1;
+    if (typeof statAdd === 'function') statAdd('skillsBought', 1);
+    if (typeof checkAchievements === 'function') checkAchievements();
+    if (typeof checkDailies === 'function') checkDailies();
     libFlash('LEARNED ' + s.name + (maxLv > 1 ? ' LV ' + (lv + 1) : ''));
     // 액티브 스킬이면 자동 장착
     if (s.slot !== 'passive' && !state.equippedSlots[s.slot]) {

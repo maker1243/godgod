@@ -106,6 +106,9 @@ function _cipherFinish(correct) {
   if (correct) {
     state.research = (state.research || 0) + cipherQuest.rewardRp;
     state.cipherSolvedCount = (state.cipherSolvedCount || 0) + 1;
+    if (typeof statAdd === 'function') { statAdd('ciphersSolved', 1); statAdd('rpEarnedTotal', cipherQuest.rewardRp); }
+    if (typeof checkAchievements === 'function') checkAchievements();
+    if (typeof checkDailies === 'function') checkDailies();
     cipherQuest.message = 'CORRECT! +' + cipherQuest.rewardRp + ' RP  (PROF DOOR UNLOCKED)';
     if (typeof sfx === 'function') sfx('level');
     if (typeof spawnFloat === 'function' && player) spawnFloat(player.x, player.y - 10, '+' + cipherQuest.rewardRp + ' RP', '#8bd8ff');

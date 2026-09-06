@@ -26,10 +26,14 @@ function updateEnemies(dt) {
       updateProfessor(e, dt, speedMod);
       if (e._profDeathT > 0) continue;
       if (e.hp <= 0 && e._profDeathT <= 0 && e._profEntryT <= 0) {
-        // 교수 처치 기록 + 관련 스킬 잠금 해제
+        // 교수 처치 기록 + 관련 스킬 잠금 해제 + 스토리 조각 + 통계
         if (e._profDef && e._profDef.key) {
           state.professorsBeaten = state.professorsBeaten || {};
           state.professorsBeaten[e._profDef.key] = (state.professorsBeaten[e._profDef.key] || 0) + 1;
+          if (typeof statAdd === 'function') statAdd('profsBeaten', 1);
+          if (typeof unlockStoryFragment === 'function') unlockStoryFragment(e._profDef.key);
+          if (typeof checkAchievements === 'function') checkAchievements();
+          if (typeof checkDailies === 'function') checkDailies();
           // rewardSkills: 각 스킬을 maxLv 로 즉시 소유 (이미 max 면 스킵)
           const rewards = e._profDef.rewardSkills || [];
           let unlockedNames = [];
@@ -774,6 +778,11 @@ function damagePlayer(amt, source) {
 }
 
 function onEnemyDeath(e) {
+  // 업적/일일 통계
+  if (typeof statAdd === 'function') {
+    statAdd('totalKills', 1);
+    if (e.isBoss) statAdd('bossKills', 1);
+  }
   spawnParticle(e.x, e.y, e.kind === 'slime' ? '#3ac762' : '#e8dcb0', 0.5, 14, 70);
   const isExtreme = state.dungeonMode === 'extreme';
   if (isExtreme) {

@@ -102,7 +102,7 @@ function updateBullets(dt) {
 
     // 크리티컬
     let isCrit = false;
-    if ((player.crit || 0) > Math.random()) { dmgMult *= (player.critMult || 2); isCrit = true; }
+    if ((player.crit || 0) > Math.random()) { dmgMult *= (player.critMult || 2); isCrit = true; if (typeof statAdd === 'function') statAdd('critHits', 1); }
 
     // 카테고리별 배율 (fire/ice)
     if (b.kind === 'fire' && player.mods.fire) dmgMult *= player.mods.fire;
