@@ -239,19 +239,26 @@ function updateFacultyLobby(dt) {
       return;
     }
     const key = FACULTY_KEYS[facultyLobby.cursor];
-    // 이미 이 계열을 클리어했다면 → 사기 스킬 4개 보상 팝업 열기
-    if (state.facultyCleared && state.facultyCleared[key] > 0 && typeof FACULTY_REWARD_SKILLS !== 'undefined' && FACULTY_REWARD_SKILLS[key]) {
-      facultyLobby.rewardPopup = { facKey: key, cursor: 0 };
-      if (typeof showMsg === 'function') showMsg(FACULTY_PROFESSORS[key].name + ' 보상 열람', 2);
-      sfx('door');
-      return;
-    }
-    // 아직 클리어 안 됨 → 시련 진입
+    // SPACE 는 항상 시련 시작 (통과했어도 재도전 가능). 보상 팝업은 F 로 별도.
     state.facultyKey = key;
     state.dungeonMode = 'professor';
     if (typeof showMsg === 'function') showMsg(FACULTY_PROFESSORS[key].name + ' 시련 시작!', 3);
     sfx('boss');
     goTo('dungeon');
+    return;
+  }
+  // F 키: 이 계열 이미 클리어했으면 사기 스킬 보상 팝업 열기
+  if (keys['KeyF']) {
+    keys['KeyF'] = false;
+    const key = FACULTY_KEYS[facultyLobby.cursor];
+    if (state.facultyCleared && state.facultyCleared[key] > 0 && typeof FACULTY_REWARD_SKILLS !== 'undefined' && FACULTY_REWARD_SKILLS[key]) {
+      facultyLobby.rewardPopup = { facKey: key, cursor: 0 };
+      if (typeof showMsg === 'function') showMsg(FACULTY_PROFESSORS[key].name + ' 보상 열람', 2);
+      sfx('door');
+    } else {
+      if (typeof showMsg === 'function') showMsg('먼저 이 계열의 시련을 통과해야 합니다', 2);
+      sfx('hurt');
+    }
     return;
   }
   // R/ESC → 아카데미로 복귀
@@ -355,6 +362,10 @@ function renderFacultyLobby() {
     // 내부 도트 (교수 2명 표시)
     pxDraw(nx - 4, ny - 2, 3, 4, fac.color);
     pxDraw(nx + 1, ny - 2, 3, 4, fac.color);
+    // 클리어 상태: 노드 위에 ★ 표시
+    if (state.facultyCleared && state.facultyCleared[key] > 0) {
+      drawText('★', nx - 2, ny - 12, '#ffefa8');
+    }
     // 계열 이름 (원형 배치 - 각도에 따라 라벨 위치)
     const labelDist = 22;
     const lx = nx + Math.cos(a) * labelDist;
@@ -376,7 +387,7 @@ function renderFacultyLobby() {
   drawText(pList, 8, py + 10, '#e8d9b0');
 
   // 안내
-  drawText('WASD/화살표 SELECT   SPACE 시련/보상   R/ESC BACK', W/2 - textWidth('WASD/화살표 SELECT   SPACE 시련/보상   R/ESC BACK')/2, H - 2, '#8a7ab5');
+  drawText('WASD/화살표 SELECT  SPACE 시련  F 보상  R/ESC BACK', W/2 - textWidth('WASD/화살표 SELECT  SPACE 시련  F 보상  R/ESC BACK')/2, H - 2, '#8a7ab5');
 
   // 보상 팝업이 열려있으면 위에 오버레이
   if (facultyLobby.rewardPopup) _renderRewardPopup();
