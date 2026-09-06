@@ -113,7 +113,19 @@ function updateBullets(dt) {
       if (dist(b, e) < b.r + e.r) {
         let finalDmg = b.dmg * dmgMult;
         if (e._dmgRed) finalDmg *= (1 - Math.min(0.9, e._dmgRed));
+        // 축복: Hex mark (첫 히트 표식, 이후 히트 x2)
+        if (b._hex) {
+          if (e._hexed) finalDmg *= 2;
+          else e._hexed = true;
+        }
         e.hp -= finalDmg;
+        // 축복: Execute (특정 HP 이하 즉사)
+        if (b._execute && e.hp > 0 && e.maxHp && (e.hp / e.maxHp) < b._execute) {
+          e.hp = 0;
+          spawnFloat(e.x, e.y - 12, 'EXECUTE!', '#ff2d80');
+        }
+        // 축복: Burn (초당 데미지 인플릭트)
+        if (b._burn) { e._burn = Math.max(e._burn||0, b._burn); e._burnDmg = finalDmg * 0.15; }
         // 코업 게스트: 실제 데미지는 호스트가 처리. mobHit 로 통지.
         if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && !mp.coop.isHost && e._syncId != null) {
           if (typeof mpSend === 'function') mpSend({ type:'mobHit', i: e._syncId, dmg: finalDmg });
@@ -178,7 +190,8 @@ function updateBullets(dt) {
 
         b.hits++;
         const canPierce = b.pierce || hasPerk('lmbpierce');
-        if (canPierce && b.hits < 3) continue;
+        const pierceMax = (b._pierceLeft ? Math.max(3, b._pierceLeft + 1) : 3);
+        if (canPierce && b.hits < pierceMax) continue;
         b.life = 0;
         break;
       }

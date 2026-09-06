@@ -191,6 +191,14 @@ function updateFacultyLobby(dt) {
   facultyLobby.hoverT += dt;
   const n = FACULTY_KEYS.length;
 
+  // === 교수 후일담 팝업 활성 시 나머지 잠금 ===
+  if (typeof updateProfAftermath === 'function' && updateProfAftermath(dt)) return;
+  // 첫 진입 시 대기 중인 후일담 있으면 자동 활성
+  if (typeof checkProfessorAftermath === 'function' && !facultyLobby._aftermathChecked) {
+    facultyLobby._aftermathChecked = true;
+    if (checkProfessorAftermath()) return;
+  }
+
   // === 보상 팝업 활성 시: 팝업 내 조작만 처리하고 나머지 잠금 ===
   if (facultyLobby.rewardPopup) {
     _updateRewardPopup(dt);
@@ -391,6 +399,8 @@ function renderFacultyLobby() {
 
   // 보상 팝업이 열려있으면 위에 오버레이
   if (facultyLobby.rewardPopup) _renderRewardPopup();
+  // 교수 후일담 오버레이 (최상위)
+  if (typeof renderProfAftermath === 'function') renderProfAftermath();
 }
 
 // === 사기 스킬 보상 팝업 ===

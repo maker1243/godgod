@@ -231,6 +231,23 @@ function drawEnemy(e) {
     ctx.arc(e.x*PX, e.y*PX, (e.r + 3)*PX, 0, Math.PI*2);
     ctx.stroke();
   }
+  // 접두 - 색상 링 + 이름표
+  if (e.affix) {
+    const t2 = state.time * 4;
+    const glow2 = 0.4 + Math.sin(t2 + e.x * 0.1) * 0.3;
+    const col = e.affixColor || '#ffffff';
+    // rgba conv
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = glow2;
+    ctx.lineWidth = PX;
+    ctx.beginPath();
+    ctx.arc(e.x*PX, e.y*PX, (e.r + 5)*PX, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (e.affixName && !e.isBoss) {
+      drawText(e.affixName, e.x - textWidth(e.affixName)/2, e.y - e.r - 12, col);
+    }
+  }
 
   if (e.hitFlash > 0) {
     // 화이트 아웃
@@ -511,6 +528,17 @@ function renderDungeonHUD() {
   drawText('LV ' + player.level, 150, 3, '#ffefa8');
   pxDraw(150, 10, 60, 4, '#2a1548');
   pxDraw(150, 10, 60 * (player.xp / player.xpNext), 4, '#e8c547');
+  // 축복 리스트 (좌하단)
+  if (player && player.blessings && player.blessings.length && typeof BLESSING_BY_ID !== 'undefined') {
+    const list = player.blessings.slice(-6);
+    let bx = 4;
+    for (const id of list) {
+      const b = BLESSING_BY_ID[id]; if (!b) continue;
+      pxDraw(bx, H - 8, 8, 4, b.color);
+      bx += 10;
+    }
+    drawText('BLESS ' + player.blessings.length, 4, H - 16, '#8bd8ff');
+  }
 
   // 우측: 층/방 이름 + 골드 + 적 수
   const fd = currentFloorData();

@@ -31,6 +31,9 @@ function render() {
     case 'academyTruth': renderAcademyTruth(); break;
     case 'training':     renderTraining(); break;
     case 'legacyLobby':  renderLegacyLobby(); break;
+    case 'customize':    renderCustomize(); break;
+    case 'blessingPick': renderBlessingPick(); break;
+    case 'runEvent':     renderRunEvent(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -217,8 +220,8 @@ function renderAcademy() {
   }
 
   // 문 10개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
-  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
-  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762', '#ffefa8'];
+  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor];
+  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762', '#ffefa8', '#c86ade'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
     if (d.hidden) continue;   // 완전히 숨겨진 문은 렌더/상호작용 제외
@@ -624,6 +627,30 @@ function renderDungeon() {
 
   // 플레이어
   drawPlayer(player.x, player.y, true);
+  // 축복: 궤도 발사체
+  if (player && player.orbitals) {
+    for (const o of player.orbitals) {
+      pxDraw(o.x - 2, o.y - 2, 4, 4, '#ff9c3d');
+      pxDraw(o.x - 1, o.y - 1, 2, 2, '#ffefa8');
+    }
+  }
+  // 축복: 실드 링
+  if (player && player.shield > 0) {
+    const glow = 0.5 + Math.sin(state.time * 4) * 0.3;
+    ctx.strokeStyle = 'rgba(139, 216, 255, ' + glow.toFixed(2) + ')';
+    ctx.lineWidth = PX;
+    ctx.beginPath();
+    ctx.arc(player.x*PX, player.y*PX, (player.r + 4)*PX, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  // 축복: FrostAura 반경
+  if (player && player.blessFrostAura) {
+    ctx.strokeStyle = 'rgba(139, 216, 255, 0.15)';
+    ctx.lineWidth = PX;
+    ctx.beginPath();
+    ctx.arc(player.x*PX, player.y*PX, 40*PX, 0, Math.PI*2);
+    ctx.stroke();
+  }
 
   // 파티클
   for (const p of entities.particles) {
@@ -672,7 +699,24 @@ function drawPlayer(x, y, showFX) {
   if (showFX && p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0) {
     ctx.globalAlpha = 0.5;
   }
-  drawSprite(sprite, PLAYER_PAL, x - 6, y - 8 + oy, p.facing === -1);
+  // 트레일 (커스터마이즈)
+  if (showFX && typeof activePlayerTrailColor === 'function') {
+    const tc = activePlayerTrailColor();
+    if (tc) {
+      const prev = p._trailPrev || [];
+      prev.unshift({ x, y, t: state.time });
+      if (prev.length > 6) prev.length = 6;
+      p._trailPrev = prev;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        const tr = prev[i];
+        ctx.globalAlpha = 0.35 * (1 - i / prev.length);
+        pxDraw(tr.x - 2, tr.y - 2, 4, 4, tc);
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  const _pal = (typeof activePlayerPal === 'function') ? activePlayerPal() : PLAYER_PAL;
+  drawSprite(sprite, _pal, x - 6, y - 8 + oy, p.facing === -1);
   ctx.globalAlpha = 1;
 
   // 히트 플래시 오버레이

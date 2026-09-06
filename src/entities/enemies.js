@@ -685,6 +685,20 @@ function updateCore(e, dt, sm) {
 
 function damagePlayer(amt, source) {
   if (player.invuln > 0) return;
+  // 몹 접두 히트 훅 (독/슬로우 등)
+  if (typeof onMobAffixHitPlayer === 'function') onMobAffixHitPlayer(source);
+  // 축복: Evade (일정 확률 회피)
+  if (player.blessEvade && Math.random() < player.blessEvade) {
+    spawnFloat(player.x, player.y - 8, 'EVADE!', '#c8ffc8');
+    return;
+  }
+  // 축복: Shield (전면 흡수)
+  if (player.shield && player.shield > 0) {
+    const absorb = Math.min(player.shield, amt);
+    player.shield -= absorb; amt -= absorb;
+    spawnFloat(player.x, player.y - 8, 'SHIELD -' + Math.floor(absorb), '#8bd8ff');
+    if (amt <= 0) return;
+  }
 
   // 반사 상태
   if (player.reflectT > 0 && source) {
@@ -773,11 +787,53 @@ function damagePlayer(amt, source) {
       spawnFloat(player.x, player.y - 10, 'LAST STAND!', '#ffefa8');
       showMsg('LAST STAND', 2);
       sfx('parry');
+    } else if (player.blessLastWard === 0) {
+      // Last Ward: 사망 무효 (60s CD)
+      player.hp = Math.max(1, Math.floor(player.maxHp * 0.3));
+      player.blessLastWard = 60;
+      player.invuln = 3;
+      spawnParticle(player.x, player.y, '#ffefa8', 0.8, 30, 100);
+      spawnFloat(player.x, player.y - 10, 'LAST WARD!', '#ffefa8');
+      showMsg('LAST WARD - 60s CD', 2);
+      sfx('parry');
+    } else if (player.reviveCharges && player.reviveCharges > 0) {
+      // Phoenix down / Phoenix event
+      player.hp = player.maxHp;
+      player.reviveCharges -= 1;
+      player.invuln = 3;
+      spawnParticle(player.x, player.y, '#ff9c3d', 0.9, 40, 120);
+      spawnFloat(player.x, player.y - 10, 'REVIVED!', '#ffefa8');
+      showMsg('불사조가 너를 되살렸다.', 2);
+      sfx('level');
     }
+  }
+  // Immortal: HP<10 되면 강제 10 유지 (60s CD)
+  if (player.blessImmortal === 0 && player.hp > 0 && player.hp < 10) {
+    player.hp = 10;
+    player.blessImmortal = 60;
+    spawnFloat(player.x, player.y - 8, 'IMMORTAL', '#ffefa8');
   }
 }
 
 function onEnemyDeath(e) {
+  // 몹 접두 사망 훅 (폭발/그림자 분신 등)
+  if (typeof onMobAffixDeath === 'function') onMobAffixDeath(e);
+  // 축복 훅: Chain Lightning
+  if (player && player.blessChain) {
+    let near = null, nd = 60;
+    for (const t of entities.enemies) {
+      if (t === e || t.hp <= 0) continue;
+      const d = dist(t, e); if (d < nd) { nd = d; near = t; }
+    }
+    if (near) {
+      const dmg = 30 * (player.baseDmg || 1);
+      near.hp -= dmg; near.hitFlash = 0.15;
+      if (typeof spawnFloat === 'function') spawnFloat(near.x, near.y, Math.floor(dmg), '#8bd8ff');
+      if (typeof sfx === 'function') sfx('hit');
+    }
+  }
+  // 축복 훅: Soul Harvest (+2 MAX HP per kill)
+  if (player && player.blessSoulHarvest) { player.maxHp += 2; player.hp += 2; }
   // 업적/일일 통계
   if (typeof statAdd === 'function') {
     statAdd('totalKills', 1);

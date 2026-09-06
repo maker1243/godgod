@@ -239,6 +239,8 @@ function nextFloor() {
   state.cam.x = 0; state.cam.y = 0;
   const fd = currentFloorData();
   showMsg('FLOOR ' + floor + ' - ' + fd.name, 3);
+  // 새 층 진입 시 축복 선택
+  if (typeof triggerFloorBlessing === 'function') triggerFloorBlessing();
 }
 
 function clearEntities() {
@@ -396,6 +398,8 @@ function spawnEnemy(kind, room) {
   if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && mp.coop.isHost) {
     base._syncId = mp.coop.nextSyncId++;
   }
+  // 몹 접두 능력 랜덤 부여
+  if (typeof maybeApplyMobAffix === 'function') maybeApplyMobAffix(base);
   entities.enemies.push(base);
 }
 
@@ -484,6 +488,8 @@ function spawnPickup(x, y, kind) {
 // ---------- 씬 전환 ----------
 function goTo(scene) {
   state.scene = scene;
+  // 팩티 로비 진입 시 후일담 재체크 플래그 리셋
+  if (scene === 'facultyLobby' && typeof facultyLobby !== 'undefined') facultyLobby._aftermathChecked = false;
   // 로그인 씬 진입 시 실제 input에 포커스 (한글 IME 대응)
   if (scene === 'login') {
     // 마지막 필드 상태로 포커스 세팅. 초기값은 name.
@@ -494,6 +500,7 @@ function goTo(scene) {
   }
   if (scene === 'dungeon') {
     player = createPlayer();
+    if (typeof resetBlessings === 'function') resetBlessings();
     newDungeon();
     state.runResult = null;
     const fd = currentFloorData();

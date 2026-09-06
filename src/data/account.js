@@ -46,6 +46,9 @@ const state = {
   legacy: {},                      // { pillarId: level } RP 로 산 영구 스탯
   artifacts: null,                 // { owned:{id:true}, equipped:[id..], rotationDay, rotationOffers } 초기 null → 씬 진입 시 생성
   traits: null,                    // { owned:{id:true}, equipped:[id..] } 초기 null
+  profAftermathSeen: {},           // 교수 후일담 관람 여부
+  npcQuests: null,                 // Elara 등 심화 유대 진행
+  customize: null,                 // 외관 커스터마이즈 { robe, hat, star, trail, owned }
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -134,6 +137,9 @@ function loadAccountData() {
     if (d.legacy && typeof d.legacy === 'object') state.legacy = d.legacy;
     if (d.artifacts && typeof d.artifacts === 'object') state.artifacts = d.artifacts;
     if (d.traits && typeof d.traits === 'object') state.traits = d.traits;
+    if (d.profAftermathSeen && typeof d.profAftermathSeen === 'object') state.profAftermathSeen = d.profAftermathSeen;
+    if (d.npcQuests && typeof d.npcQuests === 'object') state.npcQuests = d.npcQuests;
+    if (d.customize && typeof d.customize === 'object') state.customize = d.customize;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -184,6 +190,9 @@ function saveAccountData() {
     legacy: state.legacy || {},
     artifacts: state.artifacts || null,
     traits: state.traits || null,
+    profAftermathSeen: state.profAftermathSeen || {},
+    npcQuests: state.npcQuests || null,
+    customize: state.customize || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

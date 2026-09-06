@@ -44,6 +44,9 @@ function update(dt) {
     case 'academyTruth': updateAcademyTruth(dt); break;
     case 'training':     updateTraining(dt); break;
     case 'legacyLobby':  updateLegacyLobby(dt); break;
+    case 'customize':    updateCustomize(dt); break;
+    case 'blessingPick': updateBlessingPick(dt); break;
+    case 'runEvent':     updateRunEvent(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -141,6 +144,7 @@ const academy = {
   profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
   trainDoor: { x: 160, y: 95,  w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
   legacyDoor:{ x: 120, y: 60,  w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
+  customDoor:{ x: 180, y: 60,  w: 12, h: 18, kind: 'customize', label: 'STYLE'  },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -183,7 +187,7 @@ if (state.account) {
 function _placeCipherDoorRandom() {
   const r = academy.room;
   const w = 12, h = 18;
-  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
+  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor];
   for (let t = 0; t < 40; t++) {
     const x = Math.floor(r.x + 10 + Math.random() * (r.w - w - 20));
     const y = Math.floor(r.y + 20 + Math.random() * (r.h - h - 40));
@@ -370,6 +374,8 @@ function updateAcademy(dt) {
       if (dist(player, n) < 15) {
         if (n.shop) {
           goTo('shop');
+        } else if (n.name === 'ELARA' && typeof elaraInteract === 'function') {
+          elaraInteract();
         } else {
           const msg = n.msgs[Math.min(n.bond, n.msgs.length - 1)];
           showMsg(msg, 3);
@@ -383,7 +389,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -439,6 +445,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
         else if (d.kind === 'training')  { goTo('training'); }
         else if (d.kind === 'legacy')    { goTo('legacyLobby'); }
+        else if (d.kind === 'customize') { goTo('customize'); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
         else if (d.kind === 'arena')     goTo('arena');
@@ -502,6 +509,9 @@ function updateDungeon(dt) {
   }
   updateBullets(dtEnemy);
   updateEBullets(dtEnemy);
+  // 축복 / 접두 tick
+  if (typeof updateBlessingsFrame === 'function') updateBlessingsFrame(dt);
+  if (typeof tickMobAffixes === 'function') tickMobAffixes(dt);
   if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
@@ -795,6 +805,12 @@ function updatePlayer(dt) {
       if (d.kind === 'exit') {
         sfx('door');
         currentRoom++;
+        // 랜덤 런 이벤트: 20% 확률로 이벤트 방 (보스방 직전이 아닐 때만)
+        if (typeof openRunEvent === 'function' && currentRoom < 4 && Math.random() < 0.20) {
+          buildRoom(currentRoom + 1);
+          openRunEvent();
+          return;
+        }
         if (currentRoom >= 4) {
           buildRoom(5);   // 보스방
           const fd = currentFloorData();
@@ -830,16 +846,39 @@ function castFire(p, ang) {
   p.mp -= s.cost;
   let dmg = s.dmg * p.baseDmg;
   if (hasPerk('firedmg')) dmg *= 1.4;
+  // 축복: Bloom (홀수번째 발사 +50%)
+  p._shotCounter = (p._shotCounter || 0) + 1;
+  if (p.blessBloom && (p._shotCounter % 2 === 1)) dmg *= 1.5;
 
-  const count = hasPerk('firemult') ? 3 : 1;
+  const projMult = p.projMult || 1;
+  const baseCount = hasPerk('firemult') ? 3 : 1;
+  const count = baseCount * projMult;
   const spread = count > 1 ? 0.22 : 0;
+  const r = s.radius * (p.projSize || 1);
   for (let i = 0; i < count; i++) {
     const a = ang + (i - (count-1)/2) * spread;
     entities.bullets.push({
       x: p.x + Math.cos(a) * 6, y: p.y + Math.sin(a) * 6,
       vx: Math.cos(a) * s.speed, vy: Math.sin(a) * s.speed,
-      r: s.radius, dmg, life: 1.4, kind: 'fire', hits: 0,
+      r, dmg, life: 1.4, kind: 'fire', hits: 0,
+      pierce: (p.blessPierce || 0) > 0,
+      _pierceLeft: (p.blessPierce || 0),
+      _burn: p.blessBurn ? 3 : 0,
+      _hex: !!p.blessHex,
+      _execute: p.blessExecute || 0,
     });
+  }
+  // 축복: Echo (15% 확률 캐스트 두번째)
+  if (p.blessEcho && Math.random() < 0.15) {
+    for (let i = 0; i < count; i++) {
+      const a = ang + (i - (count-1)/2) * spread + 0.08;
+      entities.bullets.push({
+        x: p.x + Math.cos(a) * 6, y: p.y + Math.sin(a) * 6,
+        vx: Math.cos(a) * s.speed, vy: Math.sin(a) * s.speed,
+        r, dmg: dmg * 0.8, life: 1.4, kind: 'fire', hits: 0,
+        pierce: (p.blessPierce || 0) > 0, _pierceLeft: (p.blessPierce || 0),
+      });
+    }
   }
   sfx('fire');
 }
