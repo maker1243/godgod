@@ -132,8 +132,15 @@ function updateProfessor(e, dt, sm) {
   if (e._profPhaseT > 0) e._profPhaseT -= dt;
   // 등장 애니메이션 - 무적, 이동/시전 없음
   if (e._profEntryT > 0) {
+    const before = e._profEntryT;
     e._profEntryT -= dt;
     e.invuln = 0.05;
+    // 페이즈 전환 시점에 사운드
+    const total = e._profEntryTotal || PROFESSOR_ENTRY_SEC;
+    const pBefore = 1 - (before / total);
+    const pAfter  = 1 - (e._profEntryT / total);
+    if (pBefore < 0.3 && pAfter >= 0.3) sfx('door');       // 포털 열림
+    if (pBefore < 0.7 && pAfter >= 0.7) sfx('parry');      // 착지
     return;
   }
   // 페이즈 2 전환: HP 50% 이하 + 아직 phase 1이면 → phase 2 진입
@@ -428,14 +435,73 @@ function _profExtraPattern(e) {
 function drawProfessor(e) {
   const def = e._profDef;
   const t = state.time;
-  // 등장: alpha 0→1, 스케일 1.6→1.0
+  // 등장 애니메이션: 3단계 시네마틱 인트로
+  //  A: 포털 오픈 (0~30% 진행) - 어두운 오버레이 + 확장 링 + 하강 광선
+  //  B: 소환 (30~70%) - 스프라이트 페이드 인 + 회전 파티클 + 위로 튀는 광채
+  //  C: 정착 (70~100%) - alpha 1 + 흰 후광 축소 + 스탠딩 오라
   let alpha = 1;
-  if (e._profEntryT > 0) {
-    const p = 1 - (e._profEntryT / PROFESSOR_ENTRY_SEC);   // 0→1
-    alpha = p;
-    // 등장 오라 - pulsing
-    ctx.fillStyle = 'rgba(255,255,255,' + (0.4 * (1 - p)).toFixed(2) + ')';
-    ctx.fillRect((e.x - 30 + 30*p)*PX, (e.y - 30 + 30*p)*PX, (60 - 60*p)*PX, (60 - 60*p)*PX);
+  if (e._profEntryT > 0 && e._profEntryTotal) {
+    const p = 1 - (e._profEntryT / e._profEntryTotal);  // 0 → 1
+    // === A: 포털 오픈 ===
+    if (p < 0.3) {
+      const pa = p / 0.3;
+      // 어두운 방 오버레이
+      const rm = rooms[currentRoom];
+      if (rm) {
+        ctx.fillStyle = 'rgba(0,0,0,' + (0.5 * (1 - pa * 0.5)).toFixed(2) + ')';
+        ctx.fillRect(rm.x * PX, rm.y * PX, rm.w * PX, rm.h * PX);
+      }
+      // 포털 확장 링 3개
+      for (let i = 0; i < 3; i++) {
+        const ring = (pa + i * 0.15) % 1;
+        ctx.strokeStyle = def.color + Math.floor((1 - ring) * 200).toString(16).padStart(2, '0');
+        ctx.lineWidth = PX * 2;
+        ctx.beginPath();
+        ctx.arc(e.x * PX, e.y * PX, (5 + ring * 30) * PX, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // 위→아래 하강 광선
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.8 * (1 - pa)).toFixed(2) + ')';
+      ctx.lineWidth = PX * 3;
+      ctx.beginPath();
+      ctx.moveTo(e.x * PX, 0);
+      ctx.lineTo(e.x * PX, e.y * PX);
+      ctx.stroke();
+      // 하강 파티클
+      if (Math.random() < 0.6) spawnParticle(e.x + rand(-4, 4), e.y - rand(10, 40), def.color, 0.4, 2, 50);
+    }
+    // === B: 소환 ===
+    if (p >= 0.3 && p < 0.7) {
+      const pb = (p - 0.3) / 0.4;
+      alpha = pb;
+      // 회전 파티클 원 6개 (수축)
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + state.time * 8;
+        const r = 20 * (1 - pb) + 6;
+        pxDraw(e.x + Math.cos(a) * r - 0.5, e.y + Math.sin(a) * r - 0.5, 1, 1, def.color);
+      }
+      // 위로 튀는 광채
+      if (Math.random() < 0.5) spawnParticle(e.x + rand(-4, 4), e.y + 6, def.accent || def.color, 0.5, 2, 60);
+      // 흰 후광 (아직 존재)
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.4 * (1 - pb)).toFixed(2) + ')';
+      const halo = 18 * (1 - pb) + 6;
+      ctx.fillRect((e.x - halo) * PX, (e.y - halo) * PX, halo * 2 * PX, halo * 2 * PX);
+    }
+    // === C: 정착 ===
+    if (p >= 0.7) {
+      const pc = (p - 0.7) / 0.3;
+      alpha = 1;
+      // 흰 후광 축소
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.3 * (1 - pc)).toFixed(2) + ')';
+      const halo = 8 * (1 - pc) + 2;
+      ctx.fillRect((e.x - halo) * PX, (e.y - halo) * PX, halo * 2 * PX, halo * 2 * PX);
+      // 스탠딩 오라 링 (완전 확장 후 사라짐)
+      ctx.strokeStyle = def.color + 'aa';
+      ctx.lineWidth = PX;
+      ctx.beginPath();
+      ctx.arc(e.x * PX, e.y * PX, (10 + pc * 8) * PX, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
   // 사망: alpha 1→0
   if (e._profDeathT > 0) {
@@ -461,9 +527,26 @@ function drawProfessor(e) {
   // 로브 색(2/3) 은 def.color 기반, 모자(7) 는 어두운 톤, 별(6) 은 accent.
   const pal = _profPalette(def);
   const anim = Math.floor(t * 4) % 2 === 0 ? SPR_PLAYER_S1 : SPR_PLAYER_S2;
-  const oy = Math.sin(t * 2) * 1;
+  let oy = Math.sin(t * 2) * 1;
+  // 등장 시 위→아래 튀는 애니메이션 오프셋 (phase A~C)
+  if (e._profEntryT > 0 && e._profEntryTotal) {
+    const p = 1 - (e._profEntryT / e._profEntryTotal);
+    if (p < 0.3) {
+      // 아직 소환 안 됨 - 스프라이트 숨김
+      ctx.globalAlpha = 0;
+    } else if (p < 0.7) {
+      // 위에서 낙하 (약 20px 위)
+      const pb = (p - 0.3) / 0.4;
+      oy -= (1 - pb) * 20;
+    } else {
+      // 착지 바운스 (사인 감쇠)
+      const pc = (p - 0.7) / 0.3;
+      oy += Math.sin(pc * Math.PI * 3) * 3 * (1 - pc);
+    }
+  }
   drawSprite(anim, pal, e.x - 6, e.y - 7 + oy);
   // 학과 심볼: 로브 위에 작은 문양 오버레이 (모자 아래 왼쪽)
+  ctx.globalAlpha = alpha;
   _drawProfEmblem(def, e.x, e.y + oy);
   // 이름표
   drawText(def.name, e.x - textWidth(def.name)/2, e.y - e.r - 16, def.color);
