@@ -52,6 +52,8 @@ function _spawnTrainingDummy(hp) {
 }
 
 function updateTraining(dt) {
+  // 씬 진입 자동 시작 (goTo('training') 만으로 startTraining 이 자동 호출됨)
+  if (!training.active && state.scene === 'training') startTraining();
   if (!training.active) return;
   if (training.messageT > 0) training.messageT -= dt;
 
@@ -66,15 +68,20 @@ function updateTraining(dt) {
     return;
   }
 
-  // 플레이어 (아레나용 로직 재사용)
+  // 플레이어 (아레나용 로직 재사용) — arena.room 을 임시로 training.room 으로 스왑
   if (typeof updatePlayerArena === 'function') {
     const savedRoom = rooms[currentRoom];
+    const savedArena = (typeof arena !== 'undefined') ? arena.room : null;
     rooms[0] = { x: training.room.x, y: training.room.y, w: training.room.w, h: training.room.h, isBoss: false, cleared: false };
     currentRoom = 0;
+    if (typeof arena !== 'undefined') arena.room = training.room;
     updatePlayerArena(dt);
+    if (typeof arena !== 'undefined' && savedArena) arena.room = savedArena;
     rooms[0] = savedRoom;
   }
   updateBullets(dt);
+  // DPS 누적 - 더미 HP 감소분 추적 (render 아닌 update 에서 처리)
+  _accumulateDummyDps();
   if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
@@ -149,9 +156,6 @@ function renderTraining() {
   ctx.fillRect((r.x-4)*PX, (r.y+r.h)*PX, (r.w+8)*PX, 4*PX);
   ctx.fillRect((r.x-4)*PX, r.y*PX, 4*PX, r.h*PX);
   ctx.fillRect((r.x+r.w)*PX, r.y*PX, 4*PX, r.h*PX);
-
-  // DPS 누적 (Bullet hit → dummy hp delta)
-  _accumulateDummyDps();
 
   // 더미 렌더 (샌드백)
   const d = training.dummy;
