@@ -221,6 +221,16 @@ function drawEnemy(e) {
   ctx.beginPath();
   ctx.ellipse(e.x*PX, (e.y + e.r)*PX, (e.r + 2)*PX, 2*PX, 0, 0, Math.PI*2);
   ctx.fill();
+  // 엘리트 몹 - 금색 후광 링
+  if (e.isElite) {
+    const t = state.time * 3;
+    const glow = 0.5 + Math.sin(t + e.x * 0.1) * 0.3;
+    ctx.strokeStyle = 'rgba(232, 197, 71, ' + glow.toFixed(2) + ')';
+    ctx.lineWidth = PX * 2;
+    ctx.beginPath();
+    ctx.arc(e.x*PX, e.y*PX, (e.r + 3)*PX, 0, Math.PI*2);
+    ctx.stroke();
+  }
 
   if (e.hitFlash > 0) {
     // 화이트 아웃

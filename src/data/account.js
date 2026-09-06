@@ -42,6 +42,7 @@ const state = {
   storyFragments: {},              // 이야기 조각 { key: 획득시각ms }
   academyTruthSeen: false,         // 진실 컷씬 시청 여부
   tutorialSeen: false,             // 튜토리얼 첫 노출 여부
+  deathPouch: null,                // 사망 지점 유품 (다음 던전 재진입 시 회수)
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -123,6 +124,7 @@ function loadAccountData() {
     if (d.storyFragments && typeof d.storyFragments === 'object') state.storyFragments = d.storyFragments;
     if (typeof d.academyTruthSeen === 'boolean') state.academyTruthSeen = d.academyTruthSeen;
     if (typeof d.tutorialSeen === 'boolean') state.tutorialSeen = d.tutorialSeen;
+    if (d.deathPouch && typeof d.deathPouch === 'object') state.deathPouch = d.deathPouch;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -169,6 +171,7 @@ function saveAccountData() {
     storyFragments: state.storyFragments || {},
     academyTruthSeen: !!state.academyTruthSeen,
     tutorialSeen: !!state.tutorialSeen,
+    deathPouch: state.deathPouch || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

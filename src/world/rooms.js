@@ -213,6 +213,16 @@ function newDungeon() {
   state.cam.x = 0; state.cam.y = 0;
   // MAX 스킬 해금 판정용: 던전 진입 시각
   state.dungeonStart = performance.now();
+  // 죽음 파우치 재획득: 같은 mode+floor 에서 죽었으면 그 자리에 골드 파우치 스폰
+  if (state.deathPouch && state.deathPouch.gold > 0 && state.deathPouch.mode === (state.dungeonMode || 'normal') && state.deathPouch.floor === floor) {
+    const room = rooms[currentRoom];
+    if (room) {
+      const px = clamp(state.deathPouch.x, room.x + 8, room.x + room.w - 8);
+      const py = clamp(state.deathPouch.y, room.y + 8, room.y + room.h - 8);
+      entities.pickups.push({ x: px, y: py, kind: 'pouch', life: 9999, bob: 0, amount: state.deathPouch.gold });
+      showMsg('당신의 유품이 있습니다. 회수하세요.', 3);
+    }
+  }
 }
 
 function nextFloor() {
@@ -362,6 +372,15 @@ function spawnEnemy(kind, room) {
   const diff = currentDifficulty();
   if (diff.hpBase > 0) base.hp = diff.hpBase;
   if (diff.dmgMult !== 1) base.dmg = Math.round((base.dmg || 0) * diff.dmgMult);
+  // 엘리트 몹: 5% 확률. HP×3, DMG×1.5, 크게 그림, 처치 시 RP 조각 확정 드롭.
+  if (Math.random() < 0.05) {
+    base.isElite = true;
+    base.hp = Math.floor(base.hp * 3);
+    base.dmg = Math.floor(base.dmg * 1.5);
+    base.r = Math.max(4, Math.floor(base.r * 1.4));
+    base.speed = Math.max(10, Math.floor((base.speed || 0) * 0.9));
+    base._eliteRp = Math.max(50, Math.floor(20 * Math.pow(2, DIFFICULTY_TIERS.findIndex(d => d.id === (state.difficulty || 'normal')))));
+  }
   base.maxHp = base.hp;
   entities.enemies.push(base);
 }

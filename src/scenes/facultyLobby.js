@@ -413,11 +413,34 @@ function _updateRewardPopup(dt) {
     keys['Space']=false; keys['Enter']=false;
     _buyReward(set, _REWARD_SLOTS[pop.cursor]);
   }
+  // F 로 장착 (이미 소유한 스킬만)
+  if (keys['KeyF']) {
+    keys['KeyF']=false;
+    _equipReward(set, _REWARD_SLOTS[pop.cursor]);
+  }
   // ESC/R 닫기
   if (keys['Escape'] || keys['KeyR']) {
     keys['Escape']=false; keys['KeyR']=false;
     facultyLobby.rewardPopup = null;
   }
+}
+
+function _equipReward(set, slotKey) {
+  const s = set[slotKey];
+  if (!s) return;
+  const lv = state.ownedSkills[s.id] || 0;
+  if (lv <= 0) { if (typeof showMsg === 'function') showMsg('먼저 구매 필요', 1.5); sfx('hurt'); return; }
+  if (s.slot === 'passive') { if (typeof showMsg === 'function') showMsg('패시브는 자동 적용', 1.5); return; }
+  // 장착 토글
+  if (state.equippedSlots[s.slot] === s.id) {
+    state.equippedSlots[s.slot] = null;
+    if (typeof showMsg === 'function') showMsg('장착 해제: ' + s.name, 1.8);
+  } else {
+    state.equippedSlots[s.slot] = s.id;
+    if (typeof showMsg === 'function') showMsg('장착: ' + s.name + ' [' + s.slot.toUpperCase() + ']', 1.8);
+  }
+  if (typeof saveAccountData === 'function') saveAccountData();
+  sfx('hit');
 }
 
 function _buyReward(set, slotKey) {
@@ -484,8 +507,8 @@ function _renderRewardPopup() {
   }
 
   // 하단 안내
-  drawText('WS/TAP SELECT   SPACE BUY   ESC/R BACK',
-    bx + bw/2 - textWidth('WS/TAP SELECT   SPACE BUY   ESC/R BACK')/2,
+  drawText('WS/TAP SELECT   SPACE BUY   F EQUIP   ESC/R BACK',
+    bx + bw/2 - textWidth('WS/TAP SELECT   SPACE BUY   F EQUIP   ESC/R BACK')/2,
     by + bh - 9, '#8a7ab5');
 }
 

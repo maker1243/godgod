@@ -135,8 +135,8 @@ const academy = {
   extraDoor: { x: 42,  y: 152, w: 12, h: 18, kind: 'extra',     label: 'EXTRA'    },
   extremeDoor:{x: 140, y: 152, w: 12, h: 18, kind: 'extreme',   label: 'EXTREME'  },
   infernoDoor:{x: 204, y: 152, w: 12, h: 18, kind: 'inferno',   label: 'INFERNO'  },
-  cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER'   },
-  profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF'     },
+  cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER',    hidden:true },
+  profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -175,7 +175,43 @@ if (state.account) {
   if (!loadAccountData()) resetGameData();
 }
 
+// 랜덤 위치 재배치 헬퍼 (기존 문과 겹치지 않게 시도)
+function _placeCipherDoorRandom() {
+  const r = academy.room;
+  const w = 12, h = 18;
+  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor];
+  for (let t = 0; t < 40; t++) {
+    const x = Math.floor(r.x + 10 + Math.random() * (r.w - w - 20));
+    const y = Math.floor(r.y + 20 + Math.random() * (r.h - h - 40));
+    let clash = false;
+    for (const o of others) {
+      if (Math.abs(x - o.x) < 22 && Math.abs(y - o.y) < 24) { clash = true; break; }
+    }
+    if (!clash) { academy.cipherDoor.x = x; academy.cipherDoor.y = y; return; }
+  }
+}
+
 function updateAcademy(dt) {
+  // === CIPHER/PROF 문 표시 상태 결정 ===
+  // CIPHER 문: 항상 표시. 다만 매 아카데미 진입 시(첫 초기화 포함) 랜덤 위치.
+  //           실패 시(cipherQuest.messageT 가 방금 켜졌고 문구가 WRONG 이면) 재배치.
+  if (academy.cipherDoor.hidden) {
+    _placeCipherDoorRandom();
+    academy.cipherDoor.hidden = false;   // 초기 은닉 해제 (배치 완료 신호)
+  }
+  // PROF 문: state.cipherSolvedCount > 0 이어야 표시됨. 노출 트리거.
+  if (academy.profDoor.hidden && state.cipherSolvedCount > 0) {
+    academy.profDoor.hidden = false;
+  }
+  // CIPHER 실패 감지 → 위치 재배치 (한 번만)
+  if (typeof cipherQuest !== 'undefined' && cipherQuest._lastKnownMsgT !== cipherQuest.messageT) {
+    cipherQuest._lastKnownMsgT = cipherQuest.messageT;
+    if (cipherQuest.message && cipherQuest.message.indexOf('WRONG') === 0) {
+      _placeCipherDoorRandom();
+      if (typeof showMsg === 'function') showMsg('CIPHER 문이 다른 위치로 이동했습니다', 2.5);
+    }
+  }
+
   // 첫 진입 시 튜토리얼 자동 표시
   if (typeof onboarding !== 'undefined' && !state.tutorialSeen && !onboarding.active) {
     onboarding.active = true;
@@ -327,6 +363,7 @@ function updateAcademy(dt) {
     // 문들
     const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor];
     for (const d of doors) {
+      if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
         // 잠금 확인
         if (d.kind === 'extra' && !(state.finalCleared >= 1)) {
@@ -640,11 +677,29 @@ function updatePlayer(dt) {
       if (it.kind === 'hp') p.hp = Math.min(p.maxHp, p.hp + 15 * mult);
       else if (it.kind === 'mp') p.mp = Math.min(p.maxMp, p.mp + 20 * mult);
       else if (it.kind === 'gold') state.gold += 1 * mult;
+      else if (it.kind === 'pouch') {
+        // 죽음 파우치 회수: 저장된 골드 100% 복구
+        const amt = it.amount || 0;
+        state.gold = (state.gold || 0) + amt;
+        state.deathPouch = null;
+        if (typeof showMsg === 'function') showMsg('유품 회수 +' + amt + ' G', 3);
+        spawnFloat(p.x, p.y - 12, '+' + amt + ' G', '#ffefa8');
+      }
+      else if (it.kind === 'rpshard') {
+        // 엘리트 몹이 드롭하는 RP 조각
+        const amt = it.amount || 50;
+        state.research = (state.research || 0) + amt;
+        if (typeof statAdd === 'function') statAdd('rpEarnedTotal', amt);
+        if (typeof showMsg === 'function') showMsg('연구 조각 +' + amt + ' RP', 2);
+        spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#8bd8ff');
+      }
       entities.pickups.splice(i, 1);
       sfx('pickup');
-      spawnFloat(p.x, p.y - 6,
-        it.kind === 'hp' ? '+HP' : it.kind === 'mp' ? '+MP' : '+G',
-        it.kind === 'hp' ? '#ff8888' : it.kind === 'mp' ? '#88c8ff' : '#e8c547');
+      if (it.kind === 'hp' || it.kind === 'mp' || it.kind === 'gold') {
+        spawnFloat(p.x, p.y - 6,
+          it.kind === 'hp' ? '+HP' : it.kind === 'mp' ? '+MP' : '+G',
+          it.kind === 'hp' ? '#ff8888' : it.kind === 'mp' ? '#88c8ff' : '#e8c547');
+      }
     }
   }
 
@@ -654,6 +709,17 @@ function updatePlayer(dt) {
   // 사망
   if (p.hp <= 0) {
     state.runResult = 'dead';
+    // 죽음 파우치 저장: 지금 골드의 50% 를 위치와 함께 기록 → 다음 던전 진입에서 파우치로 스폰.
+    const dropGold = Math.floor((state.gold || 0) * 0.5);
+    if (dropGold > 0) {
+      state.deathPouch = {
+        gold: dropGold, x: p.x, y: p.y,
+        floor: floor, mode: state.dungeonMode || 'normal',
+        savedAt: Date.now(),
+      };
+    }
+    if (typeof statAdd === 'function') statAdd('deaths', 1);
+    if (typeof checkAchievements === 'function') checkAchievements();
     goTo('ending');
   }
 

@@ -219,6 +219,7 @@ function renderAcademy() {
   const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
+    if (d.hidden) continue;   // 완전히 숨겨진 문은 렌더/상호작용 제외
     const isExtra   = d.kind === 'extra';
     const isExtreme = d.kind === 'extreme';
     const isInferno = d.kind === 'inferno';
@@ -474,6 +475,23 @@ function renderDungeon() {
     const y = p.y + Math.sin(p.bob) * 1.5;
     if (p.kind === 'hp') drawSprite(SPR_ORB_HP, ORB_HP_PAL, p.x - 2, y - 2);
     else if (p.kind === 'mp') drawSprite(SPR_ORB_MP, ORB_MP_PAL, p.x - 2, y - 2);
+    else if (p.kind === 'pouch') {
+      // 유품 파우치 - 갈색 주머니 + 금색 반짝임
+      const pu = 0.5 + Math.sin(state.time * 5) * 0.5;
+      pxDraw(p.x - 3, y - 3, 6, 6, '#3a2010');
+      pxDraw(p.x - 2, y - 2, 4, 4, '#8a5a30');
+      pxDraw(p.x - 1, y - 1, 2, 2, '#ffefa8');
+      ctx.strokeStyle = 'rgba(232, 197, 71, ' + pu.toFixed(2) + ')';
+      ctx.lineWidth = PX;
+      ctx.beginPath(); ctx.arc(p.x * PX, y * PX, 6 * PX, 0, Math.PI * 2); ctx.stroke();
+    }
+    else if (p.kind === 'rpshard') {
+      // RP 조각 - 시안 다이아
+      pxDraw(p.x - 1, y - 3, 2, 1, '#8bd8ff');
+      pxDraw(p.x - 2, y - 2, 4, 2, '#8bd8ff');
+      pxDraw(p.x - 1, y, 2, 1, '#8bd8ff');
+      pxDraw(p.x, y - 1, 1, 1, '#ffffff');
+    }
     else {
       pxDraw(p.x - 2, y - 2, 4, 4, '#e8c547');
       pxDraw(p.x - 1, y - 1, 2, 2, '#ffefa8');

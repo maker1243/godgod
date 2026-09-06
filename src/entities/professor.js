@@ -204,7 +204,11 @@ function updateProfessor(e, dt, sm) {
   e._profSigCd = (e._profSigCd || 4) - dt;
   if (e._profSigCd <= 0 && e._profDef && e._profDef.signature) {
     _profSignatureCast(e, e._profDef.signature, angleTo(e, player));
-    e._profSigCd = 4 + Math.random() * 2;
+    // 페이즈 2+ 이거나 20% 확률로 추가 랜덤 패턴
+    if ((e._profPhase >= 2) || Math.random() < 0.2) _profExtraPattern(e);
+    // 교장은 매번 추가 패턴
+    if (e._isPrincipal) _profExtraPattern(e);
+    e._profSigCd = e._isPrincipal ? (2.5 + Math.random()) : (4 + Math.random() * 2);
   }
 }
 
@@ -292,6 +296,72 @@ function _profSignatureCast(e, sig, ang) {
   spawnParticle(e.x, e.y, col, 0.5, 12, 60);
   if (entities.fx) entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 0.4, max: 0.4, r0: 6, r1: 20, col });
   sfx('boss');
+
+  // === 교장 전용 추가 패턴 (phase 별 다르게) ===
+  if (e._isPrincipal) {
+    const phase = e._profPhase || 1;
+    if (phase >= 2) {
+      // 페이즈 2+: 방사형 링 2배 + 지연 두번째 링
+      for (let i = 0; i < 16; i++) {
+        const a2 = (i / 16) * Math.PI * 2 + Math.PI / 16;
+        push({ vx: Math.cos(a2) * 220, vy: Math.sin(a2) * 220, r: 4, dmg: dmg * 1.2 });
+      }
+      setTimeout(() => {
+        if (e.hp <= 0 || !entities.enemies.includes(e)) return;
+        for (let i = 0; i < 20; i++) {
+          const a3 = (i / 20) * Math.PI * 2;
+          entities.ebullets.push({
+            x: e.x, y: e.y, vx: Math.cos(a3) * 160, vy: Math.sin(a3) * 160,
+            r: 4, dmg: dmg * 1.3, life: 3, kind: 'fire', visual: vis,
+          });
+        }
+      }, 400);
+    }
+    if (phase >= 3) {
+      // 페이즈 3: 화면 전체 대각 십자 라이트닝 4방향 관통
+      for (let dir = 0; dir < 4; dir++) {
+        const a4 = dir * Math.PI / 2 + Math.PI / 4;
+        push({ vx: Math.cos(a4) * 500, vy: Math.sin(a4) * 500, r: 6, dmg: dmg * 2, life: 3 });
+      }
+      state.shake = Math.max(state.shake || 0, 18);
+    }
+  }
+}
+
+// 교수 다양성용 랜덤 서브 패턴 (일반 시전에도 20% 확률로 추가 발동)
+function _profExtraPattern(e) {
+  const sig = (e._profDef && e._profDef.signature) || null;
+  const vis = (e._profDef && e._profDef.visual) || null;
+  const dmg = 300 + Math.floor(Math.random() * 200);
+  const ang = angleTo(e, player);
+  const rand = Math.random();
+  const push = (opts) => entities.ebullets.push(Object.assign({
+    x: e.x, y: e.y, r: 3, dmg, life: 3, kind: 'fire', visual: vis
+  }, opts));
+  if (rand < 0.25) {
+    // 십자 4발
+    for (let d = 0; d < 4; d++) {
+      const a = d * Math.PI / 2;
+      push({ vx: Math.cos(a) * 200, vy: Math.sin(a) * 200 });
+    }
+  } else if (rand < 0.5) {
+    // 나선 8발 - 각도 회전
+    for (let d = 0; d < 8; d++) {
+      const a = ang + d * 0.4;
+      push({ vx: Math.cos(a) * (100 + d * 15), vy: Math.sin(a) * (100 + d * 15) });
+    }
+  } else if (rand < 0.75) {
+    // 뒷쪽까지 포함 8방향
+    for (let d = 0; d < 8; d++) {
+      const a = (d / 8) * Math.PI * 2;
+      push({ vx: Math.cos(a) * 130, vy: Math.sin(a) * 130 });
+    }
+  } else {
+    // 조준 3발 + 좌우로 스프레드 각 2발 = 7발
+    for (let i = -3; i <= 3; i++) {
+      push({ vx: Math.cos(ang + i * 0.12) * 180, vy: Math.sin(ang + i * 0.12) * 180 });
+    }
+  }
 }
 
 // enemies 렌더에서 hook. 등장/사망 애니메이션 오버레이 + 스프라이트.

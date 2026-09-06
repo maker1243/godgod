@@ -784,6 +784,11 @@ function onEnemyDeath(e) {
     if (e.isBoss) statAdd('bossKills', 1);
   }
   spawnParticle(e.x, e.y, e.kind === 'slime' ? '#3ac762' : '#e8dcb0', 0.5, 14, 70);
+  // 엘리트 몹 처치 → RP 조각 드롭
+  if (e.isElite) {
+    entities.pickups.push({ x: e.x, y: e.y, kind: 'rpshard', life: 20, bob: 0, amount: e._eliteRp || 50 });
+    spawnParticle(e.x, e.y, '#8bd8ff', 0.7, 20, 100);
+  }
   const isExtreme = state.dungeonMode === 'extreme';
   if (isExtreme) {
     // 익스트림: XP 안 주고 골드만. 대신 골드 2배 보상.
