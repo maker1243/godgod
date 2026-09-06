@@ -5,6 +5,66 @@
 // =====================================================================
 
 const PROFESSOR_HP = 15000000000;       // 15B (기존 1B → 15배)
+
+// hex 색상을 약간 어둡게/밝게 조정 (팔레트용).
+function _shade(hex, amt) {
+  const c = hex.replace('#','');
+  const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
+  const nr = Math.max(0, Math.min(255, Math.round(r + amt)));
+  const ng = Math.max(0, Math.min(255, Math.round(g + amt)));
+  const nb = Math.max(0, Math.min(255, Math.round(b + amt)));
+  return '#' + nr.toString(16).padStart(2,'0') + ng.toString(16).padStart(2,'0') + nb.toString(16).padStart(2,'0');
+}
+
+// 교수 팔레트: PLAYER_PAL 기반에 로브(2/3)와 별(6) 을 def.color 로 대체.
+// 모자(7) 는 로브 어두운 톤. 피부 등 나머지 원본 유지.
+function _profPalette(def) {
+  const base = def.color || '#7d4dbf';
+  const p = Object.assign({}, PLAYER_PAL);
+  p['2'] = _shade(base, -50);   // 로브 (어두운 톤)
+  p['3'] = base;                // 로브 하이라이트 (원색)
+  p['6'] = (def.accent || def.color || '#e8c547');   // 별/장식
+  p['7'] = _shade(base, -80);   // 모자
+  p['1'] = _shade(base, -100);  // 로브 외곽
+  return p;
+}
+
+// 학과 심볼 - 로브 위에 4x4 미니 문양. def.key 별로 다른 도트 패턴.
+const _EMBLEM_MAP = {
+  // hangul jamo
+  kor:  [[0,0],[1,0],[2,0],[0,1],[0,2],[1,2],[2,2]],
+  eng:  [[0,0],[1,0],[2,0],[0,1],[1,1],[0,2],[2,2]],
+  biz:  [[0,2],[1,1],[2,0]],                                  // 상승 화살표
+  psy:  [[0,0],[2,0],[0,1],[1,1],[2,1],[0,2],[2,2]],          // 뇌
+  phys: [[1,0],[0,1],[2,1],[1,2]],                            // 원자
+  chem: [[0,1],[1,0],[2,1],[2,2],[1,3],[0,2]],                // 벤젠
+  cs:   [[0,0],[2,0],[0,2],[2,2]],                            // 픽셀
+  robot:[[0,0],[1,0],[2,0],[1,1],[0,2],[2,2]],                // 로봇 헤드
+  med:  [[1,0],[0,1],[1,1],[2,1],[1,2]],                      // 십자
+  phar: [[0,1],[1,0],[1,1],[1,2],[2,1]],                      // 알약
+  math: [[0,0],[2,0],[1,1],[0,2],[2,2]],                      // 무한
+  pe:   [[1,0],[0,1],[2,1],[1,2]],                            // 공
+  paint:[[0,0],[2,0],[1,1],[0,2],[2,2]],                      // 팔레트
+  vocal:[[0,0],[0,1],[1,2],[2,2]],                            // 음표
+  phil: [[0,0],[1,0],[2,0],[1,1],[1,2]],                      // T (진리)
+  rel:  [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]],                // 십자 확장
+  lib:  [[0,0],[0,1],[0,2],[1,0],[2,0],[2,1],[2,2]],          // 책
+  media:[[0,1],[1,1],[2,1],[1,0],[1,2]],                      // 안테나
+  sculpt:[[1,0],[0,1],[2,1],[1,2],[1,3]],                     // 흉상
+  vdesign:[[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2]],  // 사각 프레임
+  chn:  [[0,0],[1,0],[2,0],[1,1],[0,2],[1,2],[2,2]],          // 中
+  jpn:  [[0,0],[1,0],[2,0],[1,1],[1,2],[1,3]],                // 日
+  principal:[[0,0],[2,0],[1,1],[0,2],[2,2],[1,3]],            // 왕관/불꽃
+};
+
+function _drawProfEmblem(def, cx, cy) {
+  const pat = _EMBLEM_MAP[def.key];
+  if (!pat) return;
+  const col = def.accent || def.color || '#ffefa8';
+  // 오프셋: 로브 중앙 위쪽 (플레이어는 cx-6 부터 12px 폭). 문양은 로브 정중앙.
+  const ox = cx - 2, oy = cy - 1;
+  for (const [x, y] of pat) pxDraw(ox + x, oy + y, 1, 1, col);
+}
 const PROFESSOR_ENTRY_SEC = 1.6;        // 등장 애니메이션 시간
 const PROFESSOR_DEATH_SEC = 1.5;        // 사망 애니메이션 시간
 
@@ -397,14 +457,14 @@ function drawProfessor(e) {
   ctx.globalAlpha = alpha * (0.15 + Math.sin(t*3)*0.08);
   ctx.fillRect((e.x - 18)*PX, (e.y - 18)*PX, 36*PX, 36*PX);
   ctx.globalAlpha = alpha;
-  // 스프라이트
-  const sk = def.spriteKind;
-  const oy = Math.sin(t * 2) * 2;
-  if (sk === 'lich')          drawSprite(SPR_LICH,     LICH_PAL,   e.x - 10, e.y - 12 + oy);
-  else if (sk === 'colossus') drawSprite(SPR_COLOSSUS, DRAGON_PAL, e.x - 11, e.y - 12);
-  else if (sk === 'seer')     drawSprite(SPR_SEER,     SEER_PAL,   e.x - 8,  e.y - 11 + oy);
-  else if (sk === 'wraith')   drawSprite(SPR_WRAITH,   WRAITH_PAL, e.x - 6,  e.y - 8 + oy);
-  else                        drawSprite(SPR_LICH,     LICH_PAL,   e.x - 10, e.y - 12 + oy);
+  // === 플레이어 스프라이트 + 학과별 팔레트 변형 ===
+  // 로브 색(2/3) 은 def.color 기반, 모자(7) 는 어두운 톤, 별(6) 은 accent.
+  const pal = _profPalette(def);
+  const anim = Math.floor(t * 4) % 2 === 0 ? SPR_PLAYER_S1 : SPR_PLAYER_S2;
+  const oy = Math.sin(t * 2) * 1;
+  drawSprite(anim, pal, e.x - 6, e.y - 7 + oy);
+  // 학과 심볼: 로브 위에 작은 문양 오버레이 (모자 아래 왼쪽)
+  _drawProfEmblem(def, e.x, e.y + oy);
   // 이름표
   drawText(def.name, e.x - textWidth(def.name)/2, e.y - e.r - 16, def.color);
   drawText('[' + def.title + ']', e.x - textWidth('[' + def.title + ']')/2, e.y - e.r - 8, '#c8b898');

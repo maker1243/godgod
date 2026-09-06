@@ -124,11 +124,11 @@ function codexEntries() {
       for (const k of keys) if (state.storyFragments[k]) owned++;
       out.push({ title: '이야기 조각: ' + owned + ' / ' + keys.length + (state.academyTruthSeen ? '  [진실 목격]' : ''), sub: '조각을 모으면 아카데미의 진실이 밝혀집니다.', color: '#ffefa8' });
       for (const k of keys) {
-        const frag = STORY_FRAGMENTS[k];
+        const frag = (typeof _pickStoryLang === 'function') ? _pickStoryLang(k) : STORY_FRAGMENTS[k];
         const has = !!state.storyFragments[k];
         out.push({
-          title: (has ? '📖 ' : '🔒 ') + frag.title,
-          sub: has ? frag.lines[0] : '???',
+          title: (has ? '📖 ' : '🔒 ') + (frag ? frag.title : k),
+          sub: has ? (frag ? frag.lines[0] : '') : '???',
           color: has ? '#c8b898' : '#5a4a80',
         });
       }
