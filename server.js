@@ -18,6 +18,40 @@ const MAX_MESSAGE_BYTES = 16 * 1024;
 const RATE_LIMIT_PER_SEC = 60;
 
 const ROOT = __dirname;
+const ACCOUNTS_FILE = path.join(ROOT, 'accounts.json');
+
+// ---------- Server-side account store ----------
+let accountsStore = {};
+try { accountsStore = JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf-8')) || {}; }
+catch(e) { accountsStore = {}; }
+
+let _saveTimer = null;
+function persistAccounts() {
+  if (_saveTimer) return;
+  _saveTimer = setTimeout(() => {
+    _saveTimer = null;
+    try { fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(accountsStore)); }
+    catch(e) { console.error('accounts save failed:', e.message); }
+  }, 300);
+}
+
+function apiJson(res, status, body) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+  res.end(JSON.stringify(body));
+}
+
+function readBody(req, maxBytes, cb) {
+  let buf = '';
+  req.on('data', (c) => {
+    buf += c;
+    if (buf.length > maxBytes) { req.destroy(); cb(new Error('too big')); }
+  });
+  req.on('end', () => {
+    try { cb(null, JSON.parse(buf || '{}')); }
+    catch(e) { cb(e); }
+  });
+  req.on('error', (e) => cb(e));
+}
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js':   'application/javascript; charset=utf-8',
@@ -255,6 +289,51 @@ function serveFile(res, filePath) {
 
 const httpServer = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || '/').split('?')[0].split('#')[0]);
+
+  // ---------- Account API ----------
+  if (urlPath === '/api/register' && req.method === 'POST') {
+    readBody(req, 1024*512, (err, body) => {
+      if (err) return apiJson(res, 400, { ok:false, err:'bad body' });
+      const name = (body.name || '').toString().slice(0, 24);
+      const passHash = (body.passHash || '').toString().slice(0, 64);
+      if (!name || !passHash) return apiJson(res, 400, { ok:false, err:'missing name/passHash' });
+      const key = name.toLowerCase();
+      if (accountsStore[key]) return apiJson(res, 200, { ok:false, err:'exists' });
+      accountsStore[key] = { name, passHash, createdAt: Date.now(), data: null };
+      persistAccounts();
+      return apiJson(res, 200, { ok:true, name });
+    });
+    return;
+  }
+  if (urlPath === '/api/login' && req.method === 'POST') {
+    readBody(req, 1024*512, (err, body) => {
+      if (err) return apiJson(res, 400, { ok:false, err:'bad body' });
+      const name = (body.name || '').toString().slice(0, 24);
+      const passHash = (body.passHash || '').toString().slice(0, 64);
+      const key = name.toLowerCase();
+      const rec = accountsStore[key];
+      if (!rec) return apiJson(res, 200, { ok:false, err:'not_found' });
+      if (rec.passHash !== passHash) return apiJson(res, 200, { ok:false, err:'wrong_pass' });
+      return apiJson(res, 200, { ok:true, name: rec.name, data: rec.data || null });
+    });
+    return;
+  }
+  if (urlPath === '/api/save' && req.method === 'POST') {
+    readBody(req, 1024*1024*2, (err, body) => {
+      if (err) return apiJson(res, 400, { ok:false, err:'bad body' });
+      const name = (body.name || '').toString().slice(0, 24);
+      const passHash = (body.passHash || '').toString().slice(0, 64);
+      const key = name.toLowerCase();
+      const rec = accountsStore[key];
+      if (!rec) return apiJson(res, 200, { ok:false, err:'not_found' });
+      if (rec.passHash !== passHash) return apiJson(res, 200, { ok:false, err:'wrong_pass' });
+      rec.data = body.data || null;
+      rec.savedAt = Date.now();
+      persistAccounts();
+      return apiJson(res, 200, { ok:true });
+    });
+    return;
+  }
 
   if (urlPath === '/status') {
     res.writeHead(200, { 'Content-Type': 'application/json' });

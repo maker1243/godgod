@@ -216,6 +216,9 @@ function renderAcademy() {
     if (dist(player, n) < 20) {
       const s = '[SPACE]';
       drawText(s, n.x - textWidth(s)/2, n.y - 32, '#ffefa8');
+      if (n._livingHint) {
+        drawText('(' + n._livingHint + ')', n.x - textWidth('(' + n._livingHint + ')')/2, n.y - 40, '#8bd8ff');
+      }
     }
   }
 
@@ -284,11 +287,16 @@ function renderAcademy() {
     ctx.globalAlpha = 1;
   }
 
+  // 아침 이벤트: 강조된 문 링
+  if (typeof drawMorningEventHighlight === 'function') drawMorningEventHighlight();
+
   // 플레이어
   drawPlayer(player.x, player.y, false);
 
   // 학원 HUD
   renderAcademyHUD();
+  // 아침 이벤트: 상단 티커
+  if (typeof drawMorningEventTicker === 'function') drawMorningEventTicker();
 }
 
 function renderAcademyHUD() {

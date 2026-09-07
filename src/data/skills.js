@@ -62,6 +62,17 @@ function createPlayer() {
   try { if (typeof applyArtifactsToPlayer === 'function') applyArtifactsToPlayer(base); } catch(_){}
   try { if (typeof applyTraitsToPlayer    === 'function') applyTraitsToPlayer(base); } catch(_){}
 
+  // 아침 이벤트: 축제일이면 이번 던전 진입 시 RP DROP +50%
+  try {
+    if (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_festival') {
+      base.rpMult = (base.rpMult || 1) * 1.5;
+    }
+    // 안개일이면 몹 데미지 살짝 강화 - createPlayer 에서 dmgReduction 살짝 낮춤
+    if (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_fog') {
+      base.dmgReduction = Math.max(0, (base.dmgReduction || 0) - 0.05);
+    }
+  } catch(_){}
+
   return base;
 }
 

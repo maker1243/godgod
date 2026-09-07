@@ -200,6 +200,9 @@ function _placeCipherDoorRandom() {
 }
 
 function updateAcademy(dt) {
+  // 살아있는 아카데미: NPC 병합 + 아침 이벤트 체크
+  if (typeof ensureLivingAcademyNpcs === 'function') ensureLivingAcademyNpcs();
+  if (typeof checkMorningEvent === 'function') checkMorningEvent();
   // === CIPHER/PROF 문 표시 상태 결정 ===
   // CIPHER 문: 항상 표시. 다만 매 아카데미 진입 시(첫 초기화 포함) 랜덤 위치.
   //           실패 시(cipherQuest.messageT 가 방금 켜졌고 문구가 WRONG 이면) 재배치.
@@ -376,11 +379,13 @@ function updateAcademy(dt) {
           goTo('shop');
         } else if (n.name === 'ELARA' && typeof elaraInteract === 'function') {
           elaraInteract();
+        } else if (typeof livingNpcInteract === 'function' && livingNpcInteract(n)) {
+          // 새 NPC (Living Academy) 처리됨
         } else {
-          const msg = n.msgs[Math.min(n.bond, n.msgs.length - 1)];
+          const msg = (n.msgs && n.msgs.length) ? n.msgs[Math.min(n.bond, n.msgs.length - 1)] : (n.name + ': ...');
           showMsg(msg, 3);
           n.bond++;
-          if (n.bond === 3) {
+          if (n.bond === 3 && n.msgs && n.msgs.length) {
             showMsg(n.name + ' TRUSTS YOU. +15 GOLD!', 3);
             state.gold += 15;
           }

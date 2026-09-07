@@ -144,6 +144,8 @@ function loadAccountData() {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
       if (typeof d.duelWins === 'number')  academy.duelWins  = d.duelWins;
+      // 살아있는 아카데미 NPC 병합 (bond 로드 전에 배열에 있어야 함)
+      if (typeof ensureLivingAcademyNpcs === 'function') ensureLivingAcademyNpcs();
       if (d.npcBonds && Array.isArray(academy.npcs)) {
         for (const n of academy.npcs) if (n.name && typeof d.npcBonds[n.name] === 'number') n.bond = d.npcBonds[n.name];
       }
@@ -200,6 +202,28 @@ function saveAccountData() {
     savedAt: Date.now(),
   };
   try { localStorage.setItem(k, JSON.stringify(payload)); } catch(e){}
+  _syncAccountToServer(payload);
+}
+
+// 서버에 계정 데이터 백업 (throttled: 5초). 성공 시 다른 기기에서도 로그인 가능.
+let _lastServerSync = 0;
+let _serverSyncTimer = null;
+function _syncAccountToServer(payload) {
+  if (!state.account || !state.account.name || !state.account.passHash) return;
+  const now = Date.now();
+  const delay = Math.max(0, 5000 - (now - _lastServerSync));
+  if (_serverSyncTimer) clearTimeout(_serverSyncTimer);
+  _serverSyncTimer = setTimeout(() => {
+    _serverSyncTimer = null;
+    _lastServerSync = Date.now();
+    try {
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: state.account.name, passHash: state.account.passHash, data: payload }),
+      }).catch(()=>{});
+    } catch(_){}
+  }, delay);
 }
 
 // 계정 삭제 시 데이터도 삭제 (미래에 사용)

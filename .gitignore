@@ -15,3 +15,4 @@ package-lock.json
 # Env
 .env
 .env.local
+accounts.json

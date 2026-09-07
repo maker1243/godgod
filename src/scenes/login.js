@@ -38,10 +38,24 @@ const login = {
 
 function loginFlash(msg, dur) { login.err = msg; login.errT = dur || 2.5; }
 
-function loginSubmit() {
+// 서버 API 시도 → 실패 시 로컬 fallback. 서버 성공 시 계정 데이터도 서버에서 복원.
+async function _apiCall(path, body) {
+  try {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('http ' + res.status);
+    return await res.json();
+  } catch(e) {
+    return { ok:false, err:'offline' };
+  }
+}
+
+async function loginSubmit() {
   const name = login.nameInput.trim();
   const pass = login.passInput;
-  // 3-12자, 공백/제어문자 없음. 한글/영문/숫자/기호 모두 허용.
   if (name.length < 3 || name.length > 12) { loginFlash(t('login.invalidName')); return; }
   if (/[\s\x00-\x1f]/.test(name))          { loginFlash(t('login.invalidName')); return; }
   if (pass.length < 4) { loginFlash(t('login.tooShort')); return; }
@@ -51,27 +65,51 @@ function loginSubmit() {
   const hash = simpleHash(pass);
 
   if (login.mode === 'new') {
-    if (accs[key]) { loginFlash(t('login.exists')); return; }
+    // 1) 서버 우선 시도
+    const srv = await _apiCall('/api/register', { name, passHash: hash });
+    if (srv.err === 'exists') { loginFlash(t('login.exists')); return; }
+    // 서버 성공 or offline: 로컬에도 저장 (오프라인 대비 캐시)
+    if (accs[key] && srv.ok !== true) { loginFlash(t('login.exists')); return; }
     accs[key] = { name, passHash: hash, createdAt: Date.now() };
     saveAccounts(accs);
     state.account = { name, passHash: hash };
     try { localStorage.setItem('gaa_current_account', JSON.stringify(state.account)); } catch(e){}
-    // 신규 계정: 완전 초기화 후 첫 저장
     resetGameData();
-    saveAccountData();
+    saveAccountData();       // 로컬 즉시 저장 + 서버 동기화
     showMsg(t('login.created') + ' - ' + t('login.welcome') + name.toUpperCase(), 3);
     state.scene = 'title';
     sfx('level');
     _tryAutoJoin();
   } else {
+    // 1) 서버 우선 시도
+    const srv = await _apiCall('/api/login', { name, passHash: hash });
+    if (srv.err === 'not_found')  { loginFlash(t('login.notFound')); return; }
+    if (srv.err === 'wrong_pass') { loginFlash(t('login.wrongPass')); return; }
+    if (srv.ok) {
+      // 서버 성공 - 로컬 캐시도 갱신
+      accs[key] = { name: srv.name, passHash: hash, createdAt: Date.now() };
+      saveAccounts(accs);
+      state.account = { name: srv.name, passHash: hash };
+      try { localStorage.setItem('gaa_current_account', JSON.stringify(state.account)); } catch(e){}
+      // 서버 데이터로 로컬 blob 교체 후 로드
+      if (srv.data) {
+        try { localStorage.setItem('gaa_data_' + srv.name.toLowerCase(), JSON.stringify(srv.data)); } catch(e){}
+      }
+      if (!loadAccountData()) resetGameData();
+      showMsg(t('login.signedIn') + ' - ' + t('login.welcome') + srv.name.toUpperCase(), 3);
+      state.scene = 'title';
+      sfx('level');
+      _tryAutoJoin();
+      return;
+    }
+    // 2) 오프라인 fallback: 로컬 계정으로 진행
     const rec = accs[key];
-    if (!rec) { loginFlash(t('login.notFound')); return; }
+    if (!rec) { loginFlash(t('login.notFound') + ' (오프라인)'); return; }
     if (rec.passHash !== hash) { loginFlash(t('login.wrongPass')); return; }
     state.account = { name: rec.name, passHash: rec.passHash };
     try { localStorage.setItem('gaa_current_account', JSON.stringify(state.account)); } catch(e){}
-    // 기존 계정: 저장된 데이터 로드. 없으면(파일 유실 등) 초기화.
     if (!loadAccountData()) resetGameData();
-    showMsg(t('login.signedIn') + ' - ' + t('login.welcome') + rec.name.toUpperCase(), 3);
+    showMsg(t('login.signedIn') + ' - ' + t('login.welcome') + rec.name.toUpperCase() + ' (오프라인)', 3);
     state.scene = 'title';
     sfx('level');
     _tryAutoJoin();
