@@ -126,6 +126,16 @@ const ARTIFACT_DEFS = [
   { id:'god_infmana', name:'INFINITE MANA',    tier:5, cost: 1e11, color:'#3b7fd6',
     desc:'MP 무한 (COST 0)',
     apply:(p)=>{ p.mpCostMult = 0; } },
+  // 신규 T3-T4 (3개)
+  { id:'ut_scholar',  name:'SCHOLAR\'S RING',  tier:3, cost: 2e7, color:'#8bd8ff',
+    desc:'XP GAIN +100%',
+    apply:(p)=>{ p.xpMult = (p.xpMult||1) * 2; } },
+  { id:'ut_hoarder',  name:'GOLDEN GRIP',      tier:3, cost: 3e7, color:'#e8c547',
+    desc:'GOLD +100%, RP +50%',
+    apply:(p)=>{ p.goldMult = (p.goldMult||1) * 2; p.rpMult = (p.rpMult||1) * 1.5; } },
+  { id:'atk_venom',   name:'VENOM CROWN',      tier:4, cost: 4e8, color:'#3ac762',
+    desc:'모든 발사체에 4초 독 DoT',
+    apply:(p)=>{ p.venomAttack = true; } },
 ];
 
 const ARTIFACT_BY_ID = {};
