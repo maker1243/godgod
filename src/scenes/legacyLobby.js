@@ -176,9 +176,9 @@ function renderLegacyLobby() {
 
   // 헤더
   pxDraw(0, 0, W, 12, '#1a0e2e');
-  drawText('LEGACY HALL  ·  RP ' + _fmtBigRp(state.research || 0), 4, 3, '#ffefa8');
-  const hint = '[1-3] TAB  [WASD/WHEEL] SCROLL  [SPACE] BUY  [F] EQUIP  [R/ESC] BACK';
-  drawText(hint, W - textWidth(hint) - 4, 3, '#8a7ab5');
+  drawText('LEGACY HALL  RP ' + _fmtBigRp(state.research || 0), 4, 3, '#ffefa8');
+  const hintShort = '[R/ESC] BACK';
+  drawText(hintShort, W - textWidth(hintShort) - 4, 3, '#8a7ab5');
 
   // 탭
   const tabW = 60, tabY = 14, tabH = 10;
@@ -245,5 +245,8 @@ function renderLegacyLobby() {
     drawText(s, W/2 - textWidth(s)/2, H - 20, '#ffefa8');
     ctx.globalAlpha = 1;
   }
-  drawText((legacyLobby.cursor + 1) + '/' + entries.length, 4, H - 10, '#8a7ab5');
+  const counter = (legacyLobby.cursor + 1) + '/' + entries.length;
+  drawText(counter, W - textWidth(counter) - 4, H - 10, '#8a7ab5');
+  const bottomHint = '1-3 TAB   WASD/WHEEL SCROLL   SPACE BUY   F EQUIP';
+  drawText(bottomHint, 4, H - 10, '#5a4a80');
 }

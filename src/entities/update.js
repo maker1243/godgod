@@ -808,6 +808,10 @@ function updatePlayer(dt) {
         // 랜덤 런 이벤트: 20% 확률로 이벤트 방 (보스방 직전이 아닐 때만)
         if (typeof openRunEvent === 'function' && currentRoom < 4 && Math.random() < 0.20) {
           buildRoom(currentRoom + 1);
+          // 이벤트 방: 전투 없음 - 몹 지우고 방을 클리어로 마크. 복귀 시 exit 문이 자동 스폰됨.
+          entities.enemies = [];
+          const evRoom = rooms[currentRoom];
+          if (evRoom) evRoom._eventRoom = true;
           openRunEvent();
           return;
         }

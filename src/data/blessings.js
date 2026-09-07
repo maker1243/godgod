@@ -130,6 +130,7 @@ function _confirmBlessing() {
   const cb = blessingPick.onDone;
   blessingPick.onDone = null;
   if (typeof cb === 'function') cb();
+  else if (state.scene === 'blessingPick') state.scene = 'dungeon';
 }
 
 function renderBlessingPick() {

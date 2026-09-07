@@ -159,9 +159,9 @@ function renderCustomize() {
   ctx.fillStyle = 'rgba(10, 5, 30, 0.85)'; ctx.fillRect(0, 0, W*PX, H*PX);
 
   pxDraw(0, 0, W, 12, '#1a0e2e');
-  drawText('CUSTOMIZE  ·  RP ' + Math.floor(state.research||0), 4, 3, '#ffefa8');
-  const hint = '[1-4] TAB  [WS] MOVE  [SPACE] BUY/EQUIP  [R/ESC] BACK';
-  drawText(hint, W - textWidth(hint) - 4, 3, '#8a7ab5');
+  drawText('CUSTOMIZE  RP ' + _fmtBigRp(state.research||0), 4, 3, '#ffefa8');
+  const hintShort = '[R/ESC] BACK';
+  drawText(hintShort, W - textWidth(hintShort) - 4, 3, '#8a7ab5');
 
   // 탭
   window._customTabRects = [];
@@ -224,4 +224,6 @@ function renderCustomize() {
     drawText(customize.message, W/2 - textWidth(customize.message)/2, H - 18, '#ffefa8');
     ctx.globalAlpha = 1;
   }
+  const bottomHint = '1-4 TAB   WASD SCROLL   SPACE BUY/EQUIP';
+  drawText(bottomHint, W/2 - textWidth(bottomHint)/2, H - 8, '#5a4a80');
 }
