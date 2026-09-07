@@ -205,12 +205,17 @@ function renderAcademy() {
   // NPC
   for (const n of academy.npcs) {
     drawSprite(SPR_NPC, n.color, n.x - 5, n.y - 12);
-    const nameCol = n.bond >= 3 ? '#ffefa8' : '#e8d9b0';
+    // ELARA 는 npcQuests.elara.bond 사용 (10단계까지 확장됨)
+    let displayBond = n.bond;
+    if (n.name === 'ELARA' && state.npcQuests && state.npcQuests.elara) displayBond = state.npcQuests.elara.bond;
+    const nameCol = displayBond >= 3 ? '#ffefa8' : '#e8d9b0';
     drawText(n.name, n.x - textWidth(n.name)/2, n.y - 18, nameCol);
-    // 호감도 하트
+    // 호감도 하트 (최대 10)
     if (!n.shop) {
-      for (let i = 0; i < Math.min(3, n.bond); i++) {
-        pxDraw(n.x - 3 + i * 3, n.y - 24, 2, 2, '#c81616');
+      const maxHearts = Math.min(10, displayBond);
+      for (let i = 0; i < maxHearts; i++) {
+        const col = i >= 6 ? '#ff2d80' : (i >= 3 ? '#ff9c3d' : '#c81616');
+        pxDraw(n.x - 6 + i * 2, n.y - 24, 1, 2, col);
       }
     }
     if (dist(player, n) < 20) {
