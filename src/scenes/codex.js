@@ -176,6 +176,43 @@ function codexEntries() {
     if (state.highlights && state.highlights.length) {
       out.push({ title: '기록된 하이라이트', sub: state.highlights.length + '개', color:'#8bd8ff' });
     }
+    // 업적 달성률
+    if (typeof ACHIEVEMENTS !== 'undefined') {
+      const total = ACHIEVEMENTS.length;
+      const done = Object.keys(state.achievementsUnlocked || {}).length;
+      const pct = Math.floor(done / total * 100);
+      out.push({ title: '업적 달성률', sub: done + '/' + total + ' (' + pct + '%)', color:'#ffefa8' });
+    }
+    // 스토리 조각 수집률
+    if (typeof STORY_FRAGMENTS !== 'undefined') {
+      const total = Object.keys(STORY_FRAGMENTS).length;
+      const done = Object.keys(state.storyFragments || {}).length;
+      const pct = Math.floor(done / total * 100);
+      out.push({ title: '이야기 조각', sub: done + '/' + total + ' (' + pct + '%)', color:'#c8b898' });
+    }
+    // 스킬 소유율
+    if (typeof SKILL_TREE !== 'undefined') {
+      let totalS = 0;
+      for (const cat of Object.keys(SKILL_TREE)) totalS += SKILL_TREE[cat].skills.length;
+      const done = Object.keys(state.ownedSkills || {}).length;
+      out.push({ title: '스킬 소유', sub: done + '/' + totalS, color:'#c86ade' });
+    }
+    // 축복 획득 종류 (추가로 기록되진 않지만 유용)
+    if (typeof BLESSING_DEFS !== 'undefined') {
+      out.push({ title: '축복 카드', sub: BLESSING_DEFS.length + '종 존재', color:'#ff6666' });
+    }
+    // 아티팩트 소유
+    if (state.artifacts && state.artifacts.owned) {
+      const owned = Object.keys(state.artifacts.owned).length;
+      const total = ARTIFACT_DEFS.length;
+      out.push({ title: '아티팩트 소유', sub: owned + '/' + total, color:'#e8c547' });
+    }
+    // 트레잇 소유
+    if (state.traits && state.traits.owned) {
+      const owned = Object.keys(state.traits.owned).length;
+      const total = TRAIT_DEFS.length;
+      out.push({ title: '트레잇 소유', sub: owned + '/' + total, color:'#3ac762' });
+    }
     // Blessings 활성 시너지 개수 (계정별)
     if (state.stats && s.rpEarnedTotal) {
       out.push({ title: 'RP 획득 총합', sub: format(s.rpEarnedTotal), color:'#8bd8ff' });
