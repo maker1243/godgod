@@ -18,8 +18,11 @@ function updateShop(dt) {
     keys['Space']=false; keys['Enter']=false;
     const kind = POTION_ORDER[shop.cursor];
     const pot = POTIONS[kind];
-    if (state.gold < pot.cost) { shopFlash('NEED ' + pot.cost + ' GOLD'); sfx('hurt'); return; }
-    state.gold -= pot.cost;
+    // 오늘의 세일: Sale Day 이벤트 시 50% 할인
+    const saleDay = (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_saleday');
+    const price = saleDay ? Math.floor(pot.cost * 0.5) : pot.cost;
+    if (state.gold < price) { shopFlash('NEED ' + price + ' GOLD'); sfx('hurt'); return; }
+    state.gold -= price;
     academy.inventory[kind]++;
     recomputeHotkeys();
     savePotions();
@@ -71,9 +74,11 @@ function renderShop() {
     const owned = academy.inventory[kind];
     const ownStr = 'OWN x' + owned;
     drawText(ownStr, W - listX - textWidth(ownStr) - 40, y + 6, owned > 0 ? '#3ac762' : '#5a4a80');
-    // 가격
-    const costStr = pot.cost + 'G';
-    drawText(costStr, W - listX - textWidth(costStr) - 6, y + 6, canBuy ? '#e8c547' : '#c81616');
+    // 가격 (세일 시 할인)
+    const saleDay = (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_saleday');
+    const salePrice = saleDay ? Math.floor(pot.cost * 0.5) : pot.cost;
+    const costStr = saleDay ? (salePrice + 'G(-50%)') : (pot.cost + 'G');
+    drawText(costStr, W - listX - textWidth(costStr) - 6, y + 6, (state.gold >= salePrice) ? '#e8c547' : '#c81616');
   }
 
   // 하단 정보 패널
