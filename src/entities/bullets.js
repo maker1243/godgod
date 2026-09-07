@@ -140,6 +140,8 @@ function updateBullets(dt) {
         }
         // 축복: Burn (초당 데미지 인플릭트)
         if (b._burn) { e._burn = Math.max(e._burn||0, b._burn); e._burnDmg = finalDmg * 0.15; }
+        // 아티팩트 VENOM CROWN: 모든 발사체 4초 독
+        if (player.venomAttack) { e._burn = Math.max(e._burn||0, 4); e._burnDmg = Math.max(e._burnDmg||0, finalDmg * 0.1); }
         // 코업 게스트: 실제 데미지는 호스트가 처리. mobHit 로 통지.
         if (typeof mp !== 'undefined' && mp.coop && mp.coop.active && !mp.coop.isHost && e._syncId != null) {
           if (typeof mpSend === 'function') mpSend({ type:'mobHit', i: e._syncId, dmg: finalDmg });

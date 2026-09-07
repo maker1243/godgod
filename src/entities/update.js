@@ -864,7 +864,7 @@ function updatePlayer(dt) {
       const mult = hasPerk('bountiful') ? 2 : 1;
       if (it.kind === 'hp') p.hp = Math.min(p.maxHp, p.hp + 15 * mult);
       else if (it.kind === 'mp') p.mp = Math.min(p.maxMp, p.mp + 20 * mult);
-      else if (it.kind === 'gold') state.gold += 1 * mult;
+      else if (it.kind === 'gold') state.gold += Math.floor(1 * mult * (p.goldMult || 1));
       else if (it.kind === 'xp') { p.xp += 3 * mult; spawnFloat(p.x, p.y - 6, '+' + (3*mult) + ' XP', '#c86ade'); }
       else if (it.kind === 'pouch') {
         // 죽음 파우치 회수: 저장된 골드 100% 복구
