@@ -172,6 +172,56 @@ const RUN_EVENT_DEFS = [
     choices:[
       { label:'집어든다 (부활 +1)',            apply:()=>{ player.reviveCharges = (player.reviveCharges||0) + 1; return '이번 런에서 1회 부활!'; } },
     ] },
+
+  // 추가 이벤트 (5개)
+  { id:'ev_timetrav',
+    title:'시간 여행자', color:'#c86ade',
+    body:'후드 쓴 인물이 회중시계를 흔들며 미소짓는다.',
+    choices:[
+      { label:'다음 층으로 스킵 (5000 RP)', apply:()=>{ if ((state.research||0) < 5000) return 'RP 부족'; state.research -= 5000; if (typeof nextFloor === 'function') { nextFloor(); return '한 층 스킵!'; } return '실패'; } },
+      { label:'대화만 (스토리 조각)',       apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('timetraveler_' + Date.now()); return '시간의 조각을 얻었다.'; } },
+      { label:'거절',                       apply:()=>{ return '그는 시간 속으로 사라진다.'; } },
+    ] },
+  { id:'ev_orb',
+    title:'수정 구슬', color:'#ffefa8',
+    body:'허공에 반짝이는 수정이 떠 있다. 소원을 빌 수 있을 것 같다.',
+    choices:[
+      { label:'힘 (DMG +25% 영구, 이번 런)',    apply:()=>{ player.baseDmg *= 1.25; return 'DMG +25%'; } },
+      { label:'속도 (SPD +25% 영구, 이번 런)',  apply:()=>{ player.speed *= 1.25; return 'SPD +25%'; } },
+      { label:'지혜 (MP MAX +50%, REGEN +5)',   apply:()=>{ const add = Math.floor(player.maxMp*0.5); player.maxMp += add; player.mp += add; player.mpRegenBonus = (player.mpRegenBonus||0)+5; return 'MP MAX +50%'; } },
+    ] },
+  { id:'ev_dice',
+    title:'저주받은 주사위', color:'#c81616',
+    body:'검은 주사위가 저절로 회전하고 있다. 던져볼 수 있을까.',
+    choices:[
+      { label:'2회 굴리기',
+        apply:()=>{
+          const r1 = Math.floor(Math.random()*6)+1;
+          const r2 = Math.floor(Math.random()*6)+1;
+          const sum = r1 + r2;
+          if (sum <= 4) { player.hp = Math.max(1, Math.floor(player.hp * 0.5)); return '' + r1 + '+' + r2 + '=' + sum + ' - 저주! HP -50%'; }
+          if (sum <= 8) { const amt = Math.floor(sum * 100); state.research = (state.research||0) + amt; return '' + r1 + '+' + r2 + '=' + sum + ' - +' + amt + ' RP'; }
+          if (sum <= 11) { player.baseDmg *= 1.2; return '' + r1 + '+' + r2 + '=' + sum + ' - 축복! DMG +20%'; }
+          state.research = (state.research||0) + 10000; return '★★ 12! 잭팟 +10000 RP ★★';
+        } },
+      { label:'거절',                       apply:()=>{ return '주사위가 사라진다.'; } },
+    ] },
+  { id:'ev_puzzle',
+    title:'수수께끼', color:'#8bd8ff',
+    body:'"오늘도 새 아침이지만 하나 부족한 것이 있다. 정답은?"',
+    choices:[
+      { label:'커피',                        apply:()=>{ state.research = (state.research||0) + 1500; return '정답! (사실 뭐든 맞음) +1500 RP'; } },
+      { label:'잠',                          apply:()=>{ state.research = (state.research||0) + 1500; return '정답! (사실 뭐든 맞음) +1500 RP'; } },
+      { label:'답 없음',                     apply:()=>{ state.research = (state.research||0) + 500; return '역시 답 없음. +500 RP'; } },
+    ] },
+  { id:'ev_shrine_dark',
+    title:'어두운 사당', color:'#050510',
+    body:'검은 얼굴의 상 앞에 촛불 3개. 무엇을 바치는가.',
+    choices:[
+      { label:'스킬 하나 (오히려 강화)',     apply:()=>{ const keys = Object.keys(state.ownedSkills||{}); if (!keys.length) return '가진 스킬 없음'; player.baseDmg *= 1.15; return '어둠이 힘을 준다. DMG +15%'; } },
+      { label:'포션 3개 (레벨업)',           apply:()=>{ let cnt = 0; for (const k of POTION_ORDER) if (academy.inventory[k] >= 1) cnt++; if (cnt < 3) return '포션 3개 필요'; for (const k of POTION_ORDER) if (academy.inventory[k] >= 1) { academy.inventory[k]--; cnt--; if (cnt === 0) break; } player.xp = Math.max(player.xp, player.xpNext); return '즉시 레벨업 준비'; } },
+      { label:'거절',                        apply:()=>{ return '어둠이 조용히 웃는다.'; } },
+    ] },
 ];
 
 function _pickRandomOwnedArtifactOrGrant() {
