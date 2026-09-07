@@ -389,7 +389,8 @@ function renderDuel() {
   ctx.globalAlpha = 1;
   for (const f of entities.floats) {
     ctx.globalAlpha = clamp(f.life, 0, 1);
-    drawText(f.text, f.x - textWidth(f.text)/2, f.y - 8, f.color);
+    const scale = f.scale || 1;
+    drawText(f.text, f.x - textWidth(f.text, scale)/2, f.y - 8, f.color, scale);
     ctx.globalAlpha = 1;
   }
 

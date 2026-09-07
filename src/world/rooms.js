@@ -484,6 +484,18 @@ function spawnParticle(x, y, color, life = 0.4, count = 6, spd = 40) {
 function spawnFloat(x, y, text, color = '#ffefa8') {
   entities.floats.push({ x, y, vy: -20, text, color, life: 0.8 });
 }
+function spawnFloatScale(x, y, text, color = '#ffefa8', scale = 1, life = 0.9) {
+  entities.floats.push({ x, y, vy: -25, text, color, life: life, scale: scale });
+}
+// 데미지 숫자 포맷: 큰 숫자는 축약
+function _dmgFmt(n) {
+  n = Math.max(0, Math.ceil(n));
+  if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(1)  + 'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(1)  + 'M';
+  if (n >= 1e4)  return (n/1e3).toFixed(1)  + 'k';
+  return String(n);
+}
 function spawnPickup(x, y, kind) {
   entities.pickups.push({ x, y, kind, life: 8, bob: rand(0, Math.PI*2) });
 }

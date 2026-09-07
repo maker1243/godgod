@@ -131,7 +131,18 @@ function updateBullets(dt) {
           if (typeof mpSend === 'function') mpSend({ type:'mobHit', i: e._syncId, dmg: finalDmg });
         }
         e.hitFlash = isCrit ? 0.22 : 0.14;
-        spawnFloat(e.x, e.y - 6, Math.ceil(finalDmg), isCrit ? '#ffefa8' : '#ffefa8');
+        // 데미지 넘버: 크리 시 큰 노란 텍스트, 큰 데미지는 폰트 스케일 업
+        const bigHit = finalDmg >= 1e6;
+        const veryBigHit = finalDmg >= 1e9;
+        const dmgLabel = _dmgFmt(finalDmg);
+        const dmgCol = isCrit ? '#ffefa8' : (bigHit ? '#ff9c3d' : '#e8d9b0');
+        const scale = veryBigHit ? 2 : (isCrit || bigHit ? 1 : 1);
+        // 큰 히트는 두 번 (그림자 효과)
+        if (veryBigHit || isCrit) spawnFloatScale(e.x, e.y - 6, dmgLabel, dmgCol, scale, 1.5);
+        else spawnFloat(e.x, e.y - 6, dmgLabel, dmgCol);
+        // 큰 히트 프리즈 프레임
+        if (veryBigHit) state._slowMoUntil = Math.max(state._slowMoUntil || 0, performance.now() + 80);
+        else if (isCrit) state._slowMoUntil = Math.max(state._slowMoUntil || 0, performance.now() + 40);
 
         // === 강화된 히트 이펙트 ===
         const baseCol = b.kind === 'ice' ? '#8bd8ff' : (b.kind === 'fire' ? '#ff9c3d' : '#c86ade');

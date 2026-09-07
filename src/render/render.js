@@ -490,6 +490,9 @@ function renderDungeon() {
   for (let x = r.x; x < r.x + r.w; x += 12) {
     ctx.fillRect(x*PX, (r.y-2)*PX, 10*PX, PX);
   }
+  // 방 장식 (기둥/균열/촛대/유리병 등)
+  if (typeof drawRoomDecor === 'function') drawRoomDecor(r);
+
   // 룬 (보스방)
   if (r.isBoss) {
     ctx.fillStyle = 'rgba(200, 40, 80, 0.15)';
@@ -668,10 +671,11 @@ function renderDungeon() {
   }
   ctx.globalAlpha = 1;
 
-  // 플로팅 텍스트
+  // 플로팅 텍스트 - scale 지원
   for (const f of entities.floats) {
     ctx.globalAlpha = clamp(f.life, 0, 1);
-    drawText(f.text, f.x - textWidth(f.text)/2, f.y - 8, f.color);
+    const scale = f.scale || 1;
+    drawText(f.text, f.x - textWidth(f.text, scale)/2, f.y - 8, f.color, scale);
     ctx.globalAlpha = 1;
   }
 
