@@ -5,9 +5,11 @@
 // ---------- 업데이트 ----------
 let last = performance.now();
 function frame(now) {
-  const dt = Math.min(0.033, (now - last) / 1000);
+  let dt = Math.min(0.033, (now - last) / 1000);
   last = now;
   state.time += dt;
+  // 보스 킬 슬로우모션
+  if (state._slowMoUntil && now < state._slowMoUntil) dt *= 0.35;
 
   try {
     if (typeof updateTouchInput === 'function') updateTouchInput();
@@ -518,6 +520,7 @@ function updateDungeon(dt) {
   if (typeof updateBlessingsFrame === 'function') updateBlessingsFrame(dt);
   if (typeof tickMobAffixes === 'function') tickMobAffixes(dt);
   if (typeof comboTick === 'function') comboTick(dt);
+  if (typeof updateBossHud === 'function') updateBossHud(dt);
   if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
@@ -593,6 +596,7 @@ function updateDungeon(dt) {
             state.maxUnlocked = true;
             state.trialBanUntil = 0;
             if (typeof statAdd === 'function') statAdd('trialWins', 1);
+            if (typeof weeklyAdd === 'function') weeklyAdd('weekly_trials', 1);
             showMsg(cat.toUpperCase() + ' MAX 해금!', 4);
           }
           state.trialStage = 1;

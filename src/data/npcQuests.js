@@ -89,6 +89,7 @@ function elaraInteract() {
     const line = ELARA_LINES[Math.min(el.bond, ELARA_LINES.length - 1)];
     showMsg('엘라라: ' + line + '  (BOND ' + el.bond + ' · ' + rwd + ')', 5);
     if (typeof sfx === 'function') sfx('level');
+    if (typeof weeklyAdd === 'function') weeklyAdd('weekly_elaraBond', 1);
     if (typeof saveAccountData === 'function') saveAccountData();
     return;
   }

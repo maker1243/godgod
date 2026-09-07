@@ -21,6 +21,7 @@ const CODEX_TABS = [
   { id:'achieve',  name:'ACHIEVE'    },
   { id:'daily',    name:'DAILY'      },
   { id:'story',    name:'STORY'      },
+  { id:'weekly',   name:'WEEKLY'     },
 ];
 
 function codexSetTab(id) {
@@ -116,6 +117,21 @@ function codexEntries() {
         });
       }
     }
+  } else if (codex.tab === 'weekly') {
+    if (typeof weeklyStatus === 'function') {
+      const list = weeklyStatus();
+      out.push({ title: '이번 주 도전 (' + (state.weekly ? state.weekly.week : '?') + ')', sub: '완료 시 큰 RP 보상. 매주 월요일 리셋.', color: '#ffefa8' });
+      for (const w of list) {
+        const barLen = 20;
+        const filled = Math.min(barLen, Math.floor(barLen * (w.cur / w.goal)));
+        const bar = '['.padEnd(1) + '#'.repeat(filled) + '.'.repeat(barLen - filled) + ']';
+        out.push({
+          title: (w.done ? '★ ' : '  ') + w.name + '  ' + bar + '  ' + Math.min(w.cur, w.goal) + '/' + w.goal,
+          sub: w.desc + '   보상 +' + w.reward + ' RP' + (w.done ? '   [완료!]' : ''),
+          color: w.done ? '#3ac762' : '#e8d9b0',
+        });
+      }
+    }
   } else if (codex.tab === 'story') {
     if (typeof STORY_FRAGMENTS !== 'undefined') {
       state.storyFragments = state.storyFragments || {};
@@ -176,6 +192,7 @@ function updateCodex(dt) {
   if (keys['Digit6']) { keys['Digit6']=false; codexSetTab('achieve'); sfx('hit'); }
   if (keys['Digit7']) { keys['Digit7']=false; codexSetTab('daily');   sfx('hit'); }
   if (keys['Digit8']) { keys['Digit8']=false; codexSetTab('story');   sfx('hit'); }
+  if (keys['Digit9']) { keys['Digit9']=false; codexSetTab('weekly');  sfx('hit'); }
   if (keys['Tab'])    { keys['Tab']=false; const idx = CODEX_TABS.findIndex(t => t.id === codex.tab); codexSetTab(CODEX_TABS[(idx+1) % CODEX_TABS.length].id); sfx('hit'); }
   // 커서/스크롤
   if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; codex.cursor = Math.max(0, codex.cursor - 1); }

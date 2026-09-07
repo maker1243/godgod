@@ -96,6 +96,7 @@ function perfectChamberCheck(room) {
       state.research = (state.research || 0) + bonus;
       spawnFloat(player.x, player.y - 18, 'PERFECT! +' + bonus + ' RP', '#ffefa8');
       if (typeof sfx === 'function') sfx('level');
+      if (typeof weeklyAdd === 'function') weeklyAdd('weekly_perfect', 1);
     }
     perfectChamber.active = false;
   }
@@ -160,6 +161,7 @@ function checkBlessingCombos() {
     if (c.need.every(id => owned.has(id))) {
       activated.add(c.id);
       try { c.apply(player); } catch(_){}
+      if (typeof weeklyAdd === 'function') weeklyAdd('weekly_synergies', 1);
       showMsg('★ SYNERGY: ' + c.name + ' - ' + c.desc, 6);
       spawnFloat(player.x, player.y - 24, '★ ' + c.name + ' ★', c.color);
       if (typeof sfx === 'function') sfx('level');

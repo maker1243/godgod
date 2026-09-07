@@ -679,6 +679,8 @@ function renderDungeon() {
 
   // 던전 HUD
   renderDungeonHUD();
+  // 보스 HP 오버레이
+  if (typeof drawBossHpOverlay === 'function') drawBossHpOverlay();
 }
 
 function drawPlayer(x, y, showFX) {

@@ -96,6 +96,8 @@ function _grantBlessing(id) {
   if (typeof sfx === 'function') sfx('level');
   // 시너지 콤보 자동 체크
   if (typeof checkBlessingCombos === 'function') checkBlessingCombos();
+  // 주간 도전
+  if (typeof weeklyAdd === 'function') weeklyAdd('weekly_blessings', 1);
 }
 
 function updateBlessingPick(dt) {
