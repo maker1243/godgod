@@ -1027,6 +1027,15 @@ function onEnemyDeath(e) {
       pickPerks();
       sfx('level');
       showMsg('LEVEL UP!', 2);
+      // 레벨업 이펙트: 노란 파티클 폭발
+      for (let i = 0; i < 30; i++) {
+        const a = (i / 30) * Math.PI * 2;
+        const sp = 60 + Math.random() * 40;
+        spawnParticle(player.x, player.y, '#ffefa8', 0.9, 3, sp);
+      }
+      // 링 이펙트
+      if (entities.fx) entities.fx.push({ type:'ring', x: player.x, y: player.y, life: 0.6, max: 0.6, r0: 4, r1: 40, col: '#ffefa8' });
+      state.shake = Math.max(state.shake || 0, 6);
       break;
     }
   }
