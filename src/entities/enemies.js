@@ -331,16 +331,21 @@ function updateDragonlord(e, dt, sm) {
     e.breathCd = rand(2.8, 4);
   }
 
-  // 유성 낙하 (플레이어 위치에)
+  // 유성 낙하 (플레이어 위치에 - 예고 후 낙하)
   e.meteorCd = (e.meteorCd || 5) - dt;
   if (e.meteorCd <= 0) {
     const tx = player.x, ty = player.y;
-    entities.ebullets.push({
-      x: tx, y: ty - 60,
-      vx: 0, vy: 200,
-      r: 5, dmg: e.dmg, life: 0.4, kind: 'fire',
-    });
-    spawnParticle(tx, ty, '#ff9c3d', 0.5, 6, 40);
+    // 경고 원
+    if (entities.fx) entities.fx.push({ type:'warning', x: tx, y: ty, r: 18, life: 0.6, max: 0.6 });
+    // 딜레이 후 유성 낙하
+    setTimeout(() => {
+      entities.ebullets.push({
+        x: tx, y: ty - 60,
+        vx: 0, vy: 200,
+        r: 5, dmg: e.dmg, life: 0.4, kind: 'fire',
+      });
+      spawnParticle(tx, ty, '#ff9c3d', 0.5, 6, 40);
+    }, 500);
     e.meteorCd = rand(3.5, 5.5);
   }
 }
@@ -543,6 +548,8 @@ function updateKnight(e, dt, sm) {
   if (e.slamCd <= 0 && d < 30) {
     e.phase = 3;
     e.chargeT = 0.7;
+    // 경고 원 스폰
+    if (entities.fx) entities.fx.push({ type:'warning', x: e.x, y: e.y, r: 45, life: 0.7, max: 0.7 });
   }
 }
 

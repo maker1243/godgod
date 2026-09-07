@@ -41,6 +41,18 @@ function drawFx() {
       ctx.beginPath();
       ctx.arc(f.x * PX, f.y * PX, r * PX, 0, Math.PI * 2);
       ctx.stroke();
+    } else if (f.type === 'warning') {
+      // 보스 공격 예고 - 빨간 채워진 원 + 펄스
+      const pulse = 0.4 + Math.abs(Math.sin(state.time * 8)) * 0.5;
+      ctx.fillStyle = 'rgba(200, 22, 22, ' + (0.15 * pulse * (f.life / f.max)).toFixed(2) + ')';
+      ctx.beginPath();
+      ctx.arc(f.x * PX, f.y * PX, f.r * PX, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 45, 45, ' + pulse.toFixed(2) + ')';
+      ctx.lineWidth = PX * 2;
+      ctx.beginPath();
+      ctx.arc(f.x * PX, f.y * PX, f.r * PX, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
   ctx.globalAlpha = 1;
