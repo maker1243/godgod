@@ -707,20 +707,28 @@ function drawPlayer(x, y, showFX) {
   if (showFX && p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0) {
     ctx.globalAlpha = 0.5;
   }
-  // 트레일 (커스터마이즈)
-  if (showFX && typeof activePlayerTrailColor === 'function') {
+  // 트레일 (커스터마이즈) - 아카데미/던전 모두 표시. 스프라이트 아래에 그려서 캐릭터를 가리지 않음.
+  if (typeof activePlayerTrailColor === 'function') {
     const tc = activePlayerTrailColor();
     if (tc) {
       const prev = p._trailPrev || [];
-      prev.unshift({ x, y, t: state.time });
-      if (prev.length > 6) prev.length = 6;
-      p._trailPrev = prev;
+      // 저장된 과거 궤적 렌더 (오래된 것부터, 페이드)
       for (let i = prev.length - 1; i >= 0; i--) {
         const tr = prev[i];
-        ctx.globalAlpha = 0.35 * (1 - i / prev.length);
+        const alpha = 0.7 * (1 - i / prev.length);
+        ctx.globalAlpha = alpha;
         pxDraw(tr.x - 2, tr.y - 2, 4, 4, tc);
+        // 살짝 흰 하이라이트 중심
+        pxDraw(tr.x - 1, tr.y - 1, 2, 2, '#ffffff');
       }
       ctx.globalAlpha = 1;
+      // 현재 위치를 궤적에 추가 (이동했을 때만)
+      const last = prev[0];
+      if (!last || Math.hypot((last.x||x) - x, (last.y||y) - y) > 1.2) {
+        prev.unshift({ x, y });
+        if (prev.length > 10) prev.length = 10;
+        p._trailPrev = prev;
+      }
     }
   }
   const _pal = (typeof activePlayerPal === 'function') ? activePlayerPal() : PLAYER_PAL;

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>그랜드 아르카나 아카데미 - 게임 설명서</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px;
+    font-family: 'Segoe UI', 'Malgun Gothic', 'AppleSDGothicNeo', sans-serif;
+    background: #0a0512; color: #e8d9b0;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { color: #e8c547; text-align: center; font-size: 2.5em; margin: 0 0 6px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(232,197,71,0.4); }
+  .sub { text-align: center; color: #8a7ab5; margin-bottom: 40px; letter-spacing: 4px; }
+  h2 { color: #c86ade; border-bottom: 2px solid #3a1e5c; padding-bottom: 8px; margin-top: 40px; font-size: 1.5em; }
+  h3 { color: #8bd8ff; margin-top: 24px; font-size: 1.15em; }
+  .toc { background: #1a0e2e; border-left: 3px solid #e8c547; padding: 16px 24px; border-radius: 4px; }
+  .toc a { display: inline-block; margin-right: 16px; margin-bottom: 6px; color: #ffefa8; text-decoration: none; }
+  .toc a:hover { color: #ff6666; }
+  .box { background: #1a0e2e; border: 1px solid #3a1e5c; padding: 16px 20px; border-radius: 6px; margin: 12px 0; }
+  .tip { background: #1a2e14; border-left: 4px solid #3ac762; padding: 12px 18px; margin: 12px 0; border-radius: 4px; }
+  .warn { background: #2e1414; border-left: 4px solid #c81616; padding: 12px 18px; margin: 12px 0; border-radius: 4px; }
+  .key { background: #050510; border: 1px solid #8a7ab5; color: #ffefa8; padding: 2px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.85em; margin-right: 4px; }
+  .b-red { background: #c81616; color: #fff; }
+  .b-blue { background: #3b7fd6; color: #fff; }
+  .b-green { background: #3ac762; color: #0a0512; }
+  .b-yellow { background: #e8c547; color: #0a0512; }
+  .b-purple { background: #c86ade; color: #0a0512; }
+  .b-gold { background: #ffefa8; color: #0a0512; }
+  .b-pink { background: #ff2d80; color: #fff; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #3a1e5c; padding: 8px 12px; text-align: left; }
+  th { background: #2a1548; color: #ffefa8; }
+  td { background: #14081a; }
+  ul, ol { padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  code { background: #050510; color: #8bd8ff; padding: 1px 6px; border-radius: 3px; font-family: monospace; }
+  .footer { text-align: center; color: #5a4a80; margin-top: 60px; padding-top: 20px; border-top: 1px solid #3a1e5c; font-size: 0.9em; }
+  .print-tip { text-align: center; margin-bottom: 20px; }
+  .print-tip button {
+    background: #e8c547; color: #0a0512; border: none;
+    padding: 10px 20px; border-radius: 4px; cursor: pointer;
+    font-weight: bold; font-size: 1em;
+  }
+  .print-tip button:hover { background: #ffefa8; }
+  @media print {
+    body { background: #fff; color: #000; padding: 20px; }
+    h1, h2, h3 { color: #000 !important; }
+    .toc, .box, .tip, .warn { background: #f5f5f5; color: #000; border-color: #999; }
+    th, td { background: #fff !important; color: #000; }
+    .print-tip { display: none; }
+    a { color: #000; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>그랜드 아르카나 아카데미</h1>
+  <div class="sub">GRAND ARCANA ACADEMY - 게임 설명서</div>
+
+  <div class="print-tip">
+    <button onclick="window.print()">📄 인쇄 / PDF로 저장</button>
+  </div>
+
+  <div class="toc">
+    <strong>목차:</strong><br>
+    <a href="#intro">1. 게임 개요</a>
+    <a href="#controls">2. 조작법</a>
+    <a href="#academy">3. 아카데미</a>
+    <a href="#combat">4. 전투와 스킬</a>
+    <a href="#blessings">5. 축복</a>
+    <a href="#permanent">6. 영구 성장</a>
+    <a href="#custom">7. 커스터마이즈</a>
+    <a href="#trials">8. 시련과 교수</a>
+    <a href="#tiers">9. 난이도 티어</a>
+    <a href="#events">10. 랜덤 이벤트</a>
+    <a href="#tips">11. 팁</a>
+  </div>
+
+  <h2 id="intro">1. 게임 개요</h2>
+  <p>도트 감성의 로그라이크 액션 게임입니다. 당신은 <strong>그랜드 아르카나 아카데미</strong>의 신입 마법사. 낮에는 학생, 밤에는 지하 던전을 탐험합니다.</p>
+  <p>목표는 다음과 같습니다:</p>
+  <ul>
+    <li>4개 지역의 던전을 클리어 (NORMAL → EXTRA → EXTREME → INFERNO)</li>
+    <li>11개 계열의 교수 22명 격파</li>
+    <li>모든 계열을 클리어하면 <strong>교장 (PRINCIPAL)</strong> 전투 잠금 해제</li>
+    <li>암호 퀘스트 → 계열 로비 → 최종 진실 컷씬</li>
+    <li>도전 티어 <span class="badge b-red">APEX</span>: 플레이어의 공격력에 맞춰 몹 HP가 적응 (사기 데미지 유저도 재미)</li>
+  </ul>
+
+  <h2 id="controls">2. 조작법</h2>
+  <h3>키보드 (PC)</h3>
+  <table>
+    <tr><th>키</th><th>동작</th></tr>
+    <tr><td><span class="key">WASD</span></td><td>이동</td></tr>
+    <tr><td><span class="key">Shift + 이동</span></td><td>구르기 (무적 회피)</td></tr>
+    <tr><td><span class="key">마우스</span></td><td>조준</td></tr>
+    <tr><td><span class="key">좌클릭</span> / <span class="key">LMB</span></td><td>기본 공격 (파이어볼)</td></tr>
+    <tr><td><span class="key">우클릭</span> / <span class="key">Shift 유지</span></td><td>방패 (적중 직전 = 패리)</td></tr>
+    <tr><td><span class="key">Q</span></td><td>Q 슬롯 스킬</td></tr>
+    <tr><td><span class="key">E</span></td><td>E 슬롯 스킬</td></tr>
+    <tr><td><span class="key">R</span></td><td>후퇴 (던전 나가기)</td></tr>
+    <tr><td><span class="key">Space</span></td><td>상호작용 (NPC, 문, 픽업)</td></tr>
+    <tr><td><span class="key">1</span> / <span class="key">2</span> / <span class="key">3</span></td><td>포션 슬롯</td></tr>
+    <tr><td><span class="key">C</span></td><td>난이도 선택</td></tr>
+    <tr><td><span class="key">X</span></td><td>도감 (CODEX)</td></tr>
+    <tr><td><span class="key">H</span></td><td>도움말 / 튜토리얼</td></tr>
+  </table>
+
+  <h3>모바일 (터치)</h3>
+  <ul>
+    <li>좌하단 원형 조이스틱: 이동</li>
+    <li>우하단 버튼들: Q / E / SHIFT (방패)</li>
+    <li>화면 탭: 그 방향으로 파이어볼</li>
+    <li>NPC/문/버프 카드 등 UI 요소는 직접 탭</li>
+    <li>타이틀 화면 하단의 <strong>TOUCH UI: ON</strong> 을 켜야 표시됨</li>
+  </ul>
+
+  <h2 id="academy">3. 아카데미 (로비)</h2>
+  <p>아카데미는 12개 문과 여러 NPC 로 구성되어 있습니다.</p>
+
+  <h3>문 12종</h3>
+  <table>
+    <tr><th>문</th><th>기능</th><th>해금 조건</th></tr>
+    <tr><td><span class="badge b-red">DUNGEON</span></td><td>일반 던전 시작</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-blue">LIBRARY</span></td><td>시련 (MAX/ULTRA 스킬 해금)</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-yellow">CLASS</span></td><td>교실 (강의 미니게임 → GPA)</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-yellow">ARENA</span></td><td>결투장 (웨이브/AI/멀티플레이)</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-purple">EXTRA</span></td><td>추가 난이도 던전</td><td>NORMAL 클리어</td></tr>
+    <tr><td><span class="badge b-red">EXTREME</span></td><td>극한 난이도</td><td>EXTRA 클리어</td></tr>
+    <tr><td><span class="badge b-purple">INFERNO</span></td><td>지옥 난이도</td><td>EXTREME 클리어</td></tr>
+    <tr><td><span class="badge b-red">CIPHER</span></td><td>암호 퀘스트 (시저/아핀 암호)</td><td>랜덤 위치, 실패 시 위치 이동</td></tr>
+    <tr><td><span class="badge b-blue">PROF</span></td><td>계열 로비 (교수 22명)</td><td>암호 1회 성공</td></tr>
+    <tr><td><span class="badge b-green">TRAIN</span></td><td>레벨업 수련 (DPS 훈련장)</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-gold">LEGACY</span></td><td>관록/아티팩트/트레잇 상점</td><td>항상 열림</td></tr>
+    <tr><td><span class="badge b-pink">STYLE</span></td><td>커스터마이즈 (로브/모자/트레일)</td><td>항상 열림</td></tr>
+  </table>
+
+  <h3>NPC 7명</h3>
+  <ul>
+    <li><strong>ELARA</strong> - 유대 10단계. 미니 조건 (10킬, 시련 통과, 교수 격파 등) 채우면 승격</li>
+    <li><strong>MERCHANT</strong> - 포션 상점</li>
+    <li><strong>RENN</strong> - 도서관 학생, 스토리 조각 수집도 반응</li>
+    <li><strong>VESK</strong> - 만년 낙제생, GPA 반응 (놀리기 좋음)</li>
+    <li><strong>LYRA</strong> - 아레나 챔피언, 결투 승수 반응</li>
+    <li><strong>THORNE</strong> - 냉소적 대학원생, 총 RP 반응</li>
+    <li><strong>MURA</strong> - 패션 디자이너, 커스터마이즈 소유 개수 반응 (일정 이상 시 BLOOD TRAIL 선물)</li>
+  </ul>
+
+  <div class="tip">💡 매일 아침 (state.day 변경 시) 랜덤 이벤트가 상단 티커에 표시됩니다. 특정 문에 강조 링이 뜨면 오늘 그 쪽을 노려보세요.</div>
+
+  <h2 id="combat">4. 전투와 스킬</h2>
+  <h3>스킬 트리 시스템</h3>
+  <p>5개 카테고리 (MAGIC / FIRE / ICE / ARCANE / HOLY) × 20개 기본 스킬 = 100 스킬로 시작합니다. 각 스킬은 <strong>LMB / Q / E / Passive</strong> 슬롯 중 하나에 장착 가능.</p>
+
+  <table>
+    <tr><th>단계</th><th>스킬 수</th><th>해금 조건</th></tr>
+    <tr><td>기본 (BASE)</td><td>100 (5×20)</td><td>RP 로 즉시 구매</td></tr>
+    <tr><td>MAX</td><td>125 (5×25)</td><td>기본 카테고리 모두 MAX 레벨 → 1단계 시련 통과</td></tr>
+    <tr><td>ULTRA</td><td>100 (5×20)</td><td>MAX 카테고리 모두 MAX → 2단계 ULTRA 시련 40초 안 통과</td></tr>
+    <tr><td>계열 (FACULTY)</td><td>44 (11×4)</td><td>각 계열 교수 격파 후 계열 로비에서 구매 (매우 비쌈)</td></tr>
+  </table>
+
+  <div class="warn">⚠ ULTRA 시련 실패 시 10분 재도전 금지. 기본 시련 실패는 5분.</div>
+
+  <h3>포션 (5종)</h3>
+  <p>몹에게서 낮은 확률로 드롭. 슬롯 1/2/3 에 자동 배정.</p>
+  <ul>
+    <li>HEAL - HP 회복 40</li>
+    <li>MANA - MP 회복 40</li>
+    <li>SWIFT - 이속 +40% 12초</li>
+    <li>FURY - 데미지 +50% 15초</li>
+    <li>GUARD - 무적 3초</li>
+  </ul>
+
+  <h2 id="blessings">5. 축복 (Blessings)</h2>
+  <p>각 <strong>층 이동 시</strong> 3장의 축복 카드가 나타납니다. 하나를 골라 이번 런 동안 유지되는 강력한 효과를 획득. 38종.</p>
+
+  <h3>대표 축복</h3>
+  <ul>
+    <li><strong>BARRAGE</strong> - 모든 발사체 2배</li>
+    <li><strong>CHAIN LIGHTNING</strong> - 킬 시 인접 적에 번개</li>
+    <li><strong>GLASS CANNON</strong> - 데미지 ×3, 최대 HP -50%</li>
+    <li><strong>LAST WARD</strong> - HP 1 이하 사망 무효 (60s CD)</li>
+    <li><strong>ORBITAL</strong> - 궤도를 도는 오브 2개 소환</li>
+    <li><strong>GREED</strong> - RP 드롭 ×2 (대신 최대 HP -10%)</li>
+    <li><strong>PANDEMONIUM</strong> - 몹 사망 시 폭발</li>
+    <li><strong>WILDCARD</strong> - 다음 층 축복 3개 랜덤 획득</li>
+    <li><strong>ARCANA BLESSING</strong> - 모든 스탯 ×1.3</li>
+    <li><strong>IMMORTAL</strong> - HP 10 이하로 안 떨어짐 (60s CD)</li>
+  </ul>
+
+  <div class="tip">💡 축복은 로그아웃/재로그인/새 던전 진입 시 초기화. 대신 다음 층 이동 시 새 카드 등장.</div>
+
+  <h2 id="permanent">6. 영구 성장 (LEGACY 문)</h2>
+  <p>LEGACY 문을 통해 3가지 영구 시스템에 접근:</p>
+
+  <h3>관록 (LEGACY PILLARS) - 10기둥</h3>
+  <p>RP 로 사는 영구 계정 스탯. 로그 스케일 비용 (레벨 오를수록 다음 비용 30~42% 증가).</p>
+  <ul>
+    <li>DAMAGE PILLAR (+1% DMG / lv)</li>
+    <li>VITAL PILLAR (+1% MAX HP / lv)</li>
+    <li>MANA PILLAR (+2% MAX MP / lv)</li>
+    <li>SWIFT PILLAR (-0.5% CD / lv)</li>
+    <li>CRIT / REGEN / SWIFTFOOT / BLOODBIND / BULWARK / FORTUNE</li>
+  </ul>
+
+  <h3>아티팩트 (ARTIFACT) - 30종</h3>
+  <p>매일 5개 로테이션 (오늘 날짜 시드). RP 로 구매 후 3슬롯에 장착.</p>
+  <p>Tier 1~5. 대표: <strong>ARCANA CROWN</strong> (DMG ×5, HP ×2), <strong>PHOENIX DOWN</strong> (자동 부활), <strong>ELITE MARKER</strong> (엘리트 확률 ×3)</p>
+
+  <h3>트레잇 (TRAIT) - 20종</h3>
+  <p>7개 카테고리 (ATK/DEF/UTIL/CRIT/ECO/COOP/TRAIN). 5슬롯 자유 스왑.</p>
+
+  <div class="tip">💡 관록은 로그 스케일이라 아무리 많은 RP 가 있어도 계속 사고 싶어집니다. APEX 티어와 궁합.</div>
+
+  <h2 id="custom">7. 커스터마이즈 (STYLE 문)</h2>
+  <p>4가지 외관 요소:</p>
+  <ul>
+    <li><strong>ROBE</strong> - 12색 (Arcane Purple, Crimson, Emerald, Abyss Blue, Gold, Midnight, Rose, Frost, Inferno, Void, Angel, Prismatic)</li>
+    <li><strong>HAT</strong> - 7종 (Classic, Crimson, Green, Golden, Crown, Dark Crown, Prism Crown)</li>
+    <li><strong>STAR</strong> - 5종 (모자 위 별 장식)</li>
+    <li><strong>TRAIL</strong> - 8종 (걸을 때 남는 궤적: Gold, Arcane, Blood, Frost, Ember, Void, Rainbow)</li>
+  </ul>
+  <p>RP 로 구매. 미리보기 실시간 반영.</p>
+
+  <h2 id="trials">8. 시련과 교수</h2>
+  <h3>도서관 시련</h3>
+  <p>LIBRARY 문에서 Z 키로 카테고리 선택 → 시련 보스 도전. 클리어 시 MAX/ULTRA 스킬 슬롯 해금.</p>
+
+  <h3>계열 로비 (PROF 문)</h3>
+  <p>암호 퀘스트를 1회 이상 풀어야 나타나는 파란 문. 진입하면 7-스포크 휠 UI 에서 계열 선택.</p>
+
+  <h3>교수 22명 + 교장</h3>
+  <p>11개 계열 × 2명 = 22명. 각 계열: 인문/철학/물리/화학/공학/의학/수학/체육/예술/음악/종교. 각 교수는 <strong>고유 스킬 패턴</strong>, <strong>3페이즈 전투</strong> (등장 → 강화 → 죽음 애니메이션), 격파 시 그 계열 스킬 4종 잠금 해제.</p>
+
+  <h3>교장 (PRINCIPAL)</h3>
+  <p>11개 계열을 모두 클리어하면 로비 중앙에 나타남. HP 26.25T. 매우 강력.</p>
+
+  <div class="tip">💡 교수 격파 후 계열 로비 재진입 시 <strong>후일담 컷씬</strong>이 자동 재생됩니다.</div>
+
+  <h2 id="tiers">9. 난이도 티어 (C 키)</h2>
+  <p>26 티어 + 1 적응 티어. 티어별로 몹 HP, 데미지, 보상이 다름.</p>
+  <p>대표 티어:</p>
+  <ul>
+    <li><span class="badge b-green">EASY</span> ~ <span class="badge b-yellow">NORMAL</span> - 학습용</li>
+    <li><span class="badge b-blue">HARD</span> ~ <span class="badge b-purple">NIGHTMARE</span> - 진짜 게임 시작</li>
+    <li><span class="badge b-red">HELL</span> ~ <span class="badge b-red">TRANSCEND</span> - RP/GPA 대량 획득</li>
+    <li><span class="badge b-gold">APEX</span> - <strong>플레이어 공격력에 맞춰 몹 HP 적응</strong>. 6e+66 데미지 유저도 재미있게 플레이 가능</li>
+  </ul>
+
+  <h2 id="events">10. 랜덤 이벤트</h2>
+  <h3>런 이벤트 (던전 방)</h3>
+  <p>각 방 이동 시 20% 확률로 이벤트 방 출현. 전투 대신 대화 + 2~3 선택지. 20종.</p>
+  <p>대표: 잊힌 제단 (HP 대가), 회복의 샘, 수수께끼 상인 (축복 구매), 저주받은 책, 도박사 주사위, 악마와의 계약, 불사조 깃털</p>
+
+  <h3>몹 접두 (Affix)</h3>
+  <p>일반 몹의 5% (INFERNO/EXTREME 은 12%) 에 랜덤 접두 능력 부여. 색상 링 + 이름표로 표시.</p>
+  <ul>
+    <li><strong>폭발성</strong> - 사망 시 12발 폭발</li>
+    <li><strong>재생</strong> - 초당 2% HP 회복</li>
+    <li><strong>얼음결계</strong> - 히트 시 플레이어 슬로우</li>
+    <li><strong>그림자 분신</strong> - 사망 시 절반 HP 로 부활 1회</li>
+    <li><strong>질주자</strong> - 이속 ×1.7</li>
+    <li><strong>철갑</strong> - HP ×2.5</li>
+    <li><strong>맹독</strong> - 히트 시 플레이어 독</li>
+    <li><strong>번개촉수</strong> - 2.5초마다 3발 즉발 번개</li>
+  </ul>
+
+  <h3>아침 이벤트</h3>
+  <p>매일 (state.day) 결정론적 랜덤 12종. 아카데미 상단에 티커 + 관련 문 강조.</p>
+  <p>대표: 도서관 소리, 아레나 축제, 상인 특가, 안개 (오늘 DR -5%), 축제일 (RP 드롭 +50%), 벽의 낙서</p>
+
+  <h2 id="tips">11. 팁</h2>
+  <ol>
+    <li><strong>초반</strong>: EASY 티어로 몇 판 → 파이어볼 데미지/CD 특성 위주 → 첫 시련 도전</li>
+    <li><strong>중반</strong>: MAX 스킬 하나 뽑기 (5분 안 100 kill 정도로 가능) → EXTRA 문 열기</li>
+    <li><strong>ULTRA 시련</strong>: 40초 제한. 미리 DPS 를 확인하고 도전. 실패 시 10분 밴</li>
+    <li><strong>암호 문</strong>: 시저 암호는 정직하게 알파벳 시프트, 아핀은 곱셈 + 시프트. 매번 위치가 바뀔 수 있음</li>
+    <li><strong>축복 선택</strong>: 이번 층 몹 종류/HP 를 보고 정하기. HP 폭탄이면 <strong>GLASS CANNON</strong>, 잡몹 밀치면 <strong>ORBITAL</strong></li>
+    <li><strong>RP 최적화</strong>: 관록 GOLD PILLAR + 트레잇 FORTUNE + 아티팩트 MERCHANT PURSE 조합으로 RP 획득량 폭증</li>
+    <li><strong>APEX 티어</strong>: 이미 사기 데미지 인데 지루하면 APEX 로. 6e+66 도 힘든 전투 됨</li>
+    <li><strong>훈련장 (TRAIN)</strong>: 실전 없이 자기 DPS 확인 + RP 획득. 15초마다 자동 평가</li>
+    <li><strong>죽으면</strong>: 던전 재진입 시 사망 지점에 유품 파우치 (골드 회수). AUTO POUCH 아티팩트로 자동 회수 가능</li>
+    <li><strong>계정 저장</strong>: 서버 사이드 저장 지원. 다른 기기에서도 같은 계정으로 로그인 가능</li>
+  </ol>
+
+  <h2>추가 시스템</h2>
+
+  <h3>도감 (X 키)</h3>
+  <p>8개 탭: PERKS / SKILLS / DIFFICULTY / TRIALS / VISUALS (투사체 미리보기) / ACHIEVE / DAILY / STORY</p>
+
+  <h3>업적 (25종) + 일일 도전 (3/일)</h3>
+  <p>업적: 총 킬수, 크리트 히트, 특정 티어 클리어 등. 일일: 매일 3개 랜덤 미션. 완료 시 RP.</p>
+
+  <h3>스토리 조각 (23편)</h3>
+  <p>플레이하면서 랜덤 획득. 모두 모으면 <strong>아카데미의 진실 컷씬</strong> 자동 재생.</p>
+
+  <h3>코업 멀티플레이 (F 로비)</h3>
+  <p>같은 방에 접속한 사람이 던전 문으로 들어가면 5초 안에 참가 가능. 호스트 권한, 몹 HP 동기화.</p>
+
+  <div class="footer">
+    <p>Grand Arcana Academy · 2026</p>
+    <p>플레이: <a href="/" style="color:#8bd8ff;">http://godgod.onrender.com</a> · 소스: <a href="https://github.com/maker1243/godgod" style="color:#8bd8ff;">github.com/maker1243/godgod</a></p>
+    <p>이 설명서는 인쇄 (Ctrl+P) 하거나 브라우저의 "다른 이름으로 저장" 으로 다운로드 가능합니다.</p>
+  </div>
+
+</div>
+</body>
+</html>

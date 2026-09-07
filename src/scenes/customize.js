@@ -192,8 +192,28 @@ function renderCustomize() {
   if (tab.id === 'robe' && CUSTOM_ROBES[previewIdx]) Object.assign(previewPal, CUSTOM_ROBES[previewIdx].c || {});
   if (tab.id === 'hat'  && CUSTOM_HATS[previewIdx])  Object.assign(previewPal, CUSTOM_HATS[previewIdx].c || {});
   if (tab.id === 'star' && CUSTOM_STARS[previewIdx]) Object.assign(previewPal, CUSTOM_STARS[previewIdx].c || {});
+  // 트레일 미리보기 - 스프라이트가 좌우로 스윙, 뒤에 궤적이 남는 형태
+  const trailIdxPreview = (tab.id === 'trail') ? previewIdx : (state.customize.trail || 0);
+  const trailDef = CUSTOM_TRAILS[trailIdxPreview];
+  let trailBase = trailDef && trailDef.color;
+  const rainbow = (trailBase === '#RAINBOW');
+  const T = state.time * 3;
+  const swing = Math.sin(T) * 8;        // -8 ~ +8
+  const px = previewX + swing;
+  // 궤적: 캐릭터가 지나간 지점들 (과거 5개 프레임의 스윙 위치)
+  if (trailBase) {
+    for (let i = 5; i >= 1; i--) {
+      const ox = Math.sin(T - i * 0.15) * 8;
+      const col = rainbow ? ('hsl(' + Math.floor((state.time * 200 - i * 30) % 360) + ', 90%, 60%)') : trailBase;
+      ctx.globalAlpha = 0.8 * (1 - i / 6);
+      // 발 아래 위치 (previewY + 5)
+      pxDraw(previewX + ox - 2, previewY + 5, 4, 3, col);
+      pxDraw(previewX + ox - 1, previewY + 5, 2, 2, '#ffffff');
+    }
+    ctx.globalAlpha = 1;
+  }
   if (typeof SPR_PLAYER_S1 !== 'undefined' && typeof drawSprite === 'function') {
-    drawSprite(SPR_PLAYER_S1, previewPal, previewX - 6, previewY - 7);
+    drawSprite(SPR_PLAYER_S1, previewPal, px - 6, previewY - 7);
   }
   drawText('PREVIEW', previewX - textWidth('PREVIEW')/2, previewY + 26, '#8a7ab5');
 
