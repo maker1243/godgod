@@ -547,10 +547,12 @@ function renderDungeonHUD() {
   pxDraw(16, 10, 80 * mpPct, 5, '#3b7fd6');
   pxDraw(16, 10, 80 * mpPct, 1, '#8bd8ff');
 
-  // 레벨 & XP
+  // 레벨 & XP (숫자 표시 추가)
   drawText('LV ' + player.level, 150, 3, '#ffefa8');
   pxDraw(150, 10, 60, 4, '#2a1548');
   pxDraw(150, 10, 60 * (player.xp / player.xpNext), 4, '#e8c547');
+  const xpStr = player.xp + '/' + player.xpNext;
+  drawText(xpStr, 213, 3, '#c8b898');
   // 콤보 HUD (중앙)
   if (typeof drawComboHud === 'function') drawComboHud();
   // 축복 리스트 (좌하단)
