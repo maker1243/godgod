@@ -308,6 +308,13 @@ function updateAcademy(dt) {
     goTo('codex');
     return;
   }
+  // M 키 → 도감 MEMORY 탭 바로 진입
+  if (keys['KeyM'] && !window._diffPickerOpen && !(typeof cipherQuest !== 'undefined' && cipherQuest.active)) {
+    keys['KeyM'] = false;
+    goTo('codex');
+    if (typeof codex !== 'undefined') { codex.tab = 'memory'; codex.cursor = 0; codex.scroll = 0; }
+    return;
+  }
   // 암호 퀘스트: 팝업 활성이거나 벽 접촉 카운트 진행 중이면 그 결과에 따라 나머지 잠금
   if (typeof updateCipherQuestAcademy === 'function') {
     const blocked = updateCipherQuestAcademy(dt);
