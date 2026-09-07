@@ -756,11 +756,11 @@ function renderDungeon() {
   if (typeof drawBossHpOverlay === 'function') drawBossHpOverlay();
   // 일시정지 오버레이
   if (state._paused) {
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
     ctx.fillRect(0, 0, W*PX, H*PX);
-    drawText('PAUSED', W/2 - textWidth('PAUSED', 3)/2, 60, '#ffefa8', 3);
-    const hint = '[ESC] RESUME    [SPACE] RESUME';
-    drawText(hint, W/2 - textWidth(hint)/2, 105, '#8a7ab5');
+    drawText('PAUSED', W/2 - textWidth('PAUSED', 3)/2, 50, '#ffefa8', 3);
+    const hint = '[ESC/SPACE] 재개   [Q] 후퇴 (아카데미로)';
+    drawText(hint, W/2 - textWidth(hint)/2, 95, '#8a7ab5');
     // 현재 런 요약
     if (player) {
       const rows = [

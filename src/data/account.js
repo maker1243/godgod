@@ -215,6 +215,8 @@ function saveAccountData() {
   };
   try { localStorage.setItem(k, JSON.stringify(payload)); } catch(e){}
   _syncAccountToServer(payload);
+  // 자동 저장 인디케이터 (짧게 표시)
+  state._saveIndicatorUntil = performance.now() + 1200;
 }
 
 // 서버에 계정 데이터 백업 (throttled: 5초). 성공 시 다른 기기에서도 로그인 가능.

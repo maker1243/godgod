@@ -17,6 +17,13 @@ function frame(now) {
     update(dt);
     render();
     if (typeof drawAchievementBanner === 'function') drawAchievementBanner();
+    // 자동 저장 인디케이터 (모든 씬에서 표시)
+    if (state._saveIndicatorUntil && performance.now() < state._saveIndicatorUntil) {
+      const alpha = Math.min(1, (state._saveIndicatorUntil - performance.now()) / 500);
+      ctx.globalAlpha = alpha;
+      drawText('저장됨', W - 40, 3, '#3ac762');
+      ctx.globalAlpha = 1;
+    }
     if (typeof renderTouchOverlay === 'function') renderTouchOverlay();
   } catch (err) {
     // 프레임 루프가 통째로 죽지 않도록 하는 마지막 방어선.
@@ -37,8 +44,15 @@ function update(dt) {
   }
   // 일시정지: 던전 씬은 완전 정지 (시간, 이동, 카메라 모두)
   if (state._paused && state.scene === 'dungeon') {
-    // 재개 힌트만 처리
+    // 재개
     if (keys['Space'] || keys['Enter']) { keys['Space']=false; keys['Enter']=false; state._paused = false; }
+    // 후퇴 (아카데미로 안전 복귀)
+    if (keys['KeyQ']) {
+      keys['KeyQ']=false;
+      state._paused = false;
+      state.runResult = 'retreat';
+      goTo('ending');
+    }
     return;
   }
   if (state.msgTimer > 0) state.msgTimer -= dt;
