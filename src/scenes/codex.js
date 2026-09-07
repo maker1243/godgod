@@ -123,7 +123,8 @@ function codexEntries() {
   } else if (codex.tab === 'weekly') {
     if (typeof weeklyStatus === 'function') {
       const list = weeklyStatus();
-      out.push({ title: '이번 주 도전 (' + (state.weekly ? state.weekly.week : '?') + ')', sub: '완료 시 큰 RP 보상. 매주 월요일 리셋.', color: '#ffefa8' });
+      const daysLeft = (typeof weeklyDaysLeft === 'function') ? weeklyDaysLeft() : '?';
+      out.push({ title: '이번 주 도전 (' + (state.weekly ? state.weekly.week : '?') + ')', sub: '완료 시 큰 RP 보상. ' + daysLeft + '일 후 리셋.', color: '#ffefa8' });
       for (const w of list) {
         const barLen = 20;
         const filled = Math.min(barLen, Math.floor(barLen * (w.cur / w.goal)));

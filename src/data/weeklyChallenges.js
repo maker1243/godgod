@@ -112,3 +112,12 @@ function weeklyStatus() {
     return { id, name: def.name, desc: def.desc, goal: def.goal, cur, done, reward: def.reward };
   }).filter(Boolean);
 }
+
+// 이번 주 리셋까지 남은 일수
+function weeklyDaysLeft() {
+  const d = new Date();
+  // 다음 월요일 자정까지
+  const day = d.getDay();   // 0=일요일, 1=월요일
+  let daysLeft = (day === 0 ? 1 : 8 - day);   // 0 → 1일, 1 → 7일, 2 → 6일, ...
+  return daysLeft;
+}
