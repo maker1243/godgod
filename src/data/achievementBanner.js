@@ -47,7 +47,7 @@ function drawAchievementBanner() {
   // 위 아래 컬러 스트라이프
   pxDraw(bx, by, bw, 2, a.color);
   pxDraw(bx, by + bh - 2, bw, 2, a.color);
-  // 좌 아이콘
+  // 좌 아이콘 with glow
   const iconX = bx + 8, iconY = by + 8;
   const iconGlow = 0.7 + Math.sin(state.time * 8) * 0.3;
   ctx.globalAlpha = iconGlow;
@@ -57,8 +57,19 @@ function drawAchievementBanner() {
   drawText('★', iconX + 5, iconY + 4, '#1a0e2e');
   // 헤더
   drawText('업적 달성!', bx + 32, by + 6, a.color);
-  // 이름 (더 크게 - 여기서는 그냥 스케일 1 로)
+  // 이름
   drawText(a.name, bx + 32, by + 16, '#ffefa8');
   // 서브
   drawText(a.sub, bx + 32, by + 24, '#8a7ab5');
+  // 반짝임 파티클 (밴드 주변)
+  if (t > 0.4 && t < 3) {
+    for (let i = 0; i < 3; i++) {
+      const spawnT = (state.time + i * 0.3) % 1;
+      const sx = bx + spawnT * bw;
+      const sy = by - 3 + Math.sin(state.time * 4 + i) * 2;
+      ctx.globalAlpha = 0.7;
+      pxDraw(sx, sy, 1, 1, a.color);
+      ctx.globalAlpha = 1;
+    }
+  }
 }
