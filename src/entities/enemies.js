@@ -571,8 +571,9 @@ function updateColossus(e, dt, sm) {
     for (let i = 0; i < 6; i++) {
       const tx = rm.x + 20 + Math.random() * (rm.w - 40);
       const ty = rm.y + 20 + Math.random() * (rm.h - 40);
-      // 예고 마커 파티클
+      // 예고 마커 파티클 + 경고 원
       spawnParticle(tx, ty, '#e8dcb0', 0.8, 4, 5);
+      if (entities.fx) entities.fx.push({ type:'warning', x: tx, y: ty, r: 12, life: 0.5, max: 0.5 });
       setTimeout(() => {
         entities.ebullets.push({
           x: tx, y: ty - 40,
@@ -584,8 +585,9 @@ function updateColossus(e, dt, sm) {
     e.rainCd = rand(5, 7);
   }
 
-  // 강타: 근접 시 광역
+  // 강타: 근접 시 광역 + 경고
   if (e.stompCd <= 0 && d < 50) {
+    if (entities.fx) entities.fx.push({ type:'warning', x: e.x, y: e.y, r: 50, life: 0.5, max: 0.5 });
     for (let i = 0; i < 12; i++) {
       const aa = (i / 12) * Math.PI * 2;
       entities.ebullets.push({
