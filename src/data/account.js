@@ -52,6 +52,7 @@ const state = {
   weekly: null,                    // 주간 도전 { week, ids, progress, done }
   highlights: null,                // 하이라이트 릴 (최근 20개 큰 순간)
   gameModes: null,                 // 도전 모드 { id: bool }
+  dailyLogin: null,                // 매일 로그인 { lastDay, streak }
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -146,6 +147,7 @@ function loadAccountData() {
     if (d.weekly && typeof d.weekly === 'object') state.weekly = d.weekly;
     if (Array.isArray(d.highlights)) state.highlights = d.highlights;
     if (d.gameModes && typeof d.gameModes === 'object') state.gameModes = d.gameModes;
+    if (d.dailyLogin && typeof d.dailyLogin === 'object') state.dailyLogin = d.dailyLogin;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -204,6 +206,7 @@ function saveAccountData() {
     weekly: state.weekly || null,
     highlights: state.highlights || null,
     gameModes: state.gameModes || null,
+    dailyLogin: state.dailyLogin || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,
