@@ -991,7 +991,8 @@ function onEnemyDeath(e) {
 
   // 픽업 드롭 (익스트림은 픽업 없음)
   if (!isExtreme) {
-    const pickupChance = hasPerk('bountiful') ? 1.4 : 1;
+    const bloodMoon = (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_bloodmoon');
+    const pickupChance = (hasPerk('bountiful') ? 1.4 : 1) * (bloodMoon ? 2 : 1);
     const r = Math.random();
     if (r < 0.25 * pickupChance) spawnPickup(e.x, e.y, 'hp');
     else if (r < 0.45 * pickupChance) spawnPickup(e.x, e.y, 'mp');
