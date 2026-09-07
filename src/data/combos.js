@@ -49,6 +49,11 @@ function comboOnKill(x, y) {
       else if (combo.count >= 10) sfx('combo2');
       else sfx('combo1');
     }
+    // 큰 콤보 시 짧은 슬로우모션 (10+)
+    if (combo.count >= 10) {
+      state._slowMoUntil = Math.max(state._slowMoUntil || 0, performance.now() + Math.min(400, combo.count * 20));
+      state.shake = Math.max(state.shake || 0, 5);
+    }
     // 하이라이트: x20 이상
     if (typeof highlightBigCombo === 'function') highlightBigCombo(combo.count);
   } else if (combo.count >= 3) {
