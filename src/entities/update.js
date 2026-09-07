@@ -838,10 +838,11 @@ function updatePlayer(dt) {
         state.research = (state.research || 0) + amt;
         showMsg('★★★ 잭팟 상자! +' + amt + ' RP ★★★', 5);
         spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#ff00ff');
+        if (typeof sfx === 'function') sfx('jackpot');
       }
       for (let n = 0; n < 20; n++) spawnParticle(p.x, p.y, '#e8c547', 0.6, 3, 60);
       entities.pickups.splice(i, 1);
-      sfx('pickup');
+      if (roll >= 0.95) {} else if (typeof sfx === 'function') sfx('chest');
       continue;
     }
     if (d < 6 && it.kind !== 'chest') {
