@@ -646,6 +646,8 @@ function renderDungeonHUD() {
       const cdSec = s.cd.toFixed(1);
       drawText(cdSec, x + slotW/2 - textWidth(cdSec)/2, slotY + 7, '#ffefa8');
     }
+    // 색상 도트 (좌상단)
+    pxDraw(x + 1, slotY + 1, 3, 3, s.col);
     drawText(s.name, x + slotW/2 - textWidth(s.name)/2, slotY + 3, s.cd > 0 ? '#5a4a80' : s.col);
     drawText('[' + s.key + ']', x + slotW/2 - textWidth('[' + s.key + ']')/2, slotY + 12, '#8a7ab5');
     if (s.count !== undefined) {
