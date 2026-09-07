@@ -28,6 +28,12 @@ const LEGACY_PILLARS = [
     baseCost: 1.2e6,  grow: 1.36, apply:(p, lv)=>{ p.dmgReduction = Math.min(0.8, (p.dmgReduction || 0) + lv * 0.004); } },
   { id:'gold',  name:'FORTUNE',         color:'#ffefa8', desc:'RP DROP +1% / LV',
     baseCost: 5e5,    grow: 1.30, apply:(p, lv)=>{ p.rpMult = (p.rpMult || 1) * (1 + lv * 0.01); } },
+  { id:'xp',    name:'SCHOLAR PILLAR',  color:'#8bd8ff', desc:'XP GAIN +2% / LV',
+    baseCost: 4e5,    grow: 1.28, apply:(p, lv)=>{ p.xpMult = (p.xpMult || 1) * (1 + lv * 0.02); } },
+  { id:'mag',   name:'MAGNET PILLAR',   color:'#c86ade', desc:'PICKUP 반경 +2 / LV',
+    baseCost: 1e6,    grow: 1.32, apply:(p, lv)=>{ p.pickupRange = (p.pickupRange || 0) + lv * 2; } },
+  { id:'chest', name:'HOARDER',         color:'#e8c547', desc:'상자 확률 +0.5% / LV',
+    baseCost: 3e6,    grow: 1.36, apply:(p, lv)=>{ p.chestBoost = (p.chestBoost || 0) + lv * 0.005; } },
 ];
 
 const LEGACY_BY_ID = {};
