@@ -143,15 +143,15 @@ function updateIntro(dt) {
 // ---------- 포션 시스템 ----------
 const POTIONS = {
   heal:  { name:'HEAL POTION',  desc:'RESTORE 40 HP',        cost:15, color:'#c81616',
-           use:(p)=>{ if(p.hp>=p.maxHp) return false; p.hp=Math.min(p.maxHp,p.hp+40); return true; } },
+           use:(p)=>{ if(p.hp>=p.maxHp) return false; const m=p.potionMult||1; p.hp=Math.min(p.maxHp,p.hp+40*m); return true; } },
   mana:  { name:'MANA POTION',  desc:'RESTORE 40 MP',        cost:15, color:'#3b7fd6',
-           use:(p)=>{ if(p.mp>=p.maxMp) return false; p.mp=Math.min(p.maxMp,p.mp+40); return true; } },
+           use:(p)=>{ if(p.mp>=p.maxMp) return false; const m=p.potionMult||1; p.mp=Math.min(p.maxMp,p.mp+40*m); return true; } },
   swift: { name:'SWIFT POTION', desc:'+40% SPEED, 12S',      cost:25, color:'#3ac762',
-           use:(p)=>{ p.speed*=1.4; setTimeout(()=>{ if(player===p) p.speed/=1.4; }, 12000); return true; } },
+           use:(p)=>{ const m=p.potionMult||1; p.speed*=1.4; setTimeout(()=>{ if(player===p) p.speed/=1.4; }, 12000*m); return true; } },
   fury:  { name:'FURY POTION',  desc:'+50% DMG, 15S',        cost:35, color:'#ff9c3d',
-           use:(p)=>{ p.baseDmg*=1.5; setTimeout(()=>{ if(player===p) p.baseDmg/=1.5; }, 15000); return true; } },
+           use:(p)=>{ const m=p.potionMult||1; p.baseDmg*=1.5; setTimeout(()=>{ if(player===p) p.baseDmg/=1.5; }, 15000*m); return true; } },
   guard: { name:'GUARD POTION', desc:'INVULN, 3S',           cost:40, color:'#ffefa8',
-           use:(p)=>{ p.invuln=Math.max(p.invuln,3); return true; } },
+           use:(p)=>{ const m=p.potionMult||1; p.invuln=Math.max(p.invuln,3*m); return true; } },
 };
 const POTION_ORDER = ['heal','mana','swift','fury','guard'];
 
