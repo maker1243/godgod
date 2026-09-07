@@ -555,8 +555,9 @@ function updateDungeon(dt) {
     room.cleared = true;
     // 무피격 챔버 보너스
     if (typeof perfectChamberCheck === 'function') perfectChamberCheck(room);
-    // 상자 15% 확률 스폰
-    if (!room.isBoss && !room._chestSpawned && Math.random() < 0.15) {
+    // 상자 15% 확률 스폰 (Lucky Star 축복 시 x3)
+    const chestChance = (player && player.blessLucky) ? 0.45 : 0.15;
+    if (!room.isBoss && !room._chestSpawned && Math.random() < chestChance) {
       room._chestSpawned = true;
       entities.pickups.push({
         x: room.x + room.w/2 + rand(-30, 30),

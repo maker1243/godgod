@@ -758,6 +758,12 @@ function damagePlayer(amt, source) {
     spawnFloat(player.x, player.y - 8, 'EVADE!', '#c8ffc8');
     return;
   }
+  // 축복: Holy Ward (다음 N회 피격 무효)
+  if (player.blessHolyCharges && player.blessHolyCharges > 0) {
+    player.blessHolyCharges--;
+    spawnFloat(player.x, player.y - 8, 'HOLY! (' + player.blessHolyCharges + ')', '#ffffff');
+    return;
+  }
   // 축복: Shield (전면 흡수)
   if (player.shield && player.shield > 0) {
     const absorb = Math.min(player.shield, amt);

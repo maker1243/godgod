@@ -55,6 +55,18 @@ const BLESSING_DEFS = [
   // 도박
   { id:'bl_wildcard',   name:'WILDCARD',      color:'#ff00ff', desc:'다음 층에서 랜덤 축복 3개',   apply:(p)=>{ p.blessWildcard = 3; } },
   { id:'bl_gamble',     name:'GAMBLER SOUL',  color:'#e8c547', desc:'DMG x(0.5~4), 매초 재추첨',   apply:(p)=>{ p.blessGamble = true; } },
+
+  // 추가 (10종)
+  { id:'bl_ricochet',   name:'RICOCHET',      color:'#8bd8ff', desc:'발사체가 벽에서 1회 튕김',    apply:(p)=>{ p.blessRicochet = true; } },
+  { id:'bl_swiftness',  name:'FLEET',         color:'#c8ffc8', desc:'ROLL 무적 시간 2배',           apply:(p)=>{ p.blessFleet = true; } },
+  { id:'bl_manaburst',  name:'MANA BURST',    color:'#3b7fd6', desc:'MP 소모 없음 5초 (매 30초)',   apply:(p)=>{ p.blessManaBurst = true; p._manaBurstT = 0; } },
+  { id:'bl_fortress',   name:'FORTRESS',      color:'#8a7ab5', desc:'정지 상태에서 DR +50%',        apply:(p)=>{ p.blessFortress = true; } },
+  { id:'bl_bloodrage',  name:'BLOOD RAGE',    color:'#ff2d2d', desc:'HP <50% 시 DMG x1.5',         apply:(p)=>{ p.blessBloodrage = true; } },
+  { id:'bl_lucky',      name:'LUCKY STAR',    color:'#ffefa8', desc:'상자 확률 x3',                apply:(p)=>{ p.blessLucky = true; } },
+  { id:'bl_thunder',    name:'THUNDER',       color:'#ffefa8', desc:'모든 스킬에 번개 사슬 5% 확률', apply:(p)=>{ p.blessThunder = true; } },
+  { id:'bl_ghostform',  name:'GHOST FORM',    color:'#c86ade', desc:'적을 통과 (무충돌)',           apply:(p)=>{ p.blessGhostForm = true; } },
+  { id:'bl_multishot',  name:'MULTISHOT',     color:'#ff6666', desc:'모든 발사체 3방향',            apply:(p)=>{ p.projMult = (p.projMult||1) * 3; } },
+  { id:'bl_holyward',   name:'HOLY WARD',     color:'#ffffff', desc:'다음 3회 피격 무효',            apply:(p)=>{ p.blessHolyCharges = 3; } },
 ];
 
 const BLESSING_BY_ID = {};
@@ -235,6 +247,30 @@ function updateBlessingsFrame(dt) {
     const low = player.hp <= player.maxHp * 0.3;
     if (low && !player._berserkerOn) { player.baseDmg *= 2.5; player._berserkerOn = true; }
     if (!low && player._berserkerOn) { player.baseDmg /= 2.5; player._berserkerOn = false; }
+  }
+  // Bloodrage - HP < 50% 시 DMG x1.5
+  if (player.blessBloodrage) {
+    const low = player.hp <= player.maxHp * 0.5;
+    if (low && !player._bloodrageOn) { player.baseDmg *= 1.5; player._bloodrageOn = true; }
+    if (!low && player._bloodrageOn) { player.baseDmg /= 1.5; player._bloodrageOn = false; }
+  }
+  // Fortress - 정지 시 DR +50%
+  if (player.blessFortress) {
+    const stationary = Math.abs(player.vx || 0) < 0.5 && Math.abs(player.vy || 0) < 0.5;
+    if (stationary && !player._fortressOn) { player.dmgReduction = (player.dmgReduction||0) + 0.5; player._fortressOn = true; }
+    if (!stationary && player._fortressOn) { player.dmgReduction = Math.max(0, (player.dmgReduction||0) - 0.5); player._fortressOn = false; }
+  }
+  // Mana Burst - 매 30초 5초 MP 무한
+  if (player.blessManaBurst) {
+    player._manaBurstT = (player._manaBurstT || 0) + dt;
+    if (player._manaBurstT >= 30) {
+      player._manaBurstT = 0;
+      player._manaBurstUntil = performance.now() + 5000;
+      showMsg('MANA BURST! 5초간 MP 무제한', 3);
+    }
+    if (player._manaBurstUntil && performance.now() < player._manaBurstUntil) {
+      player.mp = player.maxMp;
+    }
   }
   // Gamble
   if (player.blessGamble) {
