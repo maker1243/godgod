@@ -556,6 +556,21 @@ function renderDungeon() {
       pxDraw(p.x - 1, y, 2, 1, '#8bd8ff');
       pxDraw(p.x, y - 1, 1, 1, '#ffffff');
     }
+    else if (p.kind === 'chest') {
+      // 나무 상자 + 금색 잠금
+      pxDraw(p.x - 5, y - 2, 10, 6, '#5a3a20');
+      pxDraw(p.x - 5, y - 3, 10, 1, '#8a5a30');
+      pxDraw(p.x - 1, y - 1, 2, 2, '#e8c547');
+      // 반짝임
+      const glow = 0.5 + Math.sin(state.time * 5 + p.x) * 0.4;
+      ctx.strokeStyle = 'rgba(232, 197, 71, ' + glow.toFixed(2) + ')';
+      ctx.lineWidth = PX;
+      ctx.beginPath(); ctx.arc(p.x*PX, y*PX, 10*PX, 0, Math.PI*2); ctx.stroke();
+      // 접근 시 힌트
+      if (typeof player !== 'undefined' && Math.abs(player.x - p.x) < 12 && Math.abs(player.y - y) < 12) {
+        drawText('[SPACE]', p.x - textWidth('[SPACE]')/2, y - 12, '#ffefa8');
+      }
+    }
     else {
       pxDraw(p.x - 2, y - 2, 4, 4, '#e8c547');
       pxDraw(p.x - 1, y - 1, 2, 2, '#ffefa8');

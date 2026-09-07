@@ -541,6 +541,16 @@ function updateDungeon(dt) {
     room.cleared = true;
     // 무피격 챔버 보너스
     if (typeof perfectChamberCheck === 'function') perfectChamberCheck(room);
+    // 상자 15% 확률 스폰
+    if (!room.isBoss && !room._chestSpawned && Math.random() < 0.15) {
+      room._chestSpawned = true;
+      entities.pickups.push({
+        x: room.x + room.w/2 + rand(-30, 30),
+        y: room.y + room.h/2 + rand(-15, 15),
+        kind: 'chest', life: 999, bob: 0,
+      });
+      showMsg('상자가 나타났다! SPACE 로 열기.', 3);
+    }
     if (room.isBoss) {
       // 보스 클리어
       const fd = currentFloorData();
@@ -758,12 +768,48 @@ function updatePlayer(dt) {
   for (let i = entities.pickups.length - 1; i >= 0; i--) {
     const it = entities.pickups[i];
     const d = dist(it, p);
-    if (d < magnetR) {
+    if (d < magnetR && it.kind !== 'chest' && it.kind !== 'pouch') {
       const a = angleTo(it, p);
       it.x += Math.cos(a) * 80 * dt;
       it.y += Math.sin(a) * 80 * dt;
     }
-    if (d < 6) {
+    // 상자: SPACE 로 열기
+    if (it.kind === 'chest' && d < 14 && keys['Space']) {
+      keys['Space'] = false;
+      const roll = Math.random();
+      if (roll < 0.4) {
+        const amt = 200 + Math.floor(Math.random() * 800);
+        state.research = (state.research || 0) + amt;
+        showMsg('상자: +' + amt + ' RP', 3);
+        spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#8bd8ff');
+      } else if (roll < 0.7) {
+        const amt = 30 + Math.floor(Math.random() * 100);
+        state.gold += amt;
+        showMsg('상자: +' + amt + ' G', 3);
+        spawnFloat(p.x, p.y - 12, '+' + amt + ' G', '#e8c547');
+      } else if (roll < 0.85) {
+        const pools = ['heal','mana','swift','fury','guard'];
+        for (let n = 0; n < 2; n++) {
+          const kn = pools[Math.floor(Math.random() * pools.length)];
+          academy.inventory[kn] = (academy.inventory[kn] || 0) + 1;
+        }
+        if (typeof recomputeHotkeys === 'function') recomputeHotkeys();
+        showMsg('상자: 포션 2개!', 3);
+      } else if (roll < 0.95) {
+        if (typeof openBlessingPick === 'function') openBlessingPick(null);
+        showMsg('상자: 축복!', 3);
+      } else {
+        const amt = 5000 + Math.floor(Math.random() * 15000);
+        state.research = (state.research || 0) + amt;
+        showMsg('★★★ 잭팟 상자! +' + amt + ' RP ★★★', 5);
+        spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#ff00ff');
+      }
+      for (let n = 0; n < 20; n++) spawnParticle(p.x, p.y, '#e8c547', 0.6, 3, 60);
+      entities.pickups.splice(i, 1);
+      sfx('pickup');
+      continue;
+    }
+    if (d < 6 && it.kind !== 'chest') {
       const mult = hasPerk('bountiful') ? 2 : 1;
       if (it.kind === 'hp') p.hp = Math.min(p.maxHp, p.hp + 15 * mult);
       else if (it.kind === 'mp') p.mp = Math.min(p.maxMp, p.mp + 20 * mult);
