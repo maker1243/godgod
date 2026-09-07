@@ -216,9 +216,10 @@ function _placeCipherDoorRandom() {
 }
 
 function updateAcademy(dt) {
-  // 살아있는 아카데미: NPC 병합 + 아침 이벤트 체크
+  // 살아있는 아카데미: NPC 병합 + 아침 이벤트 체크 + 팁 순환
   if (typeof ensureLivingAcademyNpcs === 'function') ensureLivingAcademyNpcs();
   if (typeof checkMorningEvent === 'function') checkMorningEvent();
+  if (typeof tickTips === 'function') tickTips(dt);
   // === CIPHER/PROF 문 표시 상태 결정 ===
   // CIPHER 문: 항상 표시. 다만 매 아카데미 진입 시(첫 초기화 포함) 랜덤 위치.
   //           실패 시(cipherQuest.messageT 가 방금 켜졌고 문구가 WRONG 이면) 재배치.

@@ -297,6 +297,8 @@ function renderAcademy() {
   renderAcademyHUD();
   // 아침 이벤트: 상단 티커
   if (typeof drawMorningEventTicker === 'function') drawMorningEventTicker();
+  // 팁 티커 (하단)
+  if (typeof drawTipHud === 'function') drawTipHud();
 }
 
 function renderAcademyHUD() {
