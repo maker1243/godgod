@@ -62,11 +62,24 @@ const ACHIEVEMENTS = [
   { id:'a22', name:'듀얼 마스터',        desc:'AI 듀얼 시리즈 10승',                   rewardRp:400,  cond:s=>{ const w=(typeof academy!=='undefined'&&academy)?academy.duelWins:0; return w>=10; } },
   { id:'a23', name:'크리티컬 명수',      desc:'크리티컬 100회',                        rewardRp:150,  cond:s=>s.stats.critHits>=100 },
   { id:'a24', name:'불사조',             desc:'사망 후 부활 (LAST STAND/REBIRTH/DIVINITY)', rewardRp:250, cond:s=>s.stats.deaths>=1 && Object.keys(s.ownedSkills||{}).some(id=>['e40','m20','n17','o22'].includes(id)) },
-  { id:'a25', name:'전설',               desc:'모든 24개 업적 달성',                   rewardRp:20000, cond:s=>{
+  { id:'a25', name:'전설',               desc:'a1~a24 모든 24개 업적 달성',            rewardRp:20000, cond:s=>{
       const done = s.achievementsUnlocked||{};
       let n = 0;
-      for (const a of ACHIEVEMENTS) if (a.id !== 'a25' && done[a.id]) n++;
+      for (let i = 1; i <= 24; i++) if (done['a'+i]) n++;
       return n >= 24;
+    } },
+  // 신규 업적 (버전 2)
+  { id:'a26', name:'콤보 마스터',         desc:'단일 콤보 x40 달성',                     rewardRp:5000,  cond:s=>(typeof combo !== 'undefined' && combo.maxThisRun >= 40) },
+  { id:'a27', name:'상자 사냥꾼',         desc:'잭팟 상자 획득',                          rewardRp:5000,  cond:s=>(s._chestJackpot) },
+  { id:'a28', name:'무피격 5회',          desc:'PERFECT! 5회 달성',                      rewardRp:3000,  cond:s=>((s.weekly && s.weekly.progress && s.weekly.progress.weekly_perfect || 0) >= 5) },
+  { id:'a29', name:'시너지 3개',          desc:'축복 시너지 3회 발동',                   rewardRp:8000,  cond:s=>((s.weekly && s.weekly.progress && s.weekly.progress.weekly_synergies || 0) >= 3) },
+  { id:'a30', name:'ENDLESS F10',         desc:'ENDLESS 모드 10층 도달',                 rewardRp:15000, cond:s=>((s.endlessBest || 0) >= 10) },
+  { id:'a31', name:'ENDLESS F25',         desc:'ENDLESS 모드 25층 도달',                 rewardRp:50000, cond:s=>((s.endlessBest || 0) >= 25) },
+  { id:'a32', name:'주간 완주',           desc:'주간 도전 3개 모두 완료',                rewardRp:20000, cond:s=>(s.weekly && s.weekly.ids && s.weekly.ids.every(id => s.weekly.done && s.weekly.done[id])) },
+  { id:'a33', name:'7일 연속',            desc:'로그인 7일 연속',                        rewardRp:12000, cond:s=>(s.dailyLogin && s.dailyLogin.streak >= 7) },
+  { id:'a34', name:'스타일리스트',        desc:'로브 5종 이상 소유',                     rewardRp:5000,  cond:s=>{
+      if (!s.customize || !s.customize.owned || !s.customize.owned.robe) return false;
+      return Object.keys(s.customize.owned.robe).length >= 5;
     } },
 ];
 

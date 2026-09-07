@@ -838,7 +838,9 @@ function updatePlayer(dt) {
         state.research = (state.research || 0) + amt;
         showMsg('★★★ 잭팟 상자! +' + amt + ' RP ★★★', 5);
         spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#ff00ff');
+        state._chestJackpot = true;
         if (typeof sfx === 'function') sfx('jackpot');
+        if (typeof checkAchievements === 'function') checkAchievements();
       }
       for (let n = 0; n < 20; n++) spawnParticle(p.x, p.y, '#e8c547', 0.6, 3, 60);
       entities.pickups.splice(i, 1);
