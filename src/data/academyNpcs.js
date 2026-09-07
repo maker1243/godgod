@@ -145,6 +145,9 @@ const MORNING_EVENTS = [
   { id:'ev_legacy',    text:'THORNE 이 새 연구 논문을 게시했다.',                  highlight:'legacyDoor', color:'#ffefa8' },
   { id:'ev_quiet',     text:'오늘 아카데미는 조용하다. 무언가 이상하다.',            highlight:null,         color:'#5a4a80' },
   { id:'ev_festival',  text:'축제일이다. 오늘 몹 처치 시 RP +50%.',                highlight:null,         color:'#ffefa8' },
+  { id:'ev_saleday',   text:'상인이 50% 할인 세일! 오늘의 특가.',                    highlight:null,         color:'#e8c547' },
+  { id:'ev_alumni',    text:'졸업생이 방문했다. NPC 유대 +50% 획득.',                 highlight:null,         color:'#3ac762' },
+  { id:'ev_bloodmoon', text:'붉은 달이 뜬다. 몹이 더 강하지만 드롭 x2.',              highlight:null,         color:'#c81616' },
 ];
 
 const morningEvent = {
