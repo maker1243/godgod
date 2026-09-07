@@ -642,6 +642,9 @@ function renderDungeonHUD() {
     if (s.max > 0 && s.cd > 0) {
       const cdPct = s.cd / s.max;
       pxDraw(x, slotY + 20 - 20 * cdPct, slotW, 20 * cdPct, 'rgba(0,0,0,0.6)');
+      // CD 남은 초 표시
+      const cdSec = s.cd.toFixed(1);
+      drawText(cdSec, x + slotW/2 - textWidth(cdSec)/2, slotY + 7, '#ffefa8');
     }
     drawText(s.name, x + slotW/2 - textWidth(s.name)/2, slotY + 3, s.cd > 0 ? '#5a4a80' : s.col);
     drawText('[' + s.key + ']', x + slotW/2 - textWidth('[' + s.key + ']')/2, slotY + 12, '#8a7ab5');
