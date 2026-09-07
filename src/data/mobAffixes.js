@@ -57,6 +57,21 @@ const MOB_AFFIX_DEFS = [
         }
       }
     } },
+  { id:'af_giant', name:'거인', color:'#e8c547',
+    apply:(e)=>{ e.r = (e.r||5) * 2; e.dmg = Math.floor((e.dmg||5) * 1.5); e.speed = Math.max(10, (e.speed||30) * 0.7); } },
+  { id:'af_flame', name:'화염 오라', color:'#ff9c3d',
+    apply:(e)=>{ e._afFlame = 0; },
+    tick:(e, dt)=>{
+      if (!player) return;
+      if (dist(e, player) < 20) {
+        e._afFlame = (e._afFlame||0) + dt;
+        if (e._afFlame >= 1) {
+          e._afFlame = 0;
+          if (typeof damagePlayer === 'function') damagePlayer(Math.max(2, Math.floor((e.dmg||5)*0.3)), e);
+          spawnParticle(player.x, player.y, '#ff9c3d', 0.4, 8, 40);
+        }
+      }
+    } },
 ];
 
 const MOB_AFFIX_BY_ID = {};
