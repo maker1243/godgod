@@ -305,18 +305,17 @@ function renderAcademyHUD() {
   // 상단
   pxDraw(0, 0, W, 12, '#1a0e2e');
   const totalPots = POTION_ORDER.reduce((s,k)=>s+academy.inventory[k], 0);
-  // RP 축약 (100M 이상)
-  const rpVal = state.research || 0;
-  const rpStr = rpVal >= 1e12 ? (rpVal/1e12).toFixed(1)+'T' : rpVal >= 1e9 ? (rpVal/1e9).toFixed(1)+'B' : rpVal >= 1e6 ? (rpVal/1e6).toFixed(1)+'M' : String(rpVal);
-  const info1 = 'DAY ' + state.day + '  GPA ' + state.gpa.toFixed(1) + '  GOLD ' + state.gold + '  POT ' + totalPots + '  RP ' + rpStr;
+  // 축약
+  const fmt = (n)=>{ if(n>=1e12)return (n/1e12).toFixed(1)+'T'; if(n>=1e9)return (n/1e9).toFixed(1)+'B'; if(n>=1e6)return (n/1e6).toFixed(1)+'M'; if(n>=1e3)return (n/1e3).toFixed(1)+'k'; return String(n); };
+  const info1 = 'DAY ' + state.day + '  GPA ' + state.gpa.toFixed(1) + '  G ' + fmt(state.gold||0) + '  POT ' + totalPots + '  RP ' + fmt(state.research||0);
   drawText(info1, 4, 3, '#e8d9b0');
   // GPA 색상 강조
   const gpaCol = state.gpa >= 3.5 ? '#3ac762' : state.gpa >= 2.5 ? '#e8c547' : '#c81616';
   pxDraw(4 + textWidth('DAY ' + state.day + '  GPA '), 3, textWidth(state.gpa.toFixed(1)), 7, gpaCol);
   drawText(state.gpa.toFixed(1), 4 + textWidth('DAY ' + state.day + '  GPA '), 3, '#1a0e2e');
 
-  // 우측: 아레나 기록 + 클리어 왕관
-  const arenaStr = 'ARENA BEST W' + academy.bestArena;
+  // 우측: 아레나 기록 (짧게)
+  const arenaStr = 'ARENA W' + academy.bestArena;
   drawText(arenaStr, W - textWidth(arenaStr) - 4, 3, '#8bd8ff');
   if (state.finalCleared) {
     for (let i = 0; i < state.finalCleared; i++) {
