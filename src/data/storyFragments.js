@@ -53,6 +53,21 @@ const STORY_FRAGMENTS = {
           en:{ title:'Genji Annotations (Japanese Lit)',         lines:['The last chapter of Genji Monogatari is a sealing tale.','A thousand years ago Heian court made the same mistake.','History repeats. This time it is our turn.'] } },
   principal: { ko:{ title:'교장 崔 총장의 진심', lines:['나는 봉인을 유지하기 위해 이 자리에 있었다.','하지만 봉인은 결국 나를 삼켰다.','너, 학생이여. 이제 네가 이 자리에 앉을 차례다.','아카데미는 너의 것이다.'] },
           en:{ title:'The Principal\'s True Heart',              lines:['I sat in this chair to hold the seal.','In the end the seal devoured me.','You, student — now it is your turn to sit here.','The Academy is yours.'] } },
+  // 추가 조각 (7개) - Living Academy NPC 및 새 이벤트 관련
+  timetraveler_evt: { ko:{ title:'시간 여행자의 노트', lines:['나는 미래에서 왔다. 아카데미의 마지막 날을 봤다.','너는 그 순간에 서 있었다. 웃고 있었다.','이 조각을 잃지 마라.'] },
+                     en:{ title:'Time Traveler\'s Note',            lines:['I came from the future. I saw the Academy\'s last day.','You stood at that moment. You were smiling.','Do not lose this fragment.'] } },
+  wanderer_evt:     { ko:{ title:'떠도는 교수의 기록', lines:['나는 이제 교수가 아니다. 이름조차 잊었다.','하지만 이 학교의 지도가 내 머릿속에 있다.','언젠가 너에게 도움이 될 것이다.'] },
+                     en:{ title:'The Wandering Professor',          lines:['I am no longer a professor. I forgot even my name.','But this school\'s map is in my head.','Someday it will help you.'] } },
+  mirror_evt:       { ko:{ title:'거울 속의 나', lines:['거울이 다른 나를 보여준다.','그 나는 봉인이 풀리지 않은 세계에서 왔다.','더 행복해 보였다. 나는 부러웠다.'] },
+                     en:{ title:'The Other Me in the Mirror',       lines:['The mirror shows another me.','That me came from a world where the seal never broke.','They looked happier. I was jealous.'] } },
+  renn_bond:        { ko:{ title:'RENN 의 낡은 책갈피', lines:['RENN 이 자신의 책에서 뽑은 책갈피.','뒷면에 작은 글씨: "너를 지켜본다."','알 수 없는 언어로 봉인 주문이 새겨져 있다.'] },
+                     en:{ title:'RENN\'s Old Bookmark',             lines:['A bookmark RENN pulled from their own book.','A tiny script on the back: "I am watching you."','Sealing runes are carved in unknown letters.'] } },
+  elara_true:       { ko:{ title:'엘라라의 진짜 이름', lines:['엘라라는 가명이었다. 그녀의 진짜 이름은 봉인의 열쇠다.','그 이름을 아는 자는 이 아카데미에서 나 하나뿐.','언젠가 그 이름을 부를 순간이 온다.'] },
+                     en:{ title:'Elara\'s True Name',               lines:['Elara was an alias. Her true name is the key to the seal.','Only I in this Academy know that name.','A moment will come when I must speak it.'] } },
+  chronoheart:      { ko:{ title:'크로노 코어의 심장', lines:['코어의 심장은 사실 봉인 그 자체다.','부수는 자는 봉인을 풀고, 봉인하는 자는 코어를 유지한다.','두 길 다 끝이 없다.'] },
+                     en:{ title:'Heart of the Chrono Core',         lines:['The core\'s heart is the seal itself.','Break it and you break the seal; hold it and you hold the core.','Both paths are endless.'] } },
+  the_end_start:    { ko:{ title:'끝의 시작', lines:['조각들을 다 모으면, 이야기는 끝난다.','하지만 끝은 시작이다.','네가 다음 학기를 시작할 때, 이 조각들이 다시 나타날 것이다.'] },
+                     en:{ title:'The Beginning of the End',         lines:['When all fragments are gathered, the story ends.','But every ending is a beginning.','When you start next term, these fragments will appear again.'] } },
 };
 
 // 언어에 맞춰 title/lines 를 골라주는 헬퍼
