@@ -73,7 +73,7 @@ const FACULTY_PROFESSORS = {
     ]
   },
   divinity: {
-    name:'종교철학계열', title:'DIVINITY & PHILOSOPHY', color:'#c8b898',
+    name:'종교철학계열', title:'DIVINITY + PHILOSOPHY', color:'#c8b898',
     profs: [
       { key:'phil',  name:'黃 교수', dept:'철학과',         spriteKind:'lich',     color:'#c8b898', slots:{ lmb:'m01', q:'c05', e:'m14' },
         visual:'dept_hangeul', signature:'philosophy_void', rewardSkills:['c01','c05','c09'],
@@ -84,7 +84,7 @@ const FACULTY_PROFESSORS = {
     ]
   },
   info: {
-    name:'정보통신계열', title:'INFO & COMMUNICATION', color:'#5adcff',
+    name:'정보통신계열', title:'INFO + COMMUNICATION', color:'#5adcff',
     profs: [
       { key:'lib',   name:'白 교수', dept:'문헌정보학과',   spriteKind:'seer',     color:'#5adcff', slots:{ lmb:'e15', q:'e22', e:'e46' },
         visual:'dept_binary',  signature:'library_burst16', rewardSkills:['e15','e21'],
@@ -95,7 +95,7 @@ const FACULTY_PROFESSORS = {
     ]
   },
   design: {
-    name:'미술디자인계열', title:'ART & DESIGN', color:'#ffb8ff',
+    name:'미술디자인계열', title:'ART + DESIGN', color:'#ffb8ff',
     profs: [
       { key:'sculpt',name:'柳 교수', dept:'조소과',         spriteKind:'colossus', color:'#a08050', slots:{ lmb:'e16', q:'e22', e:'e50' },
         visual:'dept_gear',    signature:'sculpt_chisel', rewardSkills:['n06','e22'],
