@@ -166,6 +166,19 @@ function codexEntries() {
     if (state.endlessBest) {
       out.push({ title: 'ENDLESS 최고 층', sub: 'F' + state.endlessBest, color:'#ffefa8' });
     }
+    // 이번 주 최대 콤보 (Weekly progress 에 저장됨)
+    const wkMaxCombo = (state.weekly && state.weekly.progress && state.weekly.progress.weekly_maxCombo) || 0;
+    if (wkMaxCombo > 0) {
+      out.push({ title: '이번 주 최대 콤보', sub: 'x' + wkMaxCombo, color:'#e8c547' });
+    }
+    // Highlights 개수
+    if (state.highlights && state.highlights.length) {
+      out.push({ title: '기록된 하이라이트', sub: state.highlights.length + '개', color:'#8bd8ff' });
+    }
+    // Blessings 활성 시너지 개수 (계정별)
+    if (state.stats && s.rpEarnedTotal) {
+      out.push({ title: 'RP 획득 총합', sub: format(s.rpEarnedTotal), color:'#8bd8ff' });
+    }
   } else if (codex.tab === 'modes') {
     if (typeof GAME_MODES !== 'undefined') {
       out.push({ title: '도전 모드 - 클릭 하여 토글', sub: '활성화 시 다음 던전부터 적용됨. 완료 시 큰 보상.', color:'#ffefa8' });
