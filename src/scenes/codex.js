@@ -163,6 +163,9 @@ function codexEntries() {
     if (state.dailyLogin) {
       out.push({ title: '연속 로그인', sub: (state.dailyLogin.streak || 0) + ' 일', color:'#3ac762' });
     }
+    if (state.endlessBest) {
+      out.push({ title: 'ENDLESS 최고 층', sub: 'F' + state.endlessBest, color:'#ffefa8' });
+    }
   } else if (codex.tab === 'modes') {
     if (typeof GAME_MODES !== 'undefined') {
       out.push({ title: '도전 모드 - 클릭 하여 토글', sub: '활성화 시 다음 던전부터 적용됨. 완료 시 큰 보상.', color:'#ffefa8' });

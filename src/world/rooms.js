@@ -246,6 +246,16 @@ function nextFloor() {
   state.cam.x = 0; state.cam.y = 0;
   const fd = currentFloorData();
   showMsg('FLOOR ' + floor + ' - ' + fd.name, 3);
+  // Endless 최고 층 기록
+  if (typeof isModeActive === 'function' && isModeActive('endless')) {
+    if (floor > (state.endlessBest || 0)) {
+      state.endlessBest = floor;
+      if (typeof saveAccountData === 'function') saveAccountData();
+      if (typeof showAchievementBanner === 'function' && floor % 5 === 0) {
+        showAchievementBanner('ENDLESS BEST', 'F' + floor + ' 달성!', '#ffefa8');
+      }
+    }
+  }
   // 새 층 진입 시 축복 선택
   if (typeof triggerFloorBlessing === 'function') triggerFloorBlessing();
 }
