@@ -803,6 +803,20 @@ function renderDungeon() {
         drawText(r, W/2 - textWidth(r)/2, y, '#c8b898');
         y += 10;
       }
+      // 축복 이름 리스트
+      if (player.blessings && player.blessings.length && typeof BLESSING_BY_ID !== 'undefined') {
+        y += 4;
+        const names = player.blessings.map(id => BLESSING_BY_ID[id] && BLESSING_BY_ID[id].name).filter(Boolean).join(', ');
+        // 여러 줄로 wrap
+        const words = names.split(', ');
+        let line = '', ry = y;
+        for (const w of words) {
+          const test = line ? line + ', ' + w : w;
+          if (textWidth(test) > W - 40) { drawText(line, W/2 - textWidth(line)/2, ry, '#8bd8ff'); ry += 8; line = w; }
+          else line = test;
+        }
+        if (line) drawText(line, W/2 - textWidth(line)/2, ry, '#8bd8ff');
+      }
     }
   }
 }
