@@ -17,7 +17,7 @@ function pickPerks() {
 function updateLevelUp(dt) {
   // 마우스/터치 클릭으로 카드 선택 (renderLevelUp 의 cardW=80, cardH=70, gap=10, y=70)
   if (mouse.down && perkChoices.length) {
-    const cardW = 80, cardH = 70, gap = 10;
+    const cardW = 92, cardH = 78, gap = 8;
     const total = perkChoices.length * cardW + (perkChoices.length - 1) * gap;
     const sx = W/2 - total/2;
     const cy = 70;

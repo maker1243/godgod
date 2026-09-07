@@ -710,7 +710,7 @@ function renderLevelUp() {
   drawText(title, W/2 - textWidth(title)/2, 30, '#e8c547');
   drawText('PRESS [1] [2] [3]', W/2 - textWidth('PRESS [1] [2] [3]')/2, 42, '#8a7ab5');
 
-  const cardW = 80, cardH = 70, gap = 10;
+  const cardW = 92, cardH = 78, gap = 8;
   const total = perkChoices.length * cardW + (perkChoices.length - 1) * gap;
   const sx = W/2 - total/2;
   for (let i = 0; i < perkChoices.length; i++) {
@@ -727,11 +727,13 @@ function renderLevelUp() {
     drawText('[' + (i+1) + ']', x + cardW/2 - textWidth('[' + (i+1) + ']')/2, y + 6, '#ffefa8');
     // 이름
     drawText(p.name, x + cardW/2 - textWidth(p.name)/2, y + 22, '#e8d9b0');
+    // 구분선
+    pxDraw(x + 8, y + 32, cardW - 16, 1, '#3a1e5c');
     // 설명 (줄바꿈)
     const desc = p.desc;
     const words = desc.split(' ');
     let line = '';
-    let ly = y + 38;
+    let ly = y + 40;
     for (const w of words) {
       const test = line + (line ? ' ' : '') + w;
       if (textWidth(test) > cardW - 8) {

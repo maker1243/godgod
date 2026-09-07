@@ -24,6 +24,7 @@ const CODEX_TABS = [
   { id:'weekly',   name:'WEEKLY'     },
   { id:'memory',   name:'MEMORY'     },
   { id:'modes',    name:'MODES'      },
+  { id:'stats',    name:'STATS'      },
 ];
 
 function codexSetTab(id) {
@@ -133,6 +134,34 @@ function codexEntries() {
           color: w.done ? '#3ac762' : '#e8d9b0',
         });
       }
+    }
+  } else if (codex.tab === 'stats') {
+    const s = state.stats || {};
+    const format = (n) => {
+      if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
+      if (n >= 1e9)  return (n/1e9).toFixed(1)  + 'B';
+      if (n >= 1e6)  return (n/1e6).toFixed(1)  + 'M';
+      if (n >= 1e3)  return (n/1e3).toFixed(1)  + 'k';
+      return String(n || 0);
+    };
+    out.push({ title: '전체 통계 (계정 전체)', sub: '누적 카운터. 대부분 스탯은 자동 트래킹.', color:'#ffefa8' });
+    out.push({ title: '총 처치',   sub: format(s.totalKills),          color:'#e8c547' });
+    out.push({ title: '보스 처치', sub: format(s.bossKills),           color:'#e8c547' });
+    out.push({ title: '교수 처치', sub: format(s.profsBeaten),         color:'#e8c547' });
+    out.push({ title: '교장 격파', sub: format(s.principalKills),      color:'#ffefa8' });
+    out.push({ title: '크리티컬', sub: format(s.critHits),             color:'#ff9c3d' });
+    out.push({ title: '사망',     sub: format(s.deaths),               color:'#c81616' });
+    out.push({ title: '던전 클리어', sub: format(s.dungeonsCleared),   color:'#3ac762' });
+    out.push({ title: '시련 통과 (기본)', sub: format(s.trialWins),    color:'#8bd8ff' });
+    out.push({ title: '시련 통과 (ULTRA)', sub: format(s.ultraTrialWins), color:'#ff2d80' });
+    out.push({ title: '스킬 구매', sub: format(s.skillsBought),        color:'#c86ade' });
+    out.push({ title: '암호 성공', sub: format(s.ciphersSolved),       color:'#ff6666' });
+    out.push({ title: '최고 티어 클리어', sub: 'INDEX ' + (s.maxTierBeaten || 0), color:'#ffefa8' });
+    out.push({ title: '최고 아레나 웨이브', sub: format(s.highestArenaWave), color:'#8bd8ff' });
+    out.push({ title: '총 골드 획득', sub: format(s.goldEarnedTotal),  color:'#e8c547' });
+    out.push({ title: '총 RP 획득', sub: format(s.rpEarnedTotal),      color:'#8bd8ff' });
+    if (state.dailyLogin) {
+      out.push({ title: '연속 로그인', sub: (state.dailyLogin.streak || 0) + ' 일', color:'#3ac762' });
     }
   } else if (codex.tab === 'modes') {
     if (typeof GAME_MODES !== 'undefined') {
