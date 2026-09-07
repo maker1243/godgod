@@ -54,6 +54,16 @@ const TIPS = [
   '연속 로그인 7일 = 20000 RP 잭팟!',
   'CODEX 의 STATS 탭에서 전체 통계 확인.',
   '[M] 키로 MEMORY 탭 바로가기.',
+  'SCHOLAR PILLAR (관록) 로 XP 획득량 상승.',
+  'MAGNET PILLAR 로 픽업 자석 반경 확장.',
+  'HOARDER PILLAR 로 상자 확률 증가.',
+  'GOLDEN GRIP 아티팩트: GOLD +100% RP +50%.',
+  'VENOM CROWN 아티팩트: 모든 발사체에 4초 독.',
+  'SCHOLAR\'S RING 아티팩트: XP GAIN +100%.',
+  'ENDLESS 모드는 층 데이터가 순환. 층마다 강화.',
+  'CODEX 의 STATS 탭에서 컬렉션 % 확인.',
+  'ENDLESS 모드 최고 층 기록은 CODEX 의 STATS 탭.',
+  '스킬 슬롯 좌상단에 색상 도트로 카테고리 표시.',
 ];
 
 const tipsState = {
