@@ -43,6 +43,8 @@ function sfx(name) {
     case 'perfect':beep(1400, 0.05, 'triangle', 0.06); setTimeout(()=>beep(1800, 0.05, 'triangle', 0.05), 50); setTimeout(()=>beep(2200, 0.08, 'triangle', 0.05), 100); break;
     case 'chest': beep(500, 0.08, 'sawtooth', 0.05); setTimeout(()=>beep(800, 0.06, 'triangle', 0.05), 60); setTimeout(()=>beep(1200, 0.06, 'triangle', 0.05), 120); setTimeout(()=>beep(1600, 0.10, 'triangle', 0.06), 180); break;
     case 'jackpot': for (let i=0;i<8;i++) setTimeout(()=>beep(800+i*200,0.10,'triangle',0.06),i*60); break;
+    case 'menu':   beep(600, 0.04, 'square', 0.03); break;
+    case 'error':  beep(200, 0.15, 'sawtooth', 0.05); break;
   }
 }
 
