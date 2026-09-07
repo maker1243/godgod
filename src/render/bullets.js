@@ -540,7 +540,8 @@ function renderDungeonHUD() {
   pxDraw(16, 2, 80, 5, '#3a0a0a');
   pxDraw(16, 2, 80 * hpPct, 5, '#c81616');
   pxDraw(16, 2, 80 * hpPct, 1, '#ff6666');
-  drawText(Math.max(0, Math.ceil(player.hp)) + '/' + player.maxHp, 100, 3, '#e8d9b0');
+  const hpFmt = (n)=>{ if(n>=1e6)return (n/1e6).toFixed(1)+'M'; if(n>=1e3)return (n/1e3).toFixed(1)+'k'; return String(Math.ceil(n)); };
+  drawText(hpFmt(Math.max(0, player.hp)) + '/' + hpFmt(player.maxHp), 100, 3, '#e8d9b0');
 
   drawText('MP', 4, 11, '#3b7fd6');
   pxDraw(16, 10, 80, 5, '#0a1a3a');
