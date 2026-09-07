@@ -275,6 +275,9 @@ function buildRoom(roomIndex) {
   };
   rooms[roomIndex - 1] = room;
 
+  // 무피격 챔버 트래킹 시작
+  if (typeof perfectChamberBegin === 'function') perfectChamberBegin();
+
   // 플레이어 배치 (왼쪽 문 근처)
   player.x = room.x + 20;
   player.y = room.y + h/2;

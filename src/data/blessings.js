@@ -94,6 +94,8 @@ function _grantBlessing(id) {
   try { b.apply(player); } catch(_) {}
   spawnFloat(player.x, player.y - 12, '+ ' + b.name, b.color);
   if (typeof sfx === 'function') sfx('level');
+  // 시너지 콤보 자동 체크
+  if (typeof checkBlessingCombos === 'function') checkBlessingCombos();
 }
 
 function updateBlessingPick(dt) {
@@ -218,6 +220,9 @@ function resetBlessings() {
   player.gambleT = 0; player.gambleMult = 1;
   player.orbitals = [];
   player._shotCounter = 0;
+  if (typeof resetSynergies === 'function') resetSynergies();
+  // 콤보 리셋
+  if (typeof combo !== 'undefined') { combo.count = 0; combo.maxThisRun = 0; combo.lastKillT = 0; }
 }
 
 // 매 프레임 훅 (updateDungeon 등에서 호출).

@@ -528,6 +528,8 @@ function renderDungeonHUD() {
   drawText('LV ' + player.level, 150, 3, '#ffefa8');
   pxDraw(150, 10, 60, 4, '#2a1548');
   pxDraw(150, 10, 60 * (player.xp / player.xpNext), 4, '#e8c547');
+  // 콤보 HUD (중앙)
+  if (typeof drawComboHud === 'function') drawComboHud();
   // 축복 리스트 (좌하단)
   if (player && player.blessings && player.blessings.length && typeof BLESSING_BY_ID !== 'undefined') {
     const list = player.blessings.slice(-6);
@@ -540,12 +542,14 @@ function renderDungeonHUD() {
     drawText('BLESS ' + player.blessings.length, 4, H - 16, '#8bd8ff');
   }
 
-  // 우측: 층/방 이름 + 골드 + 적 수
+  // 우측: 층/방 이름 + 골드 + 적 수 (짧게, HP 숫자와 겹치지 않도록)
   const fd = currentFloorData();
-  const infoStr = 'F' + floor + ' - ROOM ' + (currentRoom + 1) + '/5   ' + fd.name;
+  const infoStr = 'F' + floor + '  R' + (currentRoom + 1) + '/5';
   drawText(infoStr, W - textWidth(infoStr) - 4, 3, '#e8d9b0');
-  const enStr = 'GOLD ' + state.gold + '   ENEMIES ' + entities.enemies.length;
+  const enStr = 'GOLD ' + state.gold + '  ENEMIES ' + entities.enemies.length;
   drawText(enStr, W - textWidth(enStr) - 4, 11, '#c8b898');
+  // 층 이름은 별도 라인 (상단 중앙, 짧게)
+  drawText(fd.name, W/2 - textWidth(fd.name)/2, 19, '#8a7ab5');
 
   // 현재 난이도 뱃지 (좌상단 HUD 아래)
   if (typeof currentDifficulty === 'function') {

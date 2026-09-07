@@ -514,9 +514,10 @@ function updateDungeon(dt) {
   }
   updateBullets(dtEnemy);
   updateEBullets(dtEnemy);
-  // 축복 / 접두 tick
+  // 축복 / 접두 / 콤보 tick
   if (typeof updateBlessingsFrame === 'function') updateBlessingsFrame(dt);
   if (typeof tickMobAffixes === 'function') tickMobAffixes(dt);
+  if (typeof comboTick === 'function') comboTick(dt);
   if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
@@ -533,6 +534,8 @@ function updateDungeon(dt) {
   const room = rooms[currentRoom];
   if (!room.cleared && entities.enemies.length === 0) {
     room.cleared = true;
+    // 무피격 챔버 보너스
+    if (typeof perfectChamberCheck === 'function') perfectChamberCheck(room);
     if (room.isBoss) {
       // 보스 클리어
       const fd = currentFloorData();

@@ -816,6 +816,8 @@ function damagePlayer(amt, source) {
 }
 
 function onEnemyDeath(e) {
+  // 콤보 카운트 + 티어 텍스트
+  if (typeof comboOnKill === 'function' && !e.isBoss && !e.isProfessor) comboOnKill(e.x, e.y);
   // 몹 접두 사망 훅 (폭발/그림자 분신 등)
   if (typeof onMobAffixDeath === 'function') onMobAffixDeath(e);
   // 축복 훅: Chain Lightning
