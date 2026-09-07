@@ -875,7 +875,8 @@ function onEnemyDeath(e) {
   if (typeof currentDifficulty === 'function') {
     const diff = currentDifficulty();
     if (diff.rpPerKill > 0) {
-      const rp = e.isBoss ? diff.rpPerKill * 20 : diff.rpPerKill;
+      let rp = e.isBoss ? diff.rpPerKill * 20 : diff.rpPerKill;
+      if (typeof gameModeRpMult === 'function') rp *= gameModeRpMult();
       state.research += rp;
       spawnFloat(e.x, e.y - 8, '+' + rp + ' RP', '#8bd8ff');
     }

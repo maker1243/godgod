@@ -322,6 +322,19 @@ function renderAcademyHUD() {
 
   // 하단 힌트
   drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX  [H] HELP', 4, H - 10, '#5a4a80');
+  // 활성 게임 모드 (상단 우측)
+  if (typeof activeModeLabels === 'function') {
+    const labels = activeModeLabels();
+    if (labels.length) {
+      let mx = W - 4;
+      for (let i = labels.length - 1; i >= 0; i--) {
+        const l = labels[i];
+        const tw = textWidth('[' + l.name + ']');
+        mx -= tw + 4;
+        drawText('[' + l.name + ']', mx, 22, l.color);
+      }
+    }
+  }
   // 로비 프리센스: 같은 난이도 사람 수 + coop 초대 활성 표시
   if (typeof mp !== 'undefined' && mp && mp.connected && mp.roomCode) {
     const diff = state.difficulty || 'normal';

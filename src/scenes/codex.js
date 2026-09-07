@@ -23,6 +23,7 @@ const CODEX_TABS = [
   { id:'story',    name:'STORY'      },
   { id:'weekly',   name:'WEEKLY'     },
   { id:'memory',   name:'MEMORY'     },
+  { id:'modes',    name:'MODES'      },
 ];
 
 function codexSetTab(id) {
@@ -130,6 +131,20 @@ function codexEntries() {
           title: (w.done ? '★ ' : '  ') + w.name + '  ' + bar + '  ' + Math.min(w.cur, w.goal) + '/' + w.goal,
           sub: w.desc + '   보상 +' + w.reward + ' RP' + (w.done ? '   [완료!]' : ''),
           color: w.done ? '#3ac762' : '#e8d9b0',
+        });
+      }
+    }
+  } else if (codex.tab === 'modes') {
+    if (typeof GAME_MODES !== 'undefined') {
+      out.push({ title: '도전 모드 - 클릭 하여 토글', sub: '활성화 시 다음 던전부터 적용됨. 완료 시 큰 보상.', color:'#ffefa8' });
+      for (const m of GAME_MODES) {
+        const active = isModeActive(m.id);
+        const mult = m.rewardMult ? '  [+RP x' + m.rewardMult + ']' : '';
+        out.push({
+          title: (active ? '★ ' : '  ') + m.name + mult,
+          sub: m.desc,
+          color: active ? m.color : '#8a7ab5',
+          _modeToggle: m.id,
         });
       }
     }
@@ -241,8 +256,29 @@ function updateCodex(dt) {
       if (mouse.x >= r.x && mouse.x <= r.x + r.w && mouse.y >= r.y && mouse.y <= r.y + r.h) {
         mouse.down = false;
         codex.cursor = r.idx;
+        // MODES 탭: 모드 토글
+        if (codex.tab === 'modes') {
+          const entries = codexEntries();
+          const e = entries[r.idx];
+          if (e && e._modeToggle) {
+            const on = toggleGameMode(e._modeToggle);
+            if (typeof showMsg === 'function') showMsg('MODE ' + e._modeToggle.toUpperCase() + (on ? ' ON' : ' OFF'), 2);
+            if (typeof sfx === 'function') sfx('level');
+          }
+        }
         return;
       }
+    }
+  }
+  // Space also toggles current mode row
+  if (keys['Space'] && codex.tab === 'modes') {
+    keys['Space'] = false;
+    const entries = codexEntries();
+    const e = entries[codex.cursor];
+    if (e && e._modeToggle) {
+      const on = toggleGameMode(e._modeToggle);
+      if (typeof showMsg === 'function') showMsg('MODE ' + e._modeToggle.toUpperCase() + (on ? ' ON' : ' OFF'), 2);
+      if (typeof sfx === 'function') sfx('level');
     }
   }
 }

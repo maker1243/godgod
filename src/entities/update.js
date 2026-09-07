@@ -811,6 +811,8 @@ function updatePlayer(dt) {
     }
     if (typeof statAdd === 'function') statAdd('deaths', 1);
     if (typeof checkAchievements === 'function') checkAchievements();
+    // 게임 모드 사망 훅 (Ironman 등)
+    if (typeof applyGameModesOnDeath === 'function') applyGameModesOnDeath();
     goTo('ending');
   }
 
