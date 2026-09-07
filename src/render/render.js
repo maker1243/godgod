@@ -735,6 +735,12 @@ function renderDungeon() {
 
   ctx.restore();
 
+  // 큰 피격 시 순간 붉은 플래시 (전체 화면)
+  if (state._damageFlashUntil && performance.now() < state._damageFlashUntil) {
+    const remain = (state._damageFlashUntil - performance.now()) / 200;
+    ctx.fillStyle = 'rgba(200, 22, 22, ' + (0.4 * remain).toFixed(2) + ')';
+    ctx.fillRect(0, 0, W*PX, H*PX);
+  }
   // HP 낮을 때 화면 가장자리 붉은 비네트
   if (player && player.hp > 0 && player.maxHp > 0) {
     const hpPct = player.hp / player.maxHp;

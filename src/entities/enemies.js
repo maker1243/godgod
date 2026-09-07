@@ -831,7 +831,10 @@ function damagePlayer(amt, source) {
   player.hp -= amt;
   player.hitFlash = 0.2;
   player.invuln = 0.3;
-  state.shake = Math.max(state.shake, Math.min(8, amt * 0.6));
+  state.shake = Math.max(state.shake, Math.min(12, amt * 0.6));
+  // 큰 피격 시 화면 붉은 플래시
+  const bigHit = amt >= player.maxHp * 0.2;
+  if (bigHit) state._damageFlashUntil = performance.now() + 200;
   if (amt >= 1) sfx('hurt');
 
   // 부활/최후의 저항
