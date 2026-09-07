@@ -506,6 +506,19 @@ function renderDungeon() {
   // 방 장식 (기둥/균열/촛대/유리병 등)
   if (typeof drawRoomDecor === 'function') drawRoomDecor(r);
 
+  // 앰비언트 먼지 파티클 (분위기 강화)
+  const dustCount = 12;
+  for (let i = 0; i < dustCount; i++) {
+    const seed = i * 7.31;
+    const wave = state.time * 0.4 + seed;
+    const dx = r.x + 10 + (i * 30 + Math.sin(wave) * 12) % (r.w - 20);
+    const dy = r.y + 20 + (i * 17 + Math.cos(wave * 0.7) * 8) % (r.h - 40);
+    const a = 0.15 + Math.sin(wave * 1.3) * 0.1;
+    ctx.globalAlpha = a;
+    pxDraw(Math.floor(dx), Math.floor(dy), 1, 1, '#8bd8ff');
+    ctx.globalAlpha = 1;
+  }
+
   // 룬 (보스방)
   if (r.isBoss) {
     ctx.fillStyle = 'rgba(200, 40, 80, 0.15)';
@@ -634,6 +647,17 @@ function renderDungeon() {
     if (b.kind === 'bone') {
       pxDraw(b.x - 1, b.y - 1, 3, 3, '#e8dcb0');
       pxDraw(b.x, b.y, 1, 1, '#5a4a30');
+    } else if (b.kind === 'venom') {
+      // 초록 독 볼트 + 방울 궤적
+      pxDraw(b.x - 2, b.y - 2, 5, 5, '#0a4a10');
+      pxDraw(b.x - 1, b.y - 1, 3, 3, '#3ac762');
+      pxDraw(b.x, b.y, 1, 1, '#8bff8b');
+      // 궤적 방울
+      if (Math.random() < 0.4) spawnParticle(b.x - b.vx*0.02, b.y - b.vy*0.02, '#3ac762', 0.3, 1, 20);
+    } else if (b.kind === 'bolt') {
+      // 접두: 번개 화살 (노란)
+      pxDraw(b.x - 1, b.y - 1, 3, 3, '#ffefa8');
+      pxDraw(b.x, b.y, 1, 1, '#ffffff');
     } else {
       // 그림자 볼트 (일반 몹)
       ctx.globalAlpha = 0.9;

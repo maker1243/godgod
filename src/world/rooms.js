@@ -36,9 +36,9 @@ const FLOOR_DATA = [
   { name:'THE CHRONO CORE',   subtitle:'THE HEART OF TIME', boss:'core',    bossName:'THE CHRONO CORE',
     wall:'#3a2a5c', wallLight:'#7a5abc', floor:'#0a0512', floorAlt:'#14082a', enemies:['wraith','golem','cultist'] },
   { name:'BLIGHTED GARDEN',   subtitle:'GROWTH TURNED HUNGRY', boss:'knight',   bossName:'BLIGHTED KNIGHT',
-    wall:'#2a4a1a', wallLight:'#3a6a2a', floor:'#0a1a0a', floorAlt:'#142010', enemies:['slime','spider','imp'] },
+    wall:'#2a4a1a', wallLight:'#3a6a2a', floor:'#0a1a0a', floorAlt:'#142010', enemies:['slime','spider','venomspit'] },
   { name:'THE OSSUARY DEEP',  subtitle:'MARROW MEMORIES',      boss:'colossus', bossName:'GREATER OSSUARY',
-    wall:'#5a4a3a', wallLight:'#8a7a5a', floor:'#20180f', floorAlt:'#2a2018', enemies:['skeleton','imp','golem'] },
+    wall:'#5a4a3a', wallLight:'#8a7a5a', floor:'#20180f', floorAlt:'#2a2018', enemies:['skeleton','imp','healer'] },
   { name:'VOID LIBRARY',      subtitle:'PAGES WRITTEN IN VOID', boss:'seer',    bossName:'VOID SEER',
     wall:'#0a1a3a', wallLight:'#1a2a5a', floor:'#050a20', floorAlt:'#0a1030', enemies:['wraith','cultist','bat'] },
   { name:'NECROPOLIS',        subtitle:'CITY OF THE STILL',    boss:'lich',    bossName:'ARCHLICH',
@@ -376,6 +376,12 @@ function spawnEnemy(kind, room) {
   } else if (kind === 'cultist') {
     // 원거리 마법 - 중간 HP, 자주색 볼트 3-way
     Object.assign(base, { r: 5, hp: 25 + floor*7, dmg: 14, speed: 20, xp: 5, gold: 3, spellCd: rand(1.5, 3) });
+  } else if (kind === 'venomspit') {
+    // 독 뱉기 - 원거리 초록 볼트, DoT 부여
+    Object.assign(base, { r: 5, hp: 22 + floor*6, dmg: 10, speed: 15, xp: 6, gold: 3, venomCd: rand(1, 2) });
+  } else if (kind === 'healer') {
+    // 힐러 - 주변 몹 HP 회복. 도망다님.
+    Object.assign(base, { r: 4, hp: 15 + floor*4, dmg: 4, speed: 26, xp: 8, gold: 4, healCd: rand(1.5, 2.5) });
   }
   // 전역 난이도 적용: hpBase 지정된 티어면 잡몹 HP 를 그 값으로 오버라이드.
   const diff = currentDifficulty();

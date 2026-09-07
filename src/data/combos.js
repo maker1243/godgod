@@ -42,7 +42,13 @@ function comboOnKill(x, y) {
     // 보너스 RP
     const bonus = Math.floor(combo.count * 5);
     state.research = (state.research || 0) + bonus;
-    if (typeof sfx === 'function') sfx('level');
+    // 티어별 사운드
+    if (typeof sfx === 'function') {
+      if (combo.count >= 40) sfx('combo4');
+      else if (combo.count >= 20) sfx('combo3');
+      else if (combo.count >= 10) sfx('combo2');
+      else sfx('combo1');
+    }
     // 하이라이트: x20 이상
     if (typeof highlightBigCombo === 'function') highlightBigCombo(combo.count);
   } else if (combo.count >= 3) {
@@ -97,7 +103,7 @@ function perfectChamberCheck(room) {
       const bonus = 100;
       state.research = (state.research || 0) + bonus;
       spawnFloat(player.x, player.y - 18, 'PERFECT! +' + bonus + ' RP', '#ffefa8');
-      if (typeof sfx === 'function') sfx('level');
+      if (typeof sfx === 'function') sfx('perfect');
       if (typeof weeklyAdd === 'function') weeklyAdd('weekly_perfect', 1);
     }
     perfectChamber.active = false;
@@ -167,6 +173,7 @@ function checkBlessingCombos() {
       showMsg('★ SYNERGY: ' + c.name + ' - ' + c.desc, 6);
       spawnFloat(player.x, player.y - 24, '★ ' + c.name + ' ★', c.color);
       if (typeof highlightSynergy === 'function') highlightSynergy(c.name);
+      if (typeof sfx === 'function') sfx('synergy');
       if (typeof sfx === 'function') sfx('level');
       // 폭발적 파티클
       for (let i = 0; i < 30; i++) {

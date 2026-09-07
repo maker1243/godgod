@@ -399,6 +399,29 @@ function drawEnemy(e) {
     // 렌치 스프라이트 재사용 + 다른 팔레트
     const oy = Math.sin(state.time * 2 + e.x) * 1;
     drawSprite(SPR_WRAITH, CULTIST_PAL, e.x - 6, e.y - 8 + oy);
+  } else if (e.kind === 'venomspit') {
+    // 초록 슬라임 크게. 위에 침 방울 반짝임
+    const VENOM_PAL = { '1':'#0a2a10', '2':'#1a5a20', '3':'#3ac762', '4':'#8bff8b', '5':'#050505' };
+    drawSprite(SPR_SLIME, VENOM_PAL, e.x - 6, e.y - 5);
+    // 초록 오라
+    ctx.fillStyle = 'rgba(58, 199, 98, 0.15)';
+    ctx.fillRect((e.x - 8)*PX, (e.y - 6)*PX, 16*PX, 12*PX);
+    // 위 침 방울
+    if (Math.sin(state.time * 3 + e.x) > 0) pxDraw(e.x - 1, e.y - 8, 2, 2, '#3ac762');
+  } else if (e.kind === 'healer') {
+    // 흰 로브 유령. 위에 십자가.
+    const HEAL_PAL = { '1':'#e8d9b0', '2':'#ffffff', '3':'#c8c8c8', '4':'#c8b898', '5':'#5a4a80', '6':'#3ac762', '7':'#f5d3a3', '8':'#050505' };
+    drawSprite(SPR_WRAITH, HEAL_PAL, e.x - 6, e.y - 8);
+    // 십자가
+    pxDraw(e.x - 1, e.y - 12, 2, 4, '#3ac762');
+    pxDraw(e.x - 2, e.y - 11, 4, 2, '#3ac762');
+    // 힐 오라
+    const p = 0.5 + Math.sin(state.time * 4) * 0.3;
+    ctx.strokeStyle = 'rgba(58, 199, 98, ' + p.toFixed(2) + ')';
+    ctx.lineWidth = PX;
+    ctx.beginPath();
+    ctx.arc(e.x*PX, e.y*PX, 20*PX, 0, Math.PI*2);
+    ctx.stroke();
   } else if (e.kind === 'dragonlord') {
     // 콜로수스 스프라이트 + 붉은 팔레트, 아우라
     ctx.fillStyle = 'rgba(255, 45, 45, 0.25)';

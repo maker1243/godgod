@@ -30,6 +30,7 @@ function bossKillCinematic(e) {
   // 슬로모 (전역 dt scaling)
   state._slowMoUntil = performance.now() + 1000;
   state.shake = Math.max(state.shake || 0, 10);
+  if (typeof sfx === 'function') sfx('bosskill');
   // 폭발 파티클
   for (let i = 0; i < 60; i++) {
     const a = Math.random() * Math.PI * 2;

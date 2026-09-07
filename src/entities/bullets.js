@@ -182,7 +182,7 @@ function updateBullets(dt) {
         // 라이프스틸
         if (player.lifesteal) player.hp = Math.min(player.maxHp, player.hp + player.lifesteal);
         state.shake = Math.max(state.shake, isCrit ? 4 : 2);
-        sfx('hit');
+        if (isCrit) sfx('crit'); else sfx('hit');
 
         // 폭발형
         if (b.explosive) {
@@ -224,7 +224,11 @@ function updateEBullets(dt) {
 
     if (dist(b, player) < b.r + player.r) {
       damagePlayer(b.dmg, b);
-      spawnParticle(b.x, b.y, b.kind === 'bone' ? '#e8dcb0' : '#7d4dbf', 0.3, 6, 50);
+      // 볼트 특수: 독 DoT (venom_spitter 등)
+      if (b._venomDot) {
+        player._poisonUntil = Math.max(player._poisonUntil || 0, performance.now() + b._venomDot * 1000);
+      }
+      spawnParticle(b.x, b.y, b.kind === 'bone' ? '#e8dcb0' : (b.kind === 'venom' ? '#3ac762' : '#7d4dbf'), 0.3, 6, 50);
       b.life = 0;
     }
     if (b.life <= 0) entities.ebullets.splice(i, 1);

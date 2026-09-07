@@ -33,6 +33,14 @@ function sfx(name) {
     case 'door':   beep(300, 0.10, 'sawtooth', 0.04); break;
     case 'roll':   beep(400, 0.06, 'triangle', 0.03); break;
     case 'boss':   for (let i=0;i<5;i++) setTimeout(()=>beep(100+i*30,0.15,'sawtooth',0.06),i*80); break;
+    case 'crit':   beep(1600, 0.08, 'square', 0.06); setTimeout(()=>beep(2000, 0.06, 'square', 0.05), 30); break;
+    case 'combo1': beep(700, 0.05, 'square', 0.04); break;
+    case 'combo2': beep(900, 0.05, 'square', 0.04); setTimeout(()=>beep(1100, 0.05, 'square', 0.04), 40); break;
+    case 'combo3': beep(1200, 0.06, 'triangle', 0.05); setTimeout(()=>beep(1500, 0.06, 'triangle', 0.05), 40); setTimeout(()=>beep(1800, 0.08, 'triangle', 0.05), 80); break;
+    case 'combo4': beep(400, 0.12, 'sawtooth', 0.08); setTimeout(()=>beep(800, 0.10, 'sawtooth', 0.06), 60); setTimeout(()=>beep(1600, 0.10, 'triangle', 0.05), 120); setTimeout(()=>beep(2400, 0.15, 'triangle', 0.05), 200); break;
+    case 'synergy':for (let i=0;i<8;i++) setTimeout(()=>beep(400+i*100,0.06,'triangle',0.04),i*30); break;
+    case 'bosskill':for (let i=0;i<10;i++) setTimeout(()=>beep(1200-i*80,0.15,'sawtooth',0.08),i*50); break;
+    case 'perfect':beep(1400, 0.05, 'triangle', 0.06); setTimeout(()=>beep(1800, 0.05, 'triangle', 0.05), 50); setTimeout(()=>beep(2200, 0.08, 'triangle', 0.05), 100); break;
   }
 }
 

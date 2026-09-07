@@ -69,6 +69,8 @@ function updateEnemies(dt) {
     else if (e.kind === 'golem')    updateGolem(e, dt, speedMod);
     else if (e.kind === 'spider')   updateSpider(e, dt, speedMod);
     else if (e.kind === 'cultist')  updateCultist(e, dt, speedMod);
+    else if (e.kind === 'venomspit') updateVenomSpit(e, dt, speedMod);
+    else if (e.kind === 'healer')   updateHealer(e, dt, speedMod);
     else if (e.kind === 'knight')   updateKnight(e, dt, speedMod);
     else if (e.kind === 'colossus') updateColossus(e, dt, speedMod);
     else if (e.kind === 'seer')     updateSeer(e, dt, speedMod);
@@ -247,6 +249,61 @@ function updateCultist(e, dt, sm) {
       });
     }
     e.spellCd = rand(2, 3.5);
+  }
+}
+
+function updateVenomSpit(e, dt, sm) {
+  // 원거리 유지, 독 볼트 뱉기
+  const a = angleTo(e, player);
+  const d = dist(e, player);
+  // 이상적 거리 100 유지
+  if (d < 90) {
+    e.x -= Math.cos(a) * e.speed * sm * dt;
+    e.y -= Math.sin(a) * e.speed * sm * dt;
+  } else if (d > 130) {
+    e.x += Math.cos(a) * e.speed * sm * dt;
+    e.y += Math.sin(a) * e.speed * sm * dt;
+  }
+  e.venomCd -= dt;
+  if (e.venomCd <= 0 && d < 200) {
+    entities.ebullets.push({
+      x: e.x, y: e.y, vx: Math.cos(a) * 80, vy: Math.sin(a) * 80,
+      r: 3, dmg: e.dmg, life: 2.5, kind: 'venom', _venomDot: 3,
+    });
+    e.venomCd = rand(1.5, 2.5);
+  }
+}
+
+function updateHealer(e, dt, sm) {
+  // 플레이어에게서 도망, 주변 몹 힐
+  const a = angleTo(e, player);
+  const d = dist(e, player);
+  if (d < 80) {
+    e.x -= Math.cos(a) * e.speed * sm * dt;
+    e.y -= Math.sin(a) * e.speed * sm * dt;
+  }
+  e.healCd -= dt;
+  if (e.healCd <= 0) {
+    // 주변 40 반경 몹 힐 (자기 자신 제외)
+    let healed = 0;
+    for (const other of entities.enemies) {
+      if (other === e || other.hp <= 0) continue;
+      if (dist(e, other) < 40 && other.hp < other.maxHp) {
+        const amt = Math.floor(other.maxHp * 0.08);
+        other.hp = Math.min(other.maxHp, other.hp + amt);
+        spawnFloat(other.x, other.y - 8, '+' + amt, '#3ac762');
+        healed++;
+        if (healed >= 3) break;
+      }
+    }
+    if (healed > 0) {
+      // 힐 이펙트
+      spawnParticle(e.x, e.y, '#3ac762', 0.5, 12, 60);
+      if (typeof entities.fx !== 'undefined') {
+        entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 0.4, max: 0.4, r0: 4, r1: 40, col: '#3ac762' });
+      }
+    }
+    e.healCd = rand(2, 3);
   }
 }
 
