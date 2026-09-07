@@ -558,6 +558,16 @@ function renderDungeon() {
       pxDraw(p.x - 1, y, 2, 1, '#8bd8ff');
       pxDraw(p.x, y - 1, 1, 1, '#ffffff');
     }
+    else if (p.kind === 'xp') {
+      // XP 오브 - 자주
+      pxDraw(p.x - 2, y - 2, 4, 4, '#c86ade');
+      pxDraw(p.x - 1, y - 1, 2, 2, '#ff9cff');
+      // 오라
+      const glow = 0.4 + Math.sin(state.time * 4 + p.x) * 0.3;
+      ctx.strokeStyle = 'rgba(200, 106, 222, ' + glow.toFixed(2) + ')';
+      ctx.lineWidth = PX;
+      ctx.beginPath(); ctx.arc(p.x*PX, y*PX, 4*PX, 0, Math.PI*2); ctx.stroke();
+    }
     else if (p.kind === 'chest') {
       // 나무 상자 + 금색 잠금
       pxDraw(p.x - 5, y - 2, 10, 6, '#5a3a20');

@@ -992,8 +992,11 @@ function onEnemyDeath(e) {
   // 픽업 드롭 (익스트림은 픽업 없음)
   if (!isExtreme) {
     const pickupChance = hasPerk('bountiful') ? 1.4 : 1;
-    if (Math.random() < 0.35 * pickupChance) spawnPickup(e.x, e.y, 'hp');
-    else if (Math.random() < 0.5 * pickupChance) spawnPickup(e.x, e.y, 'mp');
+    const r = Math.random();
+    if (r < 0.25 * pickupChance) spawnPickup(e.x, e.y, 'hp');
+    else if (r < 0.45 * pickupChance) spawnPickup(e.x, e.y, 'mp');
+    else if (r < 0.65 * pickupChance) spawnPickup(e.x, e.y, 'gold');
+    else if (r < 0.85 * pickupChance) spawnPickup(e.x, e.y, 'xp');
     else spawnPickup(e.x, e.y, 'gold');
 
     // === 인벤토리 포션 드롭 (낮은 확률) ===
