@@ -44,7 +44,7 @@ function legacyLobbyEntries() {
     _ensureArtifactsState();
     // 오늘의 로테이션 5개 - 우선 표시
     const offers = state.artifacts.rotationOffers || [];
-    out.push({ kind:'header', title:'★ TODAY\'S OFFER  (' + state.artifacts.rotationDay + ')', color:'#ffefa8' });
+    out.push({ kind:'header', title:'>> TODAY\'S OFFER  (' + state.artifacts.rotationDay + ')', color:'#ffefa8' });
     for (const id of offers) {
       const a = ARTIFACT_BY_ID[id]; if (!a) continue;
       const owned = !!state.artifacts.owned[id];
@@ -58,7 +58,7 @@ function legacyLobbyEntries() {
       });
     }
     // 이미 소유한 것 모두 (F로 장착 관리)
-    out.push({ kind:'header', title:'★ OWNED ARTIFACTS  (' + state.artifacts.equipped.length + '/' + ARTIFACT_SLOT_COUNT + ' EQUIPPED)', color:'#8bd8ff' });
+    out.push({ kind:'header', title:'>> OWNED ARTIFACTS  (' + state.artifacts.equipped.length + '/' + ARTIFACT_SLOT_COUNT + ' EQUIPPED)', color:'#8bd8ff' });
     for (const id of Object.keys(state.artifacts.owned)) {
       const a = ARTIFACT_BY_ID[id]; if (!a) continue;
       const eq = state.artifacts.equipped.indexOf(id) >= 0;
@@ -71,7 +71,7 @@ function legacyLobbyEntries() {
     }
   } else if (legacyLobby.tab === 'trait') {
     _ensureTraitsState();
-    out.push({ kind:'header', title:'★ TRAITS  (' + state.traits.equipped.length + '/' + TRAIT_SLOT_COUNT + ' EQUIPPED)', color:'#ffefa8' });
+    out.push({ kind:'header', title:'>> TRAITS  (' + state.traits.equipped.length + '/' + TRAIT_SLOT_COUNT + ' EQUIPPED)', color:'#ffefa8' });
     for (const t of TRAIT_DEFS) {
       const owned = !!state.traits.owned[t.id];
       const eq = state.traits.equipped.indexOf(t.id) >= 0;
