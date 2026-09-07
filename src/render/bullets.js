@@ -782,17 +782,44 @@ function renderEnding() {
   drawText(title, W/2 - textWidth(title, 2)/2, 55, col, 2);
   drawText(sub, W/2 - textWidth(sub)/2, 85, '#c8b898');
 
-  drawText('FLOOR REACHED F' + floor, W/2 - textWidth('FLOOR REACHED F' + floor)/2, 108, '#e8d9b0');
-  drawText('LEVEL REACHED ' + player.level, W/2 - textWidth('LEVEL REACHED ' + player.level)/2, 120, '#e8d9b0');
-  drawText('GOLD TOTAL ' + state.gold, W/2 - textWidth('GOLD TOTAL ' + state.gold)/2, 132, '#e8d9b0');
+  // 상세 정산 표
+  const rows = [
+    ['층', 'F' + floor],
+    ['레벨', String(player.level)],
+    ['골드', String(state.gold)],
+    ['축복', ((player.blessings && player.blessings.length) || 0) + ' 개'],
+    ['최대 콤보', 'x' + ((typeof combo !== 'undefined' && combo.maxThisRun) || 0)],
+  ];
+  // 게임 모드: 스피드런이면 시간 추가
+  if (typeof isModeActive === 'function' && isModeActive('speedrun') && player._runStart) {
+    const sec = Math.floor((Date.now() - player._runStart) / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    rows.push(['시간', m + ':' + String(s).padStart(2, '0')]);
+  }
+  // 시너지 활성화 개수
+  if (player._synActivated && player._synActivated.size > 0) {
+    rows.push(['시너지', String(player._synActivated.size) + ' 개']);
+  }
+  const rowH = 10;
+  const startY = 105;
+  for (let i = 0; i < rows.length; i++) {
+    const label = rows[i][0];
+    const val = rows[i][1];
+    const lx = W/2 - 60;
+    const rx = W/2 + 60;
+    drawText(label, lx, startY + i * rowH, '#8a7ab5');
+    drawText(val, rx - textWidth(val), startY + i * rowH, '#ffefa8');
+  }
+  const endY = startY + rows.length * rowH;
 
   if (state.runResult === 'final') {
-    drawText('YOU HAVE CLEARED THE ACADEMY.', W/2 - textWidth('YOU HAVE CLEARED THE ACADEMY.')/2, 150, '#e8c547');
+    drawText('YOU HAVE CLEARED THE ACADEMY.', W/2 - textWidth('YOU HAVE CLEARED THE ACADEMY.')/2, endY + 4, '#e8c547');
   }
 
   if (Math.floor(state.time * 2) % 2 === 0) {
     const s = '[SPACE] RETURN TO ACADEMY';
-    drawText(s, W/2 - textWidth(s)/2, 175, '#ffefa8');
+    drawText(s, W/2 - textWidth(s)/2, H - 15, '#ffefa8');
   }
 }
 

@@ -253,10 +253,19 @@ function updateFloats(dt) {
   }
 }
 function updatePickups(dt) {
+  const magnetRange = 30 + (player.pickupRange || 0);
   for (let i = entities.pickups.length - 1; i >= 0; i--) {
     const p = entities.pickups[i];
     p.life -= dt;
     p.bob += dt * 4;
+    // 픽업 자석: 일정 반경 내 픽업이 플레이어 쪽으로 부드럽게 이동
+    const d = dist(p, player);
+    if (d < magnetRange && p.kind !== 'pouch') {
+      const a = Math.atan2(player.y - p.y, player.x - p.x);
+      const speed = 60 + (magnetRange - d) * 3;
+      p.x += Math.cos(a) * speed * dt;
+      p.y += Math.sin(a) * speed * dt;
+    }
     if (p.life <= 0) entities.pickups.splice(i, 1);
   }
 }

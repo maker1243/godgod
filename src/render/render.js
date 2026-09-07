@@ -718,6 +718,21 @@ function renderDungeon() {
 
   ctx.restore();
 
+  // HP 낮을 때 화면 가장자리 붉은 비네트
+  if (player && player.hp > 0 && player.maxHp > 0) {
+    const hpPct = player.hp / player.maxHp;
+    if (hpPct < 0.3) {
+      const intensity = (0.3 - hpPct) / 0.3;
+      const pulse = 0.5 + Math.sin(state.time * 6) * 0.3;
+      // 화면 가장자리 그라디언트로 붉은 비네트
+      const grad = ctx.createRadialGradient(W*PX/2, H*PX/2, 0, W*PX/2, H*PX/2, Math.max(W, H)*PX*0.7);
+      grad.addColorStop(0.5, 'rgba(200, 22, 22, 0)');
+      grad.addColorStop(1.0, 'rgba(200, 22, 22, ' + (intensity * pulse * 0.6).toFixed(2) + ')');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W*PX, H*PX);
+    }
+  }
+
   // 던전 HUD
   renderDungeonHUD();
   // 보스 HP 오버레이
