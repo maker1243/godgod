@@ -63,6 +63,18 @@ const TRAIT_DEFS = [
   // 특수
   { id:'tr_thorns',  name:'THORNS',       cat:'UTIL',cost:8e5,  color:'#3ac762',
     desc:'THORNS +15',         apply:(p)=>{ p.thorns = (p.thorns||0) + 15; } },
+
+  // 추가 트레잇 (5종)
+  { id:'tr_chest',   name:'TREASURE HUNT', cat:'ECO', cost:2e6,  color:'#e8c547',
+    desc:'CHEST 확률 +10%',    apply:(p)=>{ p.blessLucky = true; } },
+  { id:'tr_combo',   name:'COMBO INSTINCT',cat:'ATK', cost:2e6,  color:'#ff9c3d',
+    desc:'콤보 유지 시간 +50%', apply:(p)=>{ p.comboExtra = true; } },
+  { id:'tr_potion',  name:'ALCHEMY',       cat:'UTIL',cost:1.5e6,color:'#c86ade',
+    desc:'포션 효과 +50%',      apply:(p)=>{ p.potionMult = (p.potionMult||1) * 1.5; } },
+  { id:'tr_pickup',  name:'MAGNET',        cat:'UTIL',cost:1e6,  color:'#8bd8ff',
+    desc:'PICKUP 자석 +50 반경',apply:(p)=>{ p.pickupRange = (p.pickupRange||0) + 50; } },
+  { id:'tr_bosskill',name:'BOSS SLAYER',   cat:'ATK', cost:3e6,  color:'#c81616',
+    desc:'보스에게 DMG +50%',   apply:(p)=>{ p.bossDmgMult = (p.bossDmgMult||1) * 1.5; } },
 ];
 
 const TRAIT_BY_ID = {};

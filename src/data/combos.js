@@ -11,8 +11,9 @@ const combo = {
   maxThisRun: 0,
 };
 
-// 콤보 유지 시간 (초)
+// 콤보 유지 시간 (초). 트레잇 comboExtra 시 4.5초.
 const COMBO_TIMEOUT = 3.0;
+function _comboTimeout() { return (player && player.comboExtra) ? 4.5 : COMBO_TIMEOUT; }
 // 콤보 텍스트 색상 단계
 const COMBO_TIERS = [
   { at: 3,   color:'#8bd8ff', label:'COMBO' },
@@ -31,7 +32,7 @@ function _comboLabel(n) {
 
 function comboOnKill(x, y) {
   const now = performance.now();
-  if (now - combo.lastKillT > COMBO_TIMEOUT * 1000) combo.count = 0;
+  if (now - combo.lastKillT > _comboTimeout() * 1000) combo.count = 0;
   combo.count++;
   combo.lastKillT = now;
   if (combo.count > combo.maxThisRun) combo.maxThisRun = combo.count;
@@ -72,7 +73,7 @@ function comboTick(dt) {
 function drawComboHud() {
   if (combo.count < 3) return;
   const tier = _comboLabel(combo.count);
-  const remain = Math.max(0, COMBO_TIMEOUT - (performance.now() - combo.lastKillT) / 1000);
+  const remain = Math.max(0, _comboTimeout() - (performance.now() - combo.lastKillT) / 1000);
   const label = (tier ? tier.label : 'COMBO') + ' x' + combo.count;
   const col = tier ? tier.color : '#8bd8ff';
   const scale = combo.count >= 10 ? 2 : 1;
@@ -82,7 +83,7 @@ function drawComboHud() {
   // 콤보 게이지
   const gw = 60, gx = W/2 - gw/2;
   pxDraw(gx, y + 12 * scale, gw, 2, '#1a0e2e');
-  pxDraw(gx, y + 12 * scale, gw * (remain / COMBO_TIMEOUT), 2, col);
+  pxDraw(gx, y + 12 * scale, gw * (remain / _comboTimeout()), 2, col);
 }
 
 // =====================================================================

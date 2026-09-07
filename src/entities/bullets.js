@@ -124,6 +124,8 @@ function updateBullets(dt) {
     for (const e of entities.enemies) {
       if (dist(b, e) < b.r + e.r) {
         let finalDmg = b.dmg * dmgMult;
+        // 트레잇: BOSS SLAYER
+        if ((e.isBoss || e.isProfessor) && player.bossDmgMult) finalDmg *= player.bossDmgMult;
         if (e._dmgRed) finalDmg *= (1 - Math.min(0.9, e._dmgRed));
         // 축복: Hex mark (첫 히트 표식, 이후 히트 x2)
         if (b._hex) {
