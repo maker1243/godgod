@@ -116,6 +116,16 @@ const ARTIFACT_DEFS = [
   { id:'god_wraith',  name:'WRAITH KING',      tier:5, cost: 3e10, color:'#7d4dbf',
     desc:'CRIT +80%, LIFESTEAL +30',
     apply:(p)=>{ p.crit = (p.crit||0) + 0.8; p.lifesteal = (p.lifesteal||0) + 30; } },
+  // 신규 tier 5+ (3개)
+  { id:'god_titan',   name:'TITAN CROWN',      tier:5, cost: 5e10, color:'#8a7ab5',
+    desc:'MAX HP x3, DR +40%',
+    apply:(p)=>{ const add = Math.floor(p.maxHp * 2); p.maxHp += add; p.hp += add; p.dmgReduction = Math.min(0.9, (p.dmgReduction||0) + 0.40); } },
+  { id:'god_speed',   name:'HERMES SANDALS',   tier:5, cost: 8e10, color:'#c8ffc8',
+    desc:'SPEED x2, ROLL CD 0',
+    apply:(p)=>{ p.speed *= 2; p.perks.push('multiroll'); p.rollCd = 0; } },
+  { id:'god_infmana', name:'INFINITE MANA',    tier:5, cost: 1e11, color:'#3b7fd6',
+    desc:'MP 무한 (COST 0)',
+    apply:(p)=>{ p.mpCostMult = 0; } },
 ];
 
 const ARTIFACT_BY_ID = {};
