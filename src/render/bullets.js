@@ -656,8 +656,9 @@ function renderDungeonHUD() {
   pxDraw(mmX, mmY + 25, 56, 1, '#5a4a80');
   pxDraw(mmX, mmY, 1, 26, '#5a4a80');
   pxDraw(mmX + 55, mmY, 1, 26, '#5a4a80');
-  // 층 (좌측 컬럼)
-  for (let i = 0; i < currentFloorTotal(); i++) {
+  // 층 (좌측 컬럼) - endless 모드일 때는 최대 5개만 표시
+  const displayFloors = Math.min(currentFloorTotal(), 5);
+  for (let i = 0; i < displayFloors; i++) {
     const fy = mmY + 3 + i * 4;
     const isFloor = i === floor - 1;
     pxDraw(mmX + 3, fy, 3, 3, isFloor ? '#e8c547' : (i < floor - 1 ? '#3ac762' : '#3a1e5c'));
@@ -674,7 +675,9 @@ function renderDungeonHUD() {
     if (isCur) pxDraw(rx, ry, 6, 5, '#e8c547');
     if (i < 4) pxDraw(rx + 6, ry + 2, 2, 1, '#3a1e5c');
   }
-  drawText('F' + floor + '/' + FLOOR_DATA.length, mmX + 2, mmY - 8, '#8a7ab5');
+  const totalFloors = currentFloorTotal();
+  const floorLabel = totalFloors >= 999 ? ('F' + floor + '/∞') : ('F' + floor + '/' + totalFloors);
+  drawText(floorLabel, mmX + 2, mmY - 8, '#8a7ab5');
   drawText('ROOMS', mmX + 22, mmY - 8, '#8a7ab5');
 
   // 시간 정지 표시
