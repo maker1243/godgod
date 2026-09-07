@@ -24,6 +24,12 @@ function frame(now) {
       drawText('저장됨', W - 40, 3, '#3ac762');
       ctx.globalAlpha = 1;
     }
+    // 씬 페이드 인 (검은 오버레이가 사라짐)
+    if (state._sceneFadeUntil && performance.now() < state._sceneFadeUntil) {
+      const remain = (state._sceneFadeUntil - performance.now()) / 300;
+      ctx.fillStyle = 'rgba(0,0,0,' + remain.toFixed(2) + ')';
+      ctx.fillRect(0, 0, W*PX, H*PX);
+    }
     if (typeof renderTouchOverlay === 'function') renderTouchOverlay();
   } catch (err) {
     // 프레임 루프가 통째로 죽지 않도록 하는 마지막 방어선.

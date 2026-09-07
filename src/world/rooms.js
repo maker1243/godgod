@@ -524,6 +524,8 @@ function goTo(scene) {
   // 씬 전환 시 일시정지 해제
   state._paused = false;
   state.scene = scene;
+  // 짧은 페이드 인
+  state._sceneFadeUntil = performance.now() + 300;
   // 팩티 로비 진입 시 후일담 재체크 플래그 리셋
   if (scene === 'facultyLobby' && typeof facultyLobby !== 'undefined') facultyLobby._aftermathChecked = false;
   // 로그인 씬 진입 시 실제 input에 포커스 (한글 IME 대응)
