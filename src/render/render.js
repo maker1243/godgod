@@ -757,6 +757,16 @@ function renderDungeon() {
 
   ctx.restore();
 
+  // Blood Moon 아침 이벤트: 미묘한 붉은 톤 오버레이
+  if (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_bloodmoon') {
+    ctx.fillStyle = 'rgba(200, 22, 22, 0.08)';
+    ctx.fillRect(0, 0, W*PX, H*PX);
+  }
+  // Fog 아침 이벤트: 미묘한 흰 안개
+  if (typeof morningEvent !== 'undefined' && morningEvent.today && morningEvent.today.id === 'ev_fog') {
+    ctx.fillStyle = 'rgba(139, 216, 255, 0.06)';
+    ctx.fillRect(0, 0, W*PX, H*PX);
+  }
   // 큰 피격 시 순간 붉은 플래시 (전체 화면)
   if (state._damageFlashUntil && performance.now() < state._damageFlashUntil) {
     const remain = (state._damageFlashUntil - performance.now()) / 200;
