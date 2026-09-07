@@ -205,7 +205,7 @@ function codexEntries() {
         const time = (typeof _hlTimeStr === 'function') ? _hlTimeStr(h.ts) : '';
         out.push({
           title: h.title + '   [' + time + ']',
-          sub: h.subtitle + '  |  LV ' + h.lv + '  |  BLESS ' + h.blessCount + '  |  ' + h.tier.toUpperCase() + (h.maxCombo ? '  |  MAX COMBO x' + h.maxCombo : ''),
+          sub: h.subtitle + '   LV ' + h.lv + '   BLESS ' + h.blessCount + '   ' + h.tier.toUpperCase() + (h.maxCombo ? '   MAX COMBO x' + h.maxCombo : ''),
           color: color,
         });
       }
