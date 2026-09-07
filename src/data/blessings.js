@@ -317,6 +317,12 @@ function updateBlessingsFrame(dt) {
   // LastWard / Immortal 쿨 감소
   if (player.blessLastWard > 0) player.blessLastWard = Math.max(0, player.blessLastWard - dt);
   if (player.blessImmortal > 0) player.blessImmortal = Math.max(0, player.blessImmortal - dt);
+  // 시너지: Holy Shield - HP 5 이하 자동 회복
+  if (player._synHolyShield && player.hp > 0 && player.hp <= 5) {
+    player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
+    spawnFloat(player.x, player.y - 12, 'HOLY SHIELD!', '#ffffff');
+    if (typeof sfx === 'function') sfx('perfect');
+  }
 }
 
 // 새 층 진입 시 (nextFloor()에서 호출): 축복 선택 트리거.
