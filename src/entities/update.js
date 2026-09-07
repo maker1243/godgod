@@ -29,6 +29,18 @@ function frame(now) {
 }
 
 function update(dt) {
+  // 던전 중 ESC 로 일시정지 토글
+  if (state.scene === 'dungeon' && keys['Escape']) {
+    keys['Escape'] = false;
+    state._paused = !state._paused;
+    if (typeof sfx === 'function') sfx('door');
+  }
+  // 일시정지: 던전 씬은 완전 정지 (시간, 이동, 카메라 모두)
+  if (state._paused && state.scene === 'dungeon') {
+    // 재개 힌트만 처리
+    if (keys['Space'] || keys['Enter']) { keys['Space']=false; keys['Enter']=false; state._paused = false; }
+    return;
+  }
   if (state.msgTimer > 0) state.msgTimer -= dt;
   state.shake = Math.max(0, state.shake - dt * 60);
 

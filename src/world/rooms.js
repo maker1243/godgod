@@ -508,6 +508,8 @@ function spawnPickup(x, y, kind) {
 
 // ---------- 씬 전환 ----------
 function goTo(scene) {
+  // 씬 전환 시 일시정지 해제
+  state._paused = false;
   state.scene = scene;
   // 팩티 로비 진입 시 후일담 재체크 플래그 리셋
   if (scene === 'facultyLobby' && typeof facultyLobby !== 'undefined') facultyLobby._aftermathChecked = false;
