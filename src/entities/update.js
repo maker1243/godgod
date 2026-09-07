@@ -13,8 +13,10 @@ function frame(now) {
 
   try {
     if (typeof updateTouchInput === 'function') updateTouchInput();
+    if (typeof updateAchievementBanner === 'function') updateAchievementBanner(dt);
     update(dt);
     render();
+    if (typeof drawAchievementBanner === 'function') drawAchievementBanner();
     if (typeof renderTouchOverlay === 'function') renderTouchOverlay();
   } catch (err) {
     // 프레임 루프가 통째로 죽지 않도록 하는 마지막 방어선.
@@ -561,6 +563,7 @@ function updateDungeon(dt) {
             if (typeof statAdd === 'function') { statAdd('principalKills', 1); statAdd('rpEarnedTotal', 20000); statAdd('goldEarnedTotal', 5000); }
             if (typeof unlockStoryFragment === 'function') unlockStoryFragment('principal');
             showMsg('교장 격파! 아카데미의 진실이 밝혀졌습니다.', 5);
+            if (typeof highlightPrincipal === 'function') highlightPrincipal();
           } else if (facKey) {
             state.facultyCleared = state.facultyCleared || {};
             state.facultyCleared[facKey] = (state.facultyCleared[facKey] || 0) + 1;

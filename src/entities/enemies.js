@@ -29,7 +29,9 @@ function updateEnemies(dt) {
         // 교수 처치 기록 + 관련 스킬 잠금 해제 + 스토리 조각 + 통계
         if (e._profDef && e._profDef.key) {
           state.professorsBeaten = state.professorsBeaten || {};
+          const wasFirst = !state.professorsBeaten[e._profDef.key];
           state.professorsBeaten[e._profDef.key] = (state.professorsBeaten[e._profDef.key] || 0) + 1;
+          if (wasFirst && typeof highlightProfessorFirst === 'function') highlightProfessorFirst(e._profDef.name);
           if (typeof statAdd === 'function') statAdd('profsBeaten', 1);
           if (typeof unlockStoryFragment === 'function') unlockStoryFragment(e._profDef.key);
           if (typeof checkAchievements === 'function') checkAchievements();
@@ -820,6 +822,8 @@ function onEnemyDeath(e) {
   if (typeof comboOnKill === 'function' && !e.isBoss && !e.isProfessor) comboOnKill(e.x, e.y);
   // 보스 킬 시네마틱
   if (typeof bossKillCinematic === 'function' && (e.isBoss || e.isProfessor)) bossKillCinematic(e);
+  // 하이라이트 릴 저장
+  if (typeof highlightBossKill === 'function' && (e.isBoss || e.isProfessor)) highlightBossKill(e);
   // 주간 도전 진행
   if (typeof weeklyAdd === 'function') {
     weeklyAdd('weekly_kills', 1);

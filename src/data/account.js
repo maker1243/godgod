@@ -50,6 +50,7 @@ const state = {
   npcQuests: null,                 // Elara 등 심화 유대 진행
   customize: null,                 // 외관 커스터마이즈 { robe, hat, star, trail, owned }
   weekly: null,                    // 주간 도전 { week, ids, progress, done }
+  highlights: null,                // 하이라이트 릴 (최근 20개 큰 순간)
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -142,6 +143,7 @@ function loadAccountData() {
     if (d.npcQuests && typeof d.npcQuests === 'object') state.npcQuests = d.npcQuests;
     if (d.customize && typeof d.customize === 'object') state.customize = d.customize;
     if (d.weekly && typeof d.weekly === 'object') state.weekly = d.weekly;
+    if (Array.isArray(d.highlights)) state.highlights = d.highlights;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -198,6 +200,7 @@ function saveAccountData() {
     npcQuests: state.npcQuests || null,
     customize: state.customize || null,
     weekly: state.weekly || null,
+    highlights: state.highlights || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

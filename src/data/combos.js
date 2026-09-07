@@ -43,6 +43,8 @@ function comboOnKill(x, y) {
     const bonus = Math.floor(combo.count * 5);
     state.research = (state.research || 0) + bonus;
     if (typeof sfx === 'function') sfx('level');
+    // 하이라이트: x20 이상
+    if (typeof highlightBigCombo === 'function') highlightBigCombo(combo.count);
   } else if (combo.count >= 3) {
     // 유지 표시 (작게)
     spawnFloat(x, y - 14, 'x' + combo.count, tier ? tier.color : '#8bd8ff');
@@ -164,6 +166,7 @@ function checkBlessingCombos() {
       if (typeof weeklyAdd === 'function') weeklyAdd('weekly_synergies', 1);
       showMsg('★ SYNERGY: ' + c.name + ' - ' + c.desc, 6);
       spawnFloat(player.x, player.y - 24, '★ ' + c.name + ' ★', c.color);
+      if (typeof highlightSynergy === 'function') highlightSynergy(c.name);
       if (typeof sfx === 'function') sfx('level');
       // 폭발적 파티클
       for (let i = 0; i < 30; i++) {

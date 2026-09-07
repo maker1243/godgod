@@ -80,10 +80,10 @@ function checkAchievements() {
       state.achievementsUnlocked[a.id] = Date.now();
       if (a.rewardRp)   state.research = (state.research||0) + a.rewardRp;
       if (a.rewardGold) state.gold     = (state.gold||0)     + a.rewardGold;
-      if (typeof showMsg === 'function') showMsg('업적 달성: ' + a.name + '  +' + (a.rewardRp||0) + ' RP', 3);
       if (typeof spawnFloat === 'function' && typeof player !== 'undefined' && player) {
         spawnFloat(player.x, player.y - 12, '★ ' + a.name, '#ffefa8');
       }
+      if (typeof showAchievementBanner === 'function') showAchievementBanner(a.name, '+' + (a.rewardRp||0) + ' RP', '#ffefa8');
       if (typeof sfx === 'function') sfx('level');
     }
   }

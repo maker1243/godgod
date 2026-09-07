@@ -22,6 +22,7 @@ const CODEX_TABS = [
   { id:'daily',    name:'DAILY'      },
   { id:'story',    name:'STORY'      },
   { id:'weekly',   name:'WEEKLY'     },
+  { id:'memory',   name:'MEMORY'     },
 ];
 
 function codexSetTab(id) {
@@ -132,6 +133,23 @@ function codexEntries() {
         });
       }
     }
+  } else if (codex.tab === 'memory') {
+    if (typeof highlightStatus === 'function') {
+      const list = highlightStatus();
+      out.push({ title: '메모리 홀 - 최근 하이라이트', sub: '보스 격파, 큰 콤보, 시너지, 첫 격파 등이 자동 저장됩니다.', color: '#ffefa8' });
+      if (list.length === 0) {
+        out.push({ title: '기록 없음', sub: '큰 순간을 만들어보세요.', color: '#5a4a80' });
+      }
+      for (const h of list) {
+        const color = h.type === 'boss' ? '#c81616' : (h.type === 'synergy' ? '#ff00ff' : (h.type === 'combo' ? '#e8c547' : (h.type === 'principal' ? '#ffefa8' : '#8bd8ff')));
+        const time = (typeof _hlTimeStr === 'function') ? _hlTimeStr(h.ts) : '';
+        out.push({
+          title: h.title + '   [' + time + ']',
+          sub: h.subtitle + '  |  LV ' + h.lv + '  |  BLESS ' + h.blessCount + '  |  ' + h.tier.toUpperCase() + (h.maxCombo ? '  |  MAX COMBO x' + h.maxCombo : ''),
+          color: color,
+        });
+      }
+    }
   } else if (codex.tab === 'story') {
     if (typeof STORY_FRAGMENTS !== 'undefined') {
       state.storyFragments = state.storyFragments || {};
@@ -239,7 +257,7 @@ function renderCodex() {
   // 헤더
   pxDraw(0, 0, W, 12, '#1a0e2e');
   drawText('CODEX - GAME ENCYCLOPEDIA', 4, 3, '#ffefa8');
-  drawText('[TAB] SWITCH  [1-4] TAB  [R/ESC/X] BACK', W - textWidth('[TAB] SWITCH  [1-4] TAB  [R/ESC/X] BACK') - 4, 3, '#8a7ab5');
+  drawText('[TAB] SWITCH  [1-9] TAB  [R/ESC/X] BACK', W - textWidth('[TAB] SWITCH  [1-9] TAB  [R/ESC/X] BACK') - 4, 3, '#8a7ab5');
 
   // 탭 4개
   const tabW = 38, tabY = 14, tabH = 10;
