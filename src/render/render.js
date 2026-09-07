@@ -305,7 +305,10 @@ function renderAcademyHUD() {
   // 상단
   pxDraw(0, 0, W, 12, '#1a0e2e');
   const totalPots = POTION_ORDER.reduce((s,k)=>s+academy.inventory[k], 0);
-  const info1 = 'DAY ' + state.day + '  GPA ' + state.gpa.toFixed(1) + '  GOLD ' + state.gold + '  POTIONS ' + totalPots + '  RESEARCH ' + state.research;
+  // RP 축약 (100M 이상)
+  const rpVal = state.research || 0;
+  const rpStr = rpVal >= 1e12 ? (rpVal/1e12).toFixed(1)+'T' : rpVal >= 1e9 ? (rpVal/1e9).toFixed(1)+'B' : rpVal >= 1e6 ? (rpVal/1e6).toFixed(1)+'M' : String(rpVal);
+  const info1 = 'DAY ' + state.day + '  GPA ' + state.gpa.toFixed(1) + '  GOLD ' + state.gold + '  POT ' + totalPots + '  RP ' + rpStr;
   drawText(info1, 4, 3, '#e8d9b0');
   // GPA 색상 강조
   const gpaCol = state.gpa >= 3.5 ? '#3ac762' : state.gpa >= 2.5 ? '#e8c547' : '#c81616';
