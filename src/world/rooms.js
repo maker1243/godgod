@@ -192,12 +192,19 @@ const PROFESSOR_FLOOR_DATA = [
 function currentFloorData() {
   if (state.dungeonMode === 'professor') return PROFESSOR_FLOOR_DATA[0];
   if (state.dungeonMode === 'trial')   return TRIAL_FLOOR_DATA[0];
-  if (state.dungeonMode === 'inferno') return INFERNO_FLOOR_DATA[floor - 1];
-  if (state.dungeonMode === 'extreme') return EXTREME_FLOOR_DATA[floor - 1];
-  if (state.dungeonMode === 'extra')   return EXTRA_FLOOR_DATA[floor - 1];
-  return FLOOR_DATA[floor - 1];
+  // Endless 모드: 층이 데이터 길이 넘으면 순환
+  const endless = (typeof isModeActive === 'function' && isModeActive('endless'));
+  if (state.dungeonMode === 'inferno') { const arr = INFERNO_FLOOR_DATA; return arr[endless ? ((floor - 1) % arr.length) : (floor - 1)]; }
+  if (state.dungeonMode === 'extreme') { const arr = EXTREME_FLOOR_DATA; return arr[endless ? ((floor - 1) % arr.length) : (floor - 1)]; }
+  if (state.dungeonMode === 'extra')   { const arr = EXTRA_FLOOR_DATA; return arr[endless ? ((floor - 1) % arr.length) : (floor - 1)]; }
+  { const arr = FLOOR_DATA; return arr[endless ? ((floor - 1) % arr.length) : (floor - 1)]; }
 }
 function currentFloorTotal() {
+  // Endless 모드: 층 무한
+  if (typeof isModeActive === 'function' && isModeActive('endless') &&
+      state.dungeonMode !== 'trial' && state.dungeonMode !== 'professor') {
+    return 9999;
+  }
   if (state.dungeonMode === 'professor') return PROFESSOR_FLOOR_DATA.length;
   if (state.dungeonMode === 'trial')   return TRIAL_FLOOR_DATA.length;   // 1
   if (state.dungeonMode === 'inferno') return INFERNO_FLOOR_DATA.length;
@@ -400,6 +407,12 @@ function spawnEnemy(kind, room) {
     base.r = Math.max(4, Math.floor(base.r * 1.4));
     base.speed = Math.max(10, Math.floor((base.speed || 0) * 0.9));
     base._eliteRp = Math.max(50, Math.floor(20 * Math.pow(2, DIFFICULTY_TIERS.findIndex(d => d.id === (state.difficulty || 'normal')))));
+  }
+  // Endless 모드: 층마다 +30% 스케일 (누적)
+  if (typeof isModeActive === 'function' && isModeActive('endless') && floor > 5) {
+    const scale = Math.pow(1.3, floor - 5);
+    base.hp = Math.floor((base.hp || 100) * scale);
+    base.dmg = Math.floor((base.dmg || 5) * Math.pow(1.15, floor - 5));
   }
   base.maxHp = base.hp;
   // 코업 모드: 호스트만 실제 스폰. 게스트는 mobState 로 미러링됨.

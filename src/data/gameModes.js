@@ -55,6 +55,14 @@ const GAME_MODES = [
     modifyBlessing: true,
     rewardMult: 2,
   },
+  {
+    id:'endless',
+    name:'ENDLESS',
+    color:'#ffefa8',
+    desc:'던전 층 무한. 층마다 몹 HP +30%. 도전!',
+    // 훅은 rooms.js 에서 처리 (currentFloorTotal / floor)
+    rewardMult: 4,
+  },
 ];
 
 function _ensureModes() {
