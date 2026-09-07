@@ -570,16 +570,26 @@ function renderDungeon() {
       ctx.lineWidth = PX;
       ctx.beginPath(); ctx.arc(p.x*PX, y*PX, 4*PX, 0, Math.PI*2); ctx.stroke();
     }
-    else if (p.kind === 'chest') {
-      // 나무 상자 + 금색 잠금
-      pxDraw(p.x - 5, y - 2, 10, 6, '#5a3a20');
-      pxDraw(p.x - 5, y - 3, 10, 1, '#8a5a30');
-      pxDraw(p.x - 1, y - 1, 2, 2, '#e8c547');
-      // 반짝임
+    else if (p.kind === 'chest' || p.kind === 'chest_rare' || p.kind === 'chest_legend') {
+      const boxCol = p.kind === 'chest_legend' ? '#c86ade' : (p.kind === 'chest_rare' ? '#3a5a8a' : '#5a3a20');
+      const topCol = p.kind === 'chest_legend' ? '#ff00ff' : (p.kind === 'chest_rare' ? '#8bd8ff' : '#8a5a30');
+      const lockCol = p.kind === 'chest_legend' ? '#ffefa8' : '#e8c547';
+      const ringCol = p.kind === 'chest_legend' ? [255, 0, 255] : (p.kind === 'chest_rare' ? [139, 216, 255] : [232, 197, 71]);
+      // 상자
+      pxDraw(p.x - 5, y - 2, 10, 6, boxCol);
+      pxDraw(p.x - 5, y - 3, 10, 1, topCol);
+      pxDraw(p.x - 1, y - 1, 2, 2, lockCol);
+      // 반짝임 링
       const glow = 0.5 + Math.sin(state.time * 5 + p.x) * 0.4;
-      ctx.strokeStyle = 'rgba(232, 197, 71, ' + glow.toFixed(2) + ')';
+      ctx.strokeStyle = 'rgba(' + ringCol.join(',') + ', ' + glow.toFixed(2) + ')';
       ctx.lineWidth = PX;
       ctx.beginPath(); ctx.arc(p.x*PX, y*PX, 10*PX, 0, Math.PI*2); ctx.stroke();
+      // 전설 상자: 두 번째 링
+      if (p.kind === 'chest_legend') {
+        ctx.strokeStyle = 'rgba(255, 239, 168, ' + (glow * 0.7).toFixed(2) + ')';
+        ctx.lineWidth = PX;
+        ctx.beginPath(); ctx.arc(p.x*PX, y*PX, 14*PX, 0, Math.PI*2); ctx.stroke();
+      }
       // 접근 시 힌트
       if (typeof player !== 'undefined' && Math.abs(player.x - p.x) < 12 && Math.abs(player.y - y) < 12) {
         drawText('[SPACE]', p.x - textWidth('[SPACE]')/2, y - 12, '#ffefa8');

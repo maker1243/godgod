@@ -586,12 +586,14 @@ function updateDungeon(dt) {
     const chestChance = (player && player.blessLucky) ? 0.45 : 0.15;
     if (!room.isBoss && !room._chestSpawned && Math.random() < chestChance) {
       room._chestSpawned = true;
+      const rarity = Math.random() < 0.05 ? 'chest_legend' : (Math.random() < 0.15 ? 'chest_rare' : 'chest');
       entities.pickups.push({
         x: room.x + room.w/2 + rand(-30, 30),
         y: room.y + room.h/2 + rand(-15, 15),
-        kind: 'chest', life: 999, bob: 0,
+        kind: rarity, life: 999, bob: 0,
       });
-      showMsg('상자가 나타났다! SPACE 로 열기.', 3);
+      const label = rarity === 'chest_legend' ? '★★★ 전설 상자!' : rarity === 'chest_rare' ? '★ 희귀 상자!' : '상자';
+      showMsg(label + ' SPACE 로 열기.', 3);
     }
     if (room.isBoss) {
       // 보스 클리어
@@ -810,38 +812,40 @@ function updatePlayer(dt) {
   for (let i = entities.pickups.length - 1; i >= 0; i--) {
     const it = entities.pickups[i];
     const d = dist(it, p);
-    if (d < magnetR && it.kind !== 'chest' && it.kind !== 'pouch') {
+    if (d < magnetR && it.kind !== 'chest' && it.kind !== 'chest_rare' && it.kind !== 'chest_legend' && it.kind !== 'pouch') {
       const a = angleTo(it, p);
       it.x += Math.cos(a) * 80 * dt;
       it.y += Math.sin(a) * 80 * dt;
     }
-    // 상자: SPACE 로 열기
-    if (it.kind === 'chest' && d < 14 && keys['Space']) {
+    // 상자: SPACE 로 열기 (rare/legend 배율)
+    if ((it.kind === 'chest' || it.kind === 'chest_rare' || it.kind === 'chest_legend') && d < 14 && keys['Space']) {
       keys['Space'] = false;
+      const chestMult = it.kind === 'chest_legend' ? 5 : (it.kind === 'chest_rare' ? 2 : 1);
       const roll = Math.random();
       if (roll < 0.4) {
-        const amt = 200 + Math.floor(Math.random() * 800);
+        const amt = (200 + Math.floor(Math.random() * 800)) * chestMult;
         state.research = (state.research || 0) + amt;
         showMsg('상자: +' + amt + ' RP', 3);
         spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#8bd8ff');
       } else if (roll < 0.7) {
-        const amt = 30 + Math.floor(Math.random() * 100);
+        const amt = (30 + Math.floor(Math.random() * 100)) * chestMult;
         state.gold += amt;
         showMsg('상자: +' + amt + ' G', 3);
         spawnFloat(p.x, p.y - 12, '+' + amt + ' G', '#e8c547');
       } else if (roll < 0.85) {
         const pools = ['heal','mana','swift','fury','guard'];
-        for (let n = 0; n < 2; n++) {
+        const count = 2 * chestMult;
+        for (let n = 0; n < count; n++) {
           const kn = pools[Math.floor(Math.random() * pools.length)];
           academy.inventory[kn] = (academy.inventory[kn] || 0) + 1;
         }
         if (typeof recomputeHotkeys === 'function') recomputeHotkeys();
-        showMsg('상자: 포션 2개!', 3);
+        showMsg('상자: 포션 ' + count + '개!', 3);
       } else if (roll < 0.95) {
         if (typeof openBlessingPick === 'function') openBlessingPick(null);
         showMsg('상자: 축복!', 3);
       } else {
-        const amt = 5000 + Math.floor(Math.random() * 15000);
+        const amt = (5000 + Math.floor(Math.random() * 15000)) * chestMult;
         state.research = (state.research || 0) + amt;
         showMsg('★★★ 잭팟 상자! +' + amt + ' RP ★★★', 5);
         spawnFloat(p.x, p.y - 12, '+' + amt + ' RP', '#ff00ff');
@@ -849,12 +853,13 @@ function updatePlayer(dt) {
         if (typeof sfx === 'function') sfx('jackpot');
         if (typeof checkAchievements === 'function') checkAchievements();
       }
-      for (let n = 0; n < 20; n++) spawnParticle(p.x, p.y, '#e8c547', 0.6, 3, 60);
+      const particleCol = it.kind === 'chest_legend' ? '#ff00ff' : (it.kind === 'chest_rare' ? '#8bd8ff' : '#e8c547');
+      for (let n = 0; n < 20 * chestMult; n++) spawnParticle(p.x, p.y, particleCol, 0.6, 3, 60);
       entities.pickups.splice(i, 1);
       if (roll >= 0.95) {} else if (typeof sfx === 'function') sfx('chest');
       continue;
     }
-    if (d < 6 && it.kind !== 'chest') {
+    if (d < 6 && it.kind !== 'chest' && it.kind !== 'chest_rare' && it.kind !== 'chest_legend') {
       const mult = hasPerk('bountiful') ? 2 : 1;
       if (it.kind === 'hp') p.hp = Math.min(p.maxHp, p.hp + 15 * mult);
       else if (it.kind === 'mp') p.mp = Math.min(p.maxMp, p.mp + 20 * mult);
