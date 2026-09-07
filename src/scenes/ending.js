@@ -11,6 +11,12 @@ function updateEnding(dt) {
   if (endingT < 0.5) return;
   if (keys['Space'] || keys['Enter']) {
     keys['Space'] = false; keys['Enter'] = false;
+    // 하이라이트 저장: 런 결과 요약
+    if (typeof recordHighlight === 'function' && state.runResult) {
+      const label = state.runResult === 'final' ? '아카데미 클리어' : (state.runResult === 'clear' ? '보스 격파' : (state.runResult === 'retreat' ? '후퇴 (F' + floor + ')' : '사망 (F' + floor + ')'));
+      const subtitle = 'LV ' + (player?player.level:1) + '  ·  콤보 x' + (typeof combo !== 'undefined' ? combo.maxThisRun : 0);
+      recordHighlight('run', label, subtitle);
+    }
     endingT = 0;
     // 결과 정산 (난이도 티어의 gpaFinalMult/rpBossMult 로 스케일)
     const diff = (typeof currentDifficulty === 'function') ? currentDifficulty() : { gpaFinalMult:1, rpBossMult:1 };
