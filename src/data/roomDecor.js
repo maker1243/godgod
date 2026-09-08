@@ -45,11 +45,7 @@ const DECOR_TYPES = [
     ctx.fillStyle = 'rgba(255, 156, 61, ' + (0.15 * flicker).toFixed(2) + ')';
     ctx.fillRect((x - 4)*PX, (y - 4)*PX, 12*PX, 12*PX);
   } },
-  { id:'chest_closed', weight: 1, draw(x, y) {
-    pxDraw(x, y + 2, 6, 4, '#5a3a20');
-    pxDraw(x, y + 1, 6, 1, '#8a5a30');
-    pxDraw(x + 2, y + 3, 2, 1, '#e8c547');
-  } },
+  // (제거: chest_closed 장식품 — 실제 여는 상자와 헷갈림)
   { id:'moss', weight: 4, draw(x, y, seed) {
     pxDraw(x, y, 6, 2, '#1a4a20');
     pxDraw(x + 1, y + 2, 4, 1, '#3ac762');
