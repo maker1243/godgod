@@ -80,6 +80,7 @@ function updateEnemies(dt) {
     else if (e.kind === 'dragonlord') updateDragonlord(e, dt, speedMod);
     else if (e.kind === 'voidempress') updateVoidEmpress(e, dt, speedMod);
     else if (e.kind === 'chronomancer') updateChronomancer(e, dt, speedMod);
+    else if (e.kind === 'blackheart')   updateBlackHeart(e, dt, speedMod);
 
     // 벽 클램프
     const rm = rooms[currentRoom];

@@ -54,6 +54,11 @@ const state = {
   gameModes: null,                 // 도전 모드 { id: bool }
   dailyLogin: null,                // 매일 로그인 { lastDay, streak }
   endlessBest: 0,                  // Endless 모드 최고 층 도달
+  elaraChoice: null,               // 엘라라 결말 선택: null | 'break' | 'seal'
+  sealBroken: false,               // 봉인 부수기 결말 진입
+  principalAscended: false,        // 봉인 유지 결말 진입 (교장이 됨)
+  swordClaimed: false,             // 삼관마도 획득 여부
+  blackHeartDefeated: 0,           // 검은 심장 격파 횟수
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -150,6 +155,11 @@ function loadAccountData() {
     if (d.gameModes && typeof d.gameModes === 'object') state.gameModes = d.gameModes;
     if (d.dailyLogin && typeof d.dailyLogin === 'object') state.dailyLogin = d.dailyLogin;
     if (typeof d.endlessBest === 'number') state.endlessBest = d.endlessBest;
+    if (typeof d.elaraChoice === 'string' || d.elaraChoice === null) state.elaraChoice = d.elaraChoice;
+    if (typeof d.sealBroken === 'boolean') state.sealBroken = d.sealBroken;
+    if (typeof d.principalAscended === 'boolean') state.principalAscended = d.principalAscended;
+    if (typeof d.swordClaimed === 'boolean') state.swordClaimed = d.swordClaimed;
+    if (typeof d.blackHeartDefeated === 'number') state.blackHeartDefeated = d.blackHeartDefeated;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -210,6 +220,11 @@ function saveAccountData() {
     gameModes: state.gameModes || null,
     dailyLogin: state.dailyLogin || null,
     endlessBest: state.endlessBest || 0,
+    elaraChoice: state.elaraChoice || null,
+    sealBroken: !!state.sealBroken,
+    principalAscended: !!state.principalAscended,
+    swordClaimed: !!state.swordClaimed,
+    blackHeartDefeated: state.blackHeartDefeated || 0,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

@@ -254,6 +254,12 @@ function drawEnemy(e) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  // === 검은 심장 ===
+  if (e.kind === 'blackheart' && typeof drawBlackHeart === 'function') {
+    drawBlackHeart(e);
+    return;
+  }
+
   // === 교수: 등장/사망 애니메이션 + 종파 오라 ===
   if (e.isProfessor && typeof drawProfessor === 'function') {
     drawProfessor(e);

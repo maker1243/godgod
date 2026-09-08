@@ -274,10 +274,11 @@ function clearEntities() {
 // 방 구조: 벽으로 둘러싸인 사각형 방, 문은 벽에 위치
 function buildRoom(roomIndex) {
   clearEntities();
-  // 시련/교수 모드: 방 하나 = 보스방. 5방 대신 즉시 보스.
+  // 시련/교수/검은 심장 모드: 방 하나 = 보스방. 5방 대신 즉시 보스.
   const isTrial = state.dungeonMode === 'trial';
   const isProf  = state.dungeonMode === 'professor';
-  const isBoss = (isTrial || isProf) ? true : (roomIndex === 5);
+  const isBH    = state.dungeonMode === 'blackheart';
+  const isBoss = (isTrial || isProf || isBH) ? true : (roomIndex === 5);
   const w = isBoss ? 300 : 260 + randi(0, 40);
   const h = isBoss ? 180 : 150 + randi(0, 30);
 
@@ -311,6 +312,8 @@ function buildRoom(roomIndex) {
       spawnProfessor(room, roomIndex);
     } else if (state.dungeonMode === 'trial' && typeof spawnTrialBoss === 'function') {
       spawnTrialBoss(room);
+    } else if (state.dungeonMode === 'blackheart' && typeof spawnBlackHeart === 'function') {
+      spawnBlackHeart(room);
     } else {
       spawnBoss(room);
     }

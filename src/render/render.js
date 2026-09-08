@@ -34,6 +34,9 @@ function render() {
     case 'customize':    renderCustomize(); break;
     case 'blessingPick': renderBlessingPick(); break;
     case 'runEvent':     renderRunEvent(); break;
+    case 'elaraEnding':  renderElaraEnding(); break;
+    case 'outerMap':     renderOuterMap(); break;
+    case 'principalRoom':renderPrincipalRoom(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;
@@ -170,6 +173,13 @@ function renderIntro() {
 
 // ---------- Academy ----------
 function renderAcademy() {
+  // 봉인 부수기 결말 시 지속 흔들림
+  if (state.sealBroken && (state._academyQuakeUntil ? performance.now() < state._academyQuakeUntil : true)) {
+    const q = 2 + Math.random() * 2;
+    ctx.save();
+    ctx.translate((Math.random() - 0.5) * q * PX, (Math.random() - 0.5) * q * PX);
+    state._quakeApplied = true;
+  }
   // 배경 (창문 밖 노을)
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H*PX);
   bgGrad.addColorStop(0, '#3a2050');
@@ -228,8 +238,8 @@ function renderAcademy() {
   }
 
   // 문 10개 (EXTRA/EXTREME/INFERNO/PROF는 조건부 해금)
-  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor];
-  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762', '#ffefa8', '#c86ade'];
+  const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.exitDoor, academy.principalDoor];
+  const doorCols = ['#ff6666', '#8bd8ff', '#c8b898', '#e8c547', '#c86ade', '#ff2d2d', '#ff00ff', '#ff0000', '#00c8ff', '#3ac762', '#ffefa8', '#c86ade', '#ff2d2d', '#e8c547'];
   for (let i = 0; i < doors.length; i++) {
     const d = doors[i];
     if (d.hidden) continue;   // 완전히 숨겨진 문은 렌더/상호작용 제외
@@ -304,6 +314,8 @@ function renderAcademy() {
   if (typeof drawMorningEventTicker === 'function') drawMorningEventTicker();
   // 팁 티커 (하단)
   if (typeof drawTipHud === 'function') drawTipHud();
+  // 흔들림 restore
+  if (state._quakeApplied) { ctx.restore(); state._quakeApplied = false; }
 }
 
 function renderAcademyHUD() {

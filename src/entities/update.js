@@ -83,6 +83,9 @@ function update(dt) {
     case 'customize':    updateCustomize(dt); break;
     case 'blessingPick': updateBlessingPick(dt); break;
     case 'runEvent':     updateRunEvent(dt); break;
+    case 'elaraEnding':  updateElaraEnding(dt); break;
+    case 'outerMap':     updateOuterMap(dt); break;
+    case 'principalRoom':updatePrincipalRoom(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -181,6 +184,8 @@ const academy = {
   trainDoor: { x: 160, y: 95,  w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
   legacyDoor:{ x: 120, y: 60,  w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
   customDoor:{ x: 180, y: 60,  w: 12, h: 18, kind: 'customize', label: 'STYLE'  },
+  exitDoor:  { x: 260, y: 60,  w: 12, h: 18, kind: 'exitworld', label: 'EXIT',  hidden:true },
+  principalDoor:{ x: 20, y: 60, w: 12, h: 18, kind: 'principal', label: 'PRIN', hidden:true },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -241,6 +246,23 @@ function updateAcademy(dt) {
   if (typeof checkMorningEvent === 'function') checkMorningEvent();
   if (typeof tickTips === 'function') tickTips(dt);
   if (typeof checkDailyLogin === 'function' && !academy._dailyChecked) { academy._dailyChecked = true; checkDailyLogin(); }
+  // 엘라라 결말 조건 - 첫 진입 시 자동 선택 다이얼로그
+  if (typeof canOfferEndingChoice === 'function' && canOfferEndingChoice() && !academy._elaraEndingOffered) {
+    academy._elaraEndingOffered = true;
+    if (typeof openElaraEnding === 'function') { openElaraEnding(); return; }
+  }
+  // 봉인 부수기 결말: EXIT (outer world) 문 노출, 흔들림
+  if (state.sealBroken) {
+    academy.exitDoor.hidden = false;
+    if (!academy._quakeInit) {
+      academy._quakeInit = true;
+      state._academyQuakeUntil = performance.now() + 6000;
+    }
+  }
+  // 봉인 유지 결말: PRIN 문 노출
+  if (state.principalAscended) {
+    academy.principalDoor.hidden = false;
+  }
   // === CIPHER/PROF 문 표시 상태 결정 ===
   // CIPHER 문: 항상 표시. 다만 매 아카데미 진입 시(첫 초기화 포함) 랜덤 위치.
   //           실패 시(cipherQuest.messageT 가 방금 켜졌고 문구가 WRONG 이면) 재배치.
@@ -439,7 +461,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.exitDoor, academy.principalDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -496,6 +518,8 @@ function updateAcademy(dt) {
         else if (d.kind === 'training')  { goTo('training'); }
         else if (d.kind === 'legacy')    { goTo('legacyLobby'); }
         else if (d.kind === 'customize') { goTo('customize'); }
+        else if (d.kind === 'exitworld') { if (typeof _initOuterMap === 'function') _initOuterMap(); goTo('outerMap'); }
+        else if (d.kind === 'principal') { goTo('principalRoom'); }
         else if (d.kind === 'library')   goTo('library');
         else if (d.kind === 'classroom') goTo('classroom');
         else if (d.kind === 'arena')     goTo('arena');
@@ -564,6 +588,17 @@ function updateDungeon(dt) {
   if (typeof tickMobAffixes === 'function') tickMobAffixes(dt);
   if (typeof comboTick === 'function') comboTick(dt);
   if (typeof updateBossHud === 'function') updateBossHud(dt);
+  if (typeof tickBlackHeartCurse === 'function') tickBlackHeartCurse(dt);
+  // 저주 상태: HP 회복 무효 (curseUntil 유효 시)
+  if (player && player._curseUntil && performance.now() < player._curseUntil) {
+    // hpRegen 등 회복 무효 - updatePlayer 이후 이 상태 유지 안 되도록 별도 로직 필요 없음 (이미 회복은 처리됨).
+    // 대신 hpRegen 을 임시로 0으로.
+    player._hpRegenSaved = player._hpRegenSaved != null ? player._hpRegenSaved : player.hpRegen;
+    player.hpRegen = 0;
+  } else if (player && player._hpRegenSaved != null) {
+    player.hpRegen = player._hpRegenSaved;
+    player._hpRegenSaved = null;
+  }
   if (typeof updateFx === 'function') updateFx(dt);
   updateParticles(dt);
   updateFloats(dt);
@@ -609,6 +644,20 @@ function updateDungeon(dt) {
       state.shake = 12;
       if (floor >= currentFloorTotal()) {
         // 교수 층 클리어: 계열 시련 통과 → 보상 + 로비 복귀
+        // 검은 심장 격파 처리
+        if (state.dungeonMode === 'blackheart') {
+          state.blackHeartDefeated = (state.blackHeartDefeated || 0) + 1;
+          state.research += 500000;
+          state.gold += 100000;
+          state.gpa = (state.gpa || 0) + 5;
+          showMsg('★★★ 검은 심장 격파! 아카데미의 진실 너머의 진실. ★★★', 8);
+          if (typeof highlightBossKill === 'function') highlightBossKill({ _profDef:{ name:'검은 심장 (Black Heart)' }, isBoss: true });
+          if (typeof showAchievementBanner === 'function') showAchievementBanner('검은 심장 격파', '+500000 RP · +5 GPA', '#ff2d2d');
+          if (typeof unlockStoryFragment === 'function') unlockStoryFragment('blackheart_defeated');
+          if (typeof saveAccountData === 'function') saveAccountData();
+          setTimeout(() => { state.dungeonMode = 'normal'; goTo('academy'); }, 3500);
+          return;
+        }
         if (state.dungeonMode === 'professor') {
           const facKey = state.facultyKey;
           if (facKey === 'principal') {
@@ -987,6 +1036,8 @@ function castFire(p, ang) {
       _execute: p.blessExecute || 0,
     });
   }
+  // 삼관마도: 캐스트 시 검격 애니메이션
+  if (p.threecrown && typeof threecrownCastEffect === 'function') threecrownCastEffect(p, ang);
   // 축복: Echo (15% 확률 캐스트 두번째)
   if (p.blessEcho && Math.random() < 0.15) {
     for (let i = 0; i < count; i++) {

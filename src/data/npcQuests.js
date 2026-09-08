@@ -73,6 +73,10 @@ function _ensureNpcQuestsState() {
 // SPACE 로 Elara 와 대화. 조건 만족 여부에 따라 다른 대사.
 function elaraInteract() {
   _ensureNpcQuestsState();
+  // 결말 선택 조건 만족 시 다이얼로그 오픈
+  if (typeof canOfferEndingChoice === 'function' && canOfferEndingChoice()) {
+    if (typeof openElaraEnding === 'function') { openElaraEnding(); return; }
+  }
   const el = state.npcQuests.elara;
   // 현재 유대 단계
   const nextQ = ELARA_QUESTS[el.bond];
