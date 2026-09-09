@@ -37,6 +37,7 @@ function render() {
     case 'elaraEnding':  renderElaraEnding(); break;
     case 'outerMap':     renderOuterMap(); break;
     case 'principalRoom':renderPrincipalRoom(); break;
+    case 'epilogue':     renderEpilogue(); break;
     case 'shop':      renderShop(); break;
     case 'classroom': renderClassroom(); break;
     case 'arena':     renderArenaMenu(); break;

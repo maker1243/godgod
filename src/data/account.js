@@ -59,6 +59,8 @@ const state = {
   principalAscended: false,        // 봉인 유지 결말 진입 (교장이 됨)
   swordClaimed: false,             // 삼관마도 획득 여부
   blackHeartDefeated: 0,           // 검은 심장 격파 횟수
+  epilogueSeen: {},                // {break?:true, seal?:true}
+  docsRead: {},                    // 교장의 방 문서 읽기 여부
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -160,6 +162,8 @@ function loadAccountData() {
     if (typeof d.principalAscended === 'boolean') state.principalAscended = d.principalAscended;
     if (typeof d.swordClaimed === 'boolean') state.swordClaimed = d.swordClaimed;
     if (typeof d.blackHeartDefeated === 'number') state.blackHeartDefeated = d.blackHeartDefeated;
+    if (d.epilogueSeen && typeof d.epilogueSeen === 'object') state.epilogueSeen = d.epilogueSeen;
+    if (d.docsRead && typeof d.docsRead === 'object') state.docsRead = d.docsRead;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -225,6 +229,8 @@ function saveAccountData() {
     principalAscended: !!state.principalAscended,
     swordClaimed: !!state.swordClaimed,
     blackHeartDefeated: state.blackHeartDefeated || 0,
+    epilogueSeen: state.epilogueSeen || {},
+    docsRead: state.docsRead || {},
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

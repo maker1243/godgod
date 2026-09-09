@@ -98,7 +98,12 @@ function updatePrincipalRoom(dt) {
   if (keys['Space'] || keys['Enter']) {
     keys['Space']=false; keys['Enter']=false;
     if (principalRoom.reading) principalRoom.reading = null;
-    else principalRoom.reading = PRINCIPAL_ITEMS[principalRoom.cursor];
+    else {
+      const item = PRINCIPAL_ITEMS[principalRoom.cursor];
+      principalRoom.reading = item;
+      state.docsRead = state.docsRead || {};
+      state.docsRead[item.id] = true;
+    }
   }
   // 검 획득
   if (keys['KeyF']) {
@@ -115,6 +120,11 @@ function updatePrincipalRoom(dt) {
       if (typeof sfx === 'function') sfx('jackpot');
       if (typeof saveAccountData === 'function') saveAccountData();
       if (typeof refreshPlayerStats === 'function') refreshPlayerStats();
+      // 3개 문서 모두 읽었고 검도 획득 → 에필로그
+      const dr = state.docsRead || {};
+      if (dr.resume && dr.book1 && dr.book2 && typeof openEpilogue === 'function') {
+        setTimeout(() => openEpilogue('seal'), 1500);
+      }
     }
   }
   if (keys['KeyR'] || keys['Escape']) {

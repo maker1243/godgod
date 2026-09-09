@@ -86,6 +86,7 @@ function update(dt) {
     case 'elaraEnding':  updateElaraEnding(dt); break;
     case 'outerMap':     updateOuterMap(dt); break;
     case 'principalRoom':updatePrincipalRoom(dt); break;
+    case 'epilogue':     updateEpilogue(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -655,7 +656,11 @@ function updateDungeon(dt) {
           if (typeof showAchievementBanner === 'function') showAchievementBanner('검은 심장 격파', '+500000 RP · +5 GPA', '#ff2d2d');
           if (typeof unlockStoryFragment === 'function') unlockStoryFragment('blackheart_defeated');
           if (typeof saveAccountData === 'function') saveAccountData();
-          setTimeout(() => { state.dungeonMode = 'normal'; goTo('academy'); }, 3500);
+          setTimeout(() => {
+            state.dungeonMode = 'normal';
+            if (typeof openEpilogue === 'function') openEpilogue('break');
+            else goTo('academy');
+          }, 3500);
           return;
         }
         if (state.dungeonMode === 'professor') {
