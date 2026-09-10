@@ -100,6 +100,98 @@ const S = {
   wisp:     (b,ang,c1,c2,c3) => { const t = state.time * 3 + b.x; pxDraw(b.x - 2 + Math.sin(t)*1, b.y - 2 + Math.cos(t)*1, 4, 4, c1); _sDot(b, c3); },
 };
 
+// =====================================================================
+// Fusion visuals - 융합 주문의 축(element/traj/trigger) + 시드로 고유 이펙트 생성.
+// 한 번 생성하면 spell.id 별로 BULLET_VISUALS 에 캐싱됨.
+// =====================================================================
+const _FUSION_PALETTE_BY_ELEMENT = {
+  fire:    'flame',
+  ice:     'frost',
+  thunder: 'lightning',
+  void:    'shadow',
+  holy:    'divine',
+};
+const _FUSION_SHAPE_BY_TRIGGER = {
+  impact: S.orb,
+  delay:  S.burst,
+  pierce: S.tri,
+  chain:  S.star,
+  ground: S.ring,
+};
+const _FUSION_MOTION_BY_TRAJ = {
+  straight: null,
+  homing:   _mWave,
+  spiral:   _mSpiral,
+  arc:      _mZigzag,
+  spread:   _mAccel,
+};
+
+function _fusionSeedHash(s) {
+  let h = 0;
+  const str = (s || '') + '';
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function buildFusionVisual(spell) {
+  const palName = _FUSION_PALETTE_BY_ELEMENT[spell.element] || 'flame';
+  const shape   = _FUSION_SHAPE_BY_TRIGGER[spell.trigger]  || S.orb;
+  const motion  = _FUSION_MOTION_BY_TRAJ[spell.traj]       || null;
+  const pal = V_PAL[palName] || V_PAL.fire;
+  const seed = _fusionSeedHash(spell.id + spell.element + spell.traj + spell.trigger);
+  // 시드 기반 파라미터
+  const rotDir      = (seed & 1) ? 1 : -1;
+  const orbiterCnt  = 2 + ((seed >> 1) & 3);          // 2..5
+  const orbiterR    = 4 + ((seed >> 3) & 3);          // 4..7
+  const orbiterSpd  = 3 + ((seed >> 5) & 3);          // 3..6
+  const rimCol      = pal[2];
+  const coreCol     = pal[1];
+  const shellCol    = pal[0];
+  const accentPal   = V_PAL[(seed & 1) ? 'gold' : 'plasma'];
+  const accent      = accentPal[2];
+
+  return {
+    draw: (b, ang) => {
+      // 후광
+      ctx.globalAlpha = 0.20 + Math.sin(state.time * 4 + seed) * 0.10;
+      pxDraw(b.x - 4, b.y - 4, 8, 8, shellCol);
+      ctx.globalAlpha = 1;
+      // 오르비터 (씨앗 결정 개수/속도)
+      const t = state.time * orbiterSpd * rotDir + (seed & 63);
+      for (let i = 0; i < orbiterCnt; i++) {
+        const a = t + (i / orbiterCnt) * Math.PI * 2;
+        const ox = b.x + Math.cos(a) * orbiterR;
+        const oy = b.y + Math.sin(a) * orbiterR;
+        pxDraw(ox - 1, oy - 1, 2, 2, i % 2 ? rimCol : accent);
+      }
+      // 코어 (트리거별 도형)
+      shape(b, ang, shellCol, coreCol, rimCol);
+      // 시드에 따라 십자 액센트
+      if (seed & 16) {
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = PX;
+        ctx.beginPath();
+        ctx.moveTo((b.x - 3)*PX, b.y*PX); ctx.lineTo((b.x + 3)*PX, b.y*PX);
+        ctx.moveTo(b.x*PX, (b.y - 3)*PX); ctx.lineTo(b.x*PX, (b.y + 3)*PX);
+        ctx.stroke();
+      }
+      // 파티클 트레일 확률적
+      if (Math.random() < 0.4) spawnParticle(b.x - Math.cos(ang)*3, b.y - Math.sin(ang)*3, coreCol, 0.3, 2, 20);
+    },
+    move: motion,
+  };
+}
+
+// spell.id 기반 캐싱 · 새 융합 주문 첫 사용 시 등록
+function ensureFusionVisual(spell) {
+  if (!spell || !spell.fused) return null;
+  const key = 'fusion_' + spell.id;
+  if (typeof BULLET_VISUALS !== 'undefined' && !BULLET_VISUALS[key]) {
+    BULLET_VISUALS[key] = buildFusionVisual(spell);
+  }
+  return key;
+}
+
 // --- 100+ named visuals ---
 const BULLET_VISUALS = {
   // fire family (14)

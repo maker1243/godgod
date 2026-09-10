@@ -114,6 +114,9 @@ function castCustomSpell(p, ang) {
   const count = traj.count || 1;
   const spread = traj.spread || 0;
 
+  // 융합 주문은 spell.id 별 고유 비주얼 등록 & 사용
+  const visKey = (spell.fused && typeof ensureFusionVisual === 'function') ? ensureFusionVisual(spell) : null;
+
   for (let i = 0; i < count; i++) {
     const a = ang + (i - (count-1)/2) * spread;
     const b = {
@@ -122,6 +125,8 @@ function castCustomSpell(p, ang) {
       r: 4, dmg, life: 2.0, kind: el.kind || 'fire', hits: 0,
       _customSpell: true,
       _element: spell.element,
+      visual: visKey || undefined,
+      color: el.color,
     };
     // 궤도
     if (traj.homing) b.homing = true;
