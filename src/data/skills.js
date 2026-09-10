@@ -62,6 +62,7 @@ function createPlayer() {
   try { if (typeof applyArtifactsToPlayer === 'function') applyArtifactsToPlayer(base); } catch(_){}
   try { if (typeof applyTraitsToPlayer    === 'function') applyTraitsToPlayer(base); } catch(_){}
   try { if (typeof applyGameModesToPlayer === 'function') applyGameModesToPlayer(base); } catch(_){}
+  try { if (typeof clanApplyBuffs         === 'function') clanApplyBuffs(base); } catch(_){}
 
   // 아침 이벤트: 축제일이면 이번 던전 진입 시 RP DROP +50%
   try {

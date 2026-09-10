@@ -412,6 +412,18 @@ function spawnEnemy(kind, room) {
     base.hp = Math.max(base.hp || 100, est);
   }
   if (diff.dmgMult !== 1) base.dmg = Math.round((base.dmg || 0) * diff.dmgMult);
+  // 극단 스케일링: 티어 idx 가 높을수록 층당 지수 배율이 급격하게 증가.
+  // idx 0 (일반): 층당 x1.0 (변화 없음)
+  // idx 5 (심연): 층당 x1.12 (완만)
+  // idx 15 (라그나로크): 층당 x1.35
+  // idx 25 (파훼자): 층당 x1.80 → 층 5에서 x18배, 층 10에서 x357배
+  const _tierIdx = DIFFICULTY_TIERS.findIndex(d => d.id === (state.difficulty || 'normal'));
+  if (_tierIdx > 3 && floor > 1) {
+    const chaosBase = 1 + Math.min(1.2, _tierIdx * 0.03);
+    const chaosMult = Math.pow(chaosBase, floor - 1);
+    base.hp = Math.floor((base.hp || 100) * chaosMult);
+    base.dmg = Math.floor((base.dmg || 5) * Math.pow(chaosBase * 0.95, floor - 1));
+  }
   // 엘리트 몹: 5% 확률. HP×3, DMG×1.5, 크게 그림, 처치 시 RP 조각 확정 드롭.
   if (Math.random() < 0.05) {
     base.isElite = true;

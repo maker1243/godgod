@@ -27,6 +27,10 @@ const mouse = { x: W/2, y: H/2, down: false, right: false };
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['Space','KeyR','KeyE','KeyQ','ShiftLeft','ShiftRight','Backspace','Tab'].includes(e.code)) e.preventDefault();
+  // 텍스트 입력 (clan / spell name 등)
+  if (typeof clanKeyPressed === 'function' && e.key && e.key.length === 1) {
+    if (clanKeyPressed(e.key)) e.preventDefault();
+  }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 

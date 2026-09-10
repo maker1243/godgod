@@ -61,6 +61,8 @@ const state = {
   blackHeartDefeated: 0,           // 검은 심장 격파 횟수
   epilogueSeen: {},                // {break?:true, seal?:true}
   docsRead: {},                    // 교장의 방 문서 읽기 여부
+  clan: null,                      // {name, motto, xp, contribTotal}
+  outerVisited: {},                // 외부 맵 랜드마크 방문 기록
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -164,6 +166,8 @@ function loadAccountData() {
     if (typeof d.blackHeartDefeated === 'number') state.blackHeartDefeated = d.blackHeartDefeated;
     if (d.epilogueSeen && typeof d.epilogueSeen === 'object') state.epilogueSeen = d.epilogueSeen;
     if (d.docsRead && typeof d.docsRead === 'object') state.docsRead = d.docsRead;
+    if (d.clan && typeof d.clan === 'object') state.clan = d.clan;
+    if (d.outerVisited && typeof d.outerVisited === 'object' && typeof outerMap !== 'undefined') outerMap.visited = d.outerVisited;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -231,6 +235,8 @@ function saveAccountData() {
     blackHeartDefeated: state.blackHeartDefeated || 0,
     epilogueSeen: state.epilogueSeen || {},
     docsRead: state.docsRead || {},
+    clan: state.clan || null,
+    outerVisited: (typeof outerMap !== 'undefined' ? outerMap.visited : {}) || {},
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,
