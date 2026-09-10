@@ -464,31 +464,73 @@ function onRoundEnd(outcome) {
   state.scene = 'duelEnd';
 }
 
-// 계정별 랭킹 항목 저장
+// 계정별 랭킹 항목 저장 (로컬 + 서버 동기화)
 function updateLeaderboardEntry() {
   if (!state.account) return;
+  const entry = {
+    name: state.account.name,
+    gpa: Number((state.gpa || 0).toFixed(2)),
+    wins: academy.duelWins || 0,
+    losses: academy.duelLosses || 0,
+    research: Math.floor(state.research || 0),
+    blackHeartDefeated: state.blackHeartDefeated || 0,
+    maxDifficulty: state.difficulty || 'normal',
+    updated: Date.now(),
+  };
   try {
     const raw = localStorage.getItem('gaa_leaderboard') || '{}';
     const lb = JSON.parse(raw);
-    lb[state.account.name] = {
-      name: state.account.name,
-      gpa: Number((state.gpa || 0).toFixed(2)),
-      wins: academy.duelWins || 0,
-      losses: academy.duelLosses || 0,
-      updated: Date.now(),
-    };
+    lb[state.account.name] = entry;
     localStorage.setItem('gaa_leaderboard', JSON.stringify(lb));
   } catch(e){}
+  // 서버 동기화 (다른 기기에서도 보이도록)
+  if (state.account.passHash) {
+    try {
+      fetch('/api/leaderboard/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: state.account.name, passHash: state.account.passHash, entry }),
+      }).catch(()=>{});
+    } catch(_){}
+  }
 }
-// 로컬 랭킹 조회 (모든 계정 순회)
+
+// 서버 랭킹 캐시
+const _lbCache = { list: [], t: 0, fetching: false };
+
+function _fetchServerLeaderboard() {
+  if (_lbCache.fetching) return;
+  if (Date.now() - _lbCache.t < 10000) return;    // 10초 캐시
+  _lbCache.fetching = true;
+  try {
+    fetch('/api/leaderboard/get').then(r => r.json()).then(j => {
+      _lbCache.fetching = false;
+      if (j && j.ok && Array.isArray(j.list)) {
+        _lbCache.list = j.list;
+        _lbCache.t = Date.now();
+      }
+    }).catch(()=>{ _lbCache.fetching = false; });
+  } catch(_){ _lbCache.fetching = false; }
+}
+
+// 랭킹 조회 (서버 + 로컬 병합, 서버 우선)
 function getLeaderboard() {
+  _fetchServerLeaderboard();
+  const merged = {};
+  // 로컬 먼저
   try {
     const raw = localStorage.getItem('gaa_leaderboard') || '{}';
     const lb = JSON.parse(raw);
-    const arr = Object.values(lb);
-    arr.sort((a, b) => (b.gpa || 0) - (a.gpa || 0));
-    return arr;
-  } catch(e) { return []; }
+    for (const k of Object.keys(lb)) merged[k.toLowerCase()] = lb[k];
+  } catch(e) {}
+  // 서버로 덮어쓰기 (서버가 최신)
+  for (const e of _lbCache.list) {
+    if (!e || !e.name) continue;
+    merged[e.name.toLowerCase()] = e;
+  }
+  const arr = Object.values(merged);
+  arr.sort((a, b) => (b.gpa || 0) - (a.gpa || 0));
+  return arr;
 }
 
 function renderDuelEnd() {

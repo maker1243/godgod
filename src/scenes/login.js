@@ -99,6 +99,10 @@ async function loginSubmit() {
       showMsg(t('login.signedIn') + ' - ' + t('login.welcome') + srv.name.toUpperCase(), 3);
       state.scene = 'title';
       sfx('level');
+      // 로그인 시 랭킹 서버 최신화 - 다른 기기에서 로그인해도 내 캐릭터가 랭킹에 표시됨
+      if (typeof updateLeaderboardEntry === 'function') {
+        setTimeout(() => { try { updateLeaderboardEntry(); } catch(_){} }, 500);
+      }
       _tryAutoJoin();
       return;
     }

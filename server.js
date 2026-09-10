@@ -19,11 +19,17 @@ const RATE_LIMIT_PER_SEC = 60;
 
 const ROOT = __dirname;
 const ACCOUNTS_FILE = path.join(ROOT, 'accounts.json');
+const LEADERBOARD_FILE = path.join(ROOT, 'leaderboard.json');
 
 // ---------- Server-side account store ----------
 let accountsStore = {};
 try { accountsStore = JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf-8')) || {}; }
 catch(e) { accountsStore = {}; }
+
+// ---------- Leaderboard store (name-lower → entry) ----------
+let leaderboardStore = {};
+try { leaderboardStore = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf-8')) || {}; }
+catch(e) { leaderboardStore = {}; }
 
 let _saveTimer = null;
 function persistAccounts() {
@@ -33,6 +39,15 @@ function persistAccounts() {
     try { fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(accountsStore)); }
     catch(e) { console.error('accounts save failed:', e.message); }
   }, 300);
+}
+let _lbTimer = null;
+function persistLeaderboard() {
+  if (_lbTimer) return;
+  _lbTimer = setTimeout(() => {
+    _lbTimer = null;
+    try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboardStore)); }
+    catch(e) { console.error('leaderboard save failed:', e.message); }
+  }, 500);
 }
 
 function apiJson(res, status, body) {
@@ -333,6 +348,39 @@ const httpServer = http.createServer((req, res) => {
       return apiJson(res, 200, { ok:true });
     });
     return;
+  }
+
+  // ---------- Leaderboard API ----------
+  if (urlPath === '/api/leaderboard/post' && req.method === 'POST') {
+    readBody(req, 1024*16, (err, body) => {
+      if (err) return apiJson(res, 400, { ok:false, err:'bad body' });
+      const name = (body.name || '').toString().slice(0, 24);
+      const passHash = (body.passHash || '').toString().slice(0, 64);
+      if (!name || !passHash) return apiJson(res, 400, { ok:false, err:'missing auth' });
+      const key = name.toLowerCase();
+      const rec = accountsStore[key];
+      if (!rec) return apiJson(res, 200, { ok:false, err:'not_found' });
+      if (rec.passHash !== passHash) return apiJson(res, 200, { ok:false, err:'wrong_pass' });
+      const entry = body.entry || {};
+      leaderboardStore[key] = {
+        name: rec.name,
+        gpa: Number(entry.gpa) || 0,
+        wins: Number(entry.wins) || 0,
+        losses: Number(entry.losses) || 0,
+        research: Number(entry.research) || 0,
+        blackHeartDefeated: Number(entry.blackHeartDefeated) || 0,
+        maxDifficulty: (entry.maxDifficulty || '').toString().slice(0, 24),
+        updated: Date.now(),
+      };
+      persistLeaderboard();
+      return apiJson(res, 200, { ok:true });
+    });
+    return;
+  }
+  if (urlPath === '/api/leaderboard/get' && req.method === 'GET') {
+    const arr = Object.values(leaderboardStore);
+    arr.sort((a, b) => (b.gpa || 0) - (a.gpa || 0));
+    return apiJson(res, 200, { ok:true, list: arr.slice(0, 200) });
   }
 
   if (urlPath === '/status') {
