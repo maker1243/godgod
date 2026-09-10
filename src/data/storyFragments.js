@@ -68,6 +68,8 @@ const STORY_FRAGMENTS = {
                      en:{ title:'Heart of the Chrono Core',         lines:['The core\'s heart is the seal itself.','Break it and you break the seal; hold it and you hold the core.','Both paths are endless.'] } },
   the_end_start:    { ko:{ title:'끝의 시작', lines:['조각들을 다 모으면, 이야기는 끝난다.','하지만 끝은 시작이다.','네가 다음 학기를 시작할 때, 이 조각들이 다시 나타날 것이다.'] },
                      en:{ title:'The Beginning of the End',         lines:['When all fragments are gathered, the story ends.','But every ending is a beginning.','When you start next term, these fragments will appear again.'] } },
+  blackheart_defeated:{ ko:{ title:'검은 심장의 재', lines:['검은 심장은 소멸했다. 봉인의 기억도 함께.','너의 손에 남은 것은 재 한 줌.','그 재에서 새로운 봉인이 자라고 있다.'] },
+                       en:{ title:'Ashes of the Black Heart',        lines:['The Black Heart is gone. So are the seal\'s memories.','What remains in your hand is a fistful of ash.','From that ash, a new seal is growing.'] } },
 };
 
 // 언어에 맞춰 title/lines 를 골라주는 헬퍼
@@ -80,6 +82,21 @@ function _pickStoryLang(key) {
 
 function _storyEnsure() {
   state.storyFragments = state.storyFragments || {};
+  // 과거 버그: wanderer_1234567890 같은 동적 키가 남아 있으면 정리 후
+  // 올바른 정적 키로 통합
+  const legacyMap = { wanderer_: 'wanderer_evt', mirror_: 'mirror_evt', timetraveler_: 'timetraveler_evt' };
+  for (const k of Object.keys(state.storyFragments)) {
+    if (STORY_FRAGMENTS[k]) continue;
+    for (const prefix of Object.keys(legacyMap)) {
+      if (k.indexOf(prefix) === 0 && k !== legacyMap[prefix]) {
+        state.storyFragments[legacyMap[prefix]] = state.storyFragments[k];
+        delete state.storyFragments[k];
+        break;
+      }
+    }
+    // 그래도 STORY_FRAGMENTS 에 없으면 삭제 (leftover garbage)
+    if (state.storyFragments[k] && !STORY_FRAGMENTS[k]) delete state.storyFragments[k];
+  }
 }
 
 function unlockStoryFragment(key) {

@@ -26,6 +26,11 @@ function openElaraEnding() {
   elaraEnding.message = '';
   elaraEnding.messageT = 0;
   state.scene = 'elaraEnding';
+  // 결말 진입 시 관련 스토리 조각들 획득
+  if (typeof unlockStoryFragment === 'function') {
+    unlockStoryFragment('elara_true');
+    unlockStoryFragment('chronoheart');
+  }
 }
 
 function updateElaraEnding(dt) {

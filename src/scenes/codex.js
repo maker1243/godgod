@@ -186,7 +186,8 @@ function codexEntries() {
     // 스토리 조각 수집률
     if (typeof STORY_FRAGMENTS !== 'undefined') {
       const total = Object.keys(STORY_FRAGMENTS).length;
-      const done = Object.keys(state.storyFragments || {}).length;
+      const sf = state.storyFragments || {};
+      const done = Object.keys(sf).filter(k => STORY_FRAGMENTS[k]).length;
       const pct = Math.floor(done / total * 100);
       out.push({ title: '이야기 조각', sub: done + '/' + total + ' (' + pct + '%)', color:'#c8b898' });
     }
@@ -251,6 +252,7 @@ function codexEntries() {
   } else if (codex.tab === 'story') {
     if (typeof STORY_FRAGMENTS !== 'undefined') {
       state.storyFragments = state.storyFragments || {};
+      if (typeof _storyEnsure === 'function') _storyEnsure();
       const keys = Object.keys(STORY_FRAGMENTS);
       let owned = 0;
       for (const k of keys) if (state.storyFragments[k]) owned++;

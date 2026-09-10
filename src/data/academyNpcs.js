@@ -25,7 +25,7 @@ const ACADEMY_NPC_DEFS = [
     },
     reward: (s) => {
       const frags = Object.keys(s.storyFragments || {}).length;
-      if (frags >= 5 && !s._rennGift) { s._rennGift = true; state.research = (state.research||0) + 500; return '(RENN 이 낡은 책갈피를 건넨다: +500 RP)'; }
+      if (frags >= 5 && !s._rennGift) { s._rennGift = true; state.research = (state.research||0) + 500; if (typeof unlockStoryFragment === 'function') unlockStoryFragment('renn_bond'); return '(RENN 이 낡은 책갈피를 건넨다: +500 RP · 조각 획득)'; }
       return '';
     },
   },

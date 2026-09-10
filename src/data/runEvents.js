@@ -39,7 +39,7 @@ const RUN_EVENT_DEFS = [
     title:'떠도는 교수', color:'#8bd8ff',
     body:'낯익은 얼굴의 교수가 지친 표정으로 앉아 있다. 무언가 이야기를 나누고 싶어 한다.',
     choices:[
-      { label:'대화한다 (스토리 조각)',   apply:()=>{ if (typeof unlockStoryFragment === 'function') { const keys = Object.keys(state.storyFragments||{}); unlockStoryFragment('wanderer_' + Date.now()); } return '이야기의 조각을 얻었다.'; } },
+      { label:'대화한다 (스토리 조각)',   apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('wanderer_evt'); return '이야기의 조각을 얻었다.'; } },
       { label:'금화를 준다 (-100G, +DMG +10%)', apply:()=>{ if ((state.gold||0) < 100) return '금 부족'; state.gold -= 100; player.baseDmg *= 1.1; return 'DMG +10% (이 런)'; } },
       { label:'지나친다',                  apply:()=>{ return '교수는 어둠 속으로 사라진다.'; } },
     ] },
@@ -130,7 +130,7 @@ const RUN_EVENT_DEFS = [
     body:'거대한 거울에 다른 자신이 비친다.',
     choices:[
       { label:'거울을 깬다 (THORNS +30)',   apply:()=>{ player.thorns = (player.thorns||0) + 30; return 'THORNS +30'; } },
-      { label:'거울과 대화 (스토리)',        apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('mirror_' + Date.now()); return '자신의 진실을 엿본다.'; } },
+      { label:'거울과 대화 (스토리)',        apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('mirror_evt'); return '자신의 진실을 엿본다.'; } },
     ] },
   { id:'ev_wounded',
     title:'다친 학생', color:'#3ac762',
@@ -179,7 +179,7 @@ const RUN_EVENT_DEFS = [
     body:'후드 쓴 인물이 회중시계를 흔들며 미소짓는다.',
     choices:[
       { label:'다음 층으로 스킵 (5000 RP)', apply:()=>{ if ((state.research||0) < 5000) return 'RP 부족'; state.research -= 5000; if (typeof nextFloor === 'function') { nextFloor(); return '한 층 스킵!'; } return '실패'; } },
-      { label:'대화만 (스토리 조각)',       apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('timetraveler_' + Date.now()); return '시간의 조각을 얻었다.'; } },
+      { label:'대화만 (스토리 조각)',       apply:()=>{ if (typeof unlockStoryFragment === 'function') unlockStoryFragment('timetraveler_evt'); return '시간의 조각을 얻었다.'; } },
       { label:'거절',                       apply:()=>{ return '그는 시간 속으로 사라진다.'; } },
     ] },
   { id:'ev_orb',

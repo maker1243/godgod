@@ -112,6 +112,8 @@ function openEpilogue(kind) {
   state.scene = 'epilogue';
   state.epilogueSeen = state.epilogueSeen || {};
   state.epilogueSeen[epilogue.kind] = true;
+  // 최종 조각
+  if (typeof unlockStoryFragment === 'function') unlockStoryFragment('the_end_start');
   if (typeof saveAccountData === 'function') saveAccountData();
 }
 
