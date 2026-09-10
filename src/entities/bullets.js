@@ -78,11 +78,49 @@ function updateBullets(dt) {
         b.vx = Math.cos(newA) * spd; b.vy = Math.sin(newA) * spd;
       }
     }
+    // 커스텀 주문 궤도
+    if (b._sc_spin) {
+      const cur = Math.atan2(b.vy, b.vx);
+      const spd = Math.hypot(b.vx, b.vy);
+      const newA = cur + b._sc_spin * dt;
+      b.vx = Math.cos(newA) * spd; b.vy = Math.sin(newA) * spd;
+    }
+    if (b._sc_arc) {
+      // 시전 방향 기준 수직 방향으로 곡률
+      const cur = Math.atan2(b.vy, b.vx);
+      const perp = cur + Math.PI/2;
+      const spd = Math.hypot(b.vx, b.vy);
+      b.vx += Math.cos(perp) * b._sc_arc * spd * dt;
+      b.vy += Math.sin(perp) * b._sc_arc * spd * dt;
+      // 속도 정규화 방지 - overshoot 방지
+      const ns = Math.hypot(b.vx, b.vy);
+      if (ns > 0) { b.vx = b.vx / ns * spd; b.vy = b.vy / ns * spd; }
+    }
     b.x += b.vx * dt;
     b.y += b.vy * dt;
     // visual 이 커스텀 모션(파도/나선/지그재그 등) 갖고 있으면 추가 오프셋 적용
     if (typeof applyBulletVisualMotion === 'function') applyBulletVisualMotion(b, dt);
     b.life -= dt;
+    // 지연폭발: 카운트다운 → 폭발 → 소멸
+    if (b._delayFuse) {
+      b._delayFuse -= dt;
+      if (b._delayFuse <= 0) {
+        // 광역 데미지
+        const R = b._aoeR || 20;
+        for (const e of entities.enemies) {
+          const d = dist(b, e);
+          if (d < R + e.r) {
+            const df = b.dmg * (1 - d / (R + e.r));
+            e.hp -= df;
+            e.hitFlash = 0.14;
+            if (typeof spawnFloat === 'function') spawnFloat(e.x, e.y - 6, _dmgFmt ? _dmgFmt(df) : Math.floor(df), '#ff9c3d');
+          }
+        }
+        if (entities.fx) entities.fx.push({ type:'ring', x: b.x, y: b.y, life: 0.35, max: 0.35, r0: 4, r1: R, col: '#ffefa8' });
+        if (typeof state !== 'undefined') state.shake = Math.max(state.shake || 0, 6);
+        b.life = 0;
+      }
+    }
     // 벽 처리: bounces 남았으면 반사, 아니면 소멸
     if (b.x < rm.x) {
       if (b.bounces && b.bounces > 0) { b.bounces--; b.vx = Math.abs(b.vx); b.x = rm.x + 1; sfx('hit'); }
@@ -127,6 +165,8 @@ function updateBullets(dt) {
         // 트레잇: BOSS SLAYER
         if ((e.isBoss || e.isProfessor) && player.bossDmgMult) finalDmg *= player.bossDmgMult;
         if (e._dmgRed) finalDmg *= (1 - Math.min(0.9, e._dmgRed));
+        // 저주 (void 커스텀 주문): 만료 안 됐으면 25% 추가 데미지
+        if (e._curseDmgAmp && e._curseUntil && performance.now() < e._curseUntil) finalDmg *= (1 + e._curseDmgAmp);
         // 축복: Hex mark (첫 히트 표식, 이후 히트 x2)
         if (b._hex) {
           if (e._hexed) finalDmg *= 2;
@@ -197,6 +237,30 @@ function updateBullets(dt) {
         }
         // 라이프스틸
         if (player.lifesteal) player.hp = Math.min(player.maxHp, player.hp + player.lifesteal);
+        // 커스텀 주문: 흡혈 (holy)
+        if (b._lifesteal) player.hp = Math.min(player.maxHp, player.hp + finalDmg * b._lifesteal);
+        // 커스텀 주문: 저주 (void) - 아머 감소 (dmgRed 반대 부호로 취급)
+        if (b._curse) { e._curseDmgAmp = Math.max(e._curseDmgAmp || 0, 0.25); e._curseUntil = performance.now() + b._curse * 1000; }
+        // 커스텀 주문: 연쇄
+        if (b._chainLeft && b._chainLeft > 0) {
+          let nearest = null, nd = Infinity;
+          for (const e2 of entities.enemies) {
+            if (e2 === e) continue;
+            const dd = dist(b, e2);
+            if (dd < nd && dd < (b._chainR || 60)) { nearest = e2; nd = dd; }
+          }
+          if (nearest) {
+            const a2 = angleTo(b, nearest);
+            const spd2 = Math.hypot(b.vx, b.vy) || 200;
+            entities.bullets.push({
+              x: b.x, y: b.y,
+              vx: Math.cos(a2) * spd2, vy: Math.sin(a2) * spd2,
+              r: b.r, dmg: b.dmg * 0.75, life: 0.4, kind: b.kind, hits: 0,
+              _customSpell: true, _element: b._element,
+              _chainLeft: b._chainLeft - 1, _chainR: b._chainR,
+            });
+          }
+        }
         state.shake = Math.max(state.shake, isCrit ? 4 : 2);
         if (isCrit) sfx('crit'); else sfx('hit');
 
@@ -223,7 +287,19 @@ function updateBullets(dt) {
         break;
       }
     }
-    if (b.life <= 0) entities.bullets.splice(i, 1);
+    if (b.life <= 0) {
+      // 커스텀: 지면 장판 - bullet 소멸 시 stationary DoT 장판 스폰
+      if (b._groundDur && !b._groundSpawned) {
+        b._groundSpawned = true;
+        entities.bullets.push({
+          x: b.x, y: b.y, vx: 0, vy: 0,
+          r: b._groundR || 20, dmg: b.dmg * 0.3, life: b._groundDur, kind: b.kind, hits: 0,
+          _isGround: true, pierce: true, _pierceLeft: 9999,
+        });
+        if (entities.fx) entities.fx.push({ type:'ring', x: b.x, y: b.y, life: b._groundDur, max: b._groundDur, r0: 2, r1: (b._groundR || 20), col: '#c86ade' });
+      }
+      entities.bullets.splice(i, 1);
+    }
   }
 }
 

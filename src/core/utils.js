@@ -28,8 +28,9 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['Space','KeyR','KeyE','KeyQ','ShiftLeft','ShiftRight','Backspace','Tab'].includes(e.code)) e.preventDefault();
   // 텍스트 입력 (clan / spell name 등)
-  if (typeof clanKeyPressed === 'function' && e.key && e.key.length === 1) {
-    if (clanKeyPressed(e.key)) e.preventDefault();
+  if (e.key && e.key.length === 1) {
+    if (typeof clanKeyPressed === 'function' && clanKeyPressed(e.key)) { e.preventDefault(); return; }
+    if (typeof spellCraftKeyPressed === 'function' && spellCraftKeyPressed(e.key)) { e.preventDefault(); return; }
   }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });

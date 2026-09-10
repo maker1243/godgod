@@ -88,6 +88,7 @@ function update(dt) {
     case 'principalRoom':updatePrincipalRoom(dt); break;
     case 'epilogue':     updateEpilogue(dt); break;
     case 'clan':         updateClan(dt); break;
+    case 'spellCraft':   updateSpellCraft(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -187,6 +188,7 @@ const academy = {
   legacyDoor:{ x: 120, y: 60,  w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
   customDoor:{ x: 180, y: 60,  w: 12, h: 18, kind: 'customize', label: 'STYLE'  },
   clanDoor:  { x: 220, y: 60,  w: 12, h: 18, kind: 'clan',      label: 'CLAN'   },
+  spellDoor: { x: 100, y: 60,  w: 12, h: 18, kind: 'spellcraft', label: 'SPELL' },
   exitDoor:  { x: 260, y: 60,  w: 12, h: 18, kind: 'exitworld', label: 'EXIT',  hidden:true },
   principalDoor:{ x: 20, y: 60, w: 12, h: 18, kind: 'principal', label: 'PRIN', hidden:true },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
@@ -231,7 +233,7 @@ if (state.account) {
 function _placeCipherDoorRandom() {
   const r = academy.room;
   const w = 12, h = 18;
-  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor];
+  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor];
   for (let t = 0; t < 40; t++) {
     const x = Math.floor(r.x + 10 + Math.random() * (r.w - w - 20));
     const y = Math.floor(r.y + 20 + Math.random() * (r.h - h - 40));
@@ -464,7 +466,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.exitDoor, academy.principalDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor, academy.exitDoor, academy.principalDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -522,6 +524,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'legacy')    { goTo('legacyLobby'); }
         else if (d.kind === 'customize') { goTo('customize'); }
         else if (d.kind === 'clan')      { openClanScene(); }
+        else if (d.kind === 'spellcraft'){ openSpellCraft(); }
         else if (d.kind === 'exitworld') { if (typeof _initOuterMap === 'function') _initOuterMap(); goTo('outerMap'); }
         else if (d.kind === 'principal') { goTo('principalRoom'); }
         else if (d.kind === 'library')   goTo('library');
@@ -1014,6 +1017,11 @@ function updatePlayer(dt) {
 }
 
 function castFire(p, ang) {
+  // 커스텀 주문 장착 시 그것을 대신 시전
+  if (state.equippedSpell && typeof castCustomSpell === 'function') {
+    if (castCustomSpell(p, ang)) return;
+    // 실패 (MP 부족 등) 시 폴백으로 기본 화염구
+  }
   const s = SKILLS.fire;
   let cd = s.cd;
   if (hasPerk('firecd')) cd *= 0.7;
