@@ -4,7 +4,7 @@
 // =====================================================================
 
 const spellCraftUI = {
-  tab: 'craft',        // 'craft' | 'library'
+  tab: 'craft',        // 'craft' | 'fuse' | 'library'
   // craft 상태
   eIdx: 0, tIdx: 0, gIdx: 0, cIdx: 0,
   cursor: 0,           // 0:element 1:traj 2:trigger 3:chant 4:name 5:craft
@@ -12,6 +12,10 @@ const spellCraftUI = {
   namingMode: false,
   // library
   libCursor: 0,
+  // fusion
+  fuseSide: 0,         // 0:base 1:mod
+  fuseBaseIdx: 0,
+  fuseModIdx: 0,
   msg: '', msgT: 0,
 };
 
@@ -53,8 +57,11 @@ function updateSpellCraft(dt) {
 
   // ESC 종료
   if (keys['Escape'] || keys['KeyR']) { keys['Escape']=false; keys['KeyR']=false; state.scene='academy'; return; }
-  // 탭 전환
-  if (keys['Tab']) { keys['Tab']=false; spellCraftUI.tab = (spellCraftUI.tab === 'craft') ? 'library' : 'craft'; }
+  // 탭 전환 (craft → fuse → library → craft)
+  if (keys['Tab']) {
+    keys['Tab']=false;
+    spellCraftUI.tab = (spellCraftUI.tab === 'craft') ? 'fuse' : (spellCraftUI.tab === 'fuse' ? 'library' : 'craft');
+  }
 
   if (spellCraftUI.tab === 'craft') {
     // WS 로 커서 이동 (5개: E/T/G/C/CRAFT)
@@ -78,6 +85,31 @@ function updateSpellCraft(dt) {
         spellCraftUI.namingMode = true;
         spellCraftUI.inputBuf = '';
       }
+    }
+  } else if (spellCraftUI.tab === 'fuse') {
+    const bases = getOwnedActiveSkills();
+    const mods = getOwnedAllSkills();
+    if (bases.length === 0 || mods.length === 0) return;
+    if (keys['KeyA'] || keys['ArrowLeft'])  { keys['KeyA']=false; keys['ArrowLeft']=false; spellCraftUI.fuseSide = 0; sfx('hit'); }
+    if (keys['KeyD'] || keys['ArrowRight']) { keys['KeyD']=false; keys['ArrowRight']=false; spellCraftUI.fuseSide = 1; sfx('hit'); }
+    if (keys['KeyW'] || keys['ArrowUp']) {
+      keys['KeyW']=false; keys['ArrowUp']=false;
+      if (spellCraftUI.fuseSide === 0) spellCraftUI.fuseBaseIdx = (spellCraftUI.fuseBaseIdx - 1 + bases.length) % bases.length;
+      else spellCraftUI.fuseModIdx = (spellCraftUI.fuseModIdx - 1 + mods.length) % mods.length;
+      sfx('hit');
+    }
+    if (keys['KeyS'] || keys['ArrowDown']) {
+      keys['KeyS']=false; keys['ArrowDown']=false;
+      if (spellCraftUI.fuseSide === 0) spellCraftUI.fuseBaseIdx = (spellCraftUI.fuseBaseIdx + 1) % bases.length;
+      else spellCraftUI.fuseModIdx = (spellCraftUI.fuseModIdx + 1) % mods.length;
+      sfx('hit');
+    }
+    if (keys['Space'] || keys['Enter']) {
+      keys['Space']=false; keys['Enter']=false;
+      const base = bases[spellCraftUI.fuseBaseIdx];
+      const mod  = mods[spellCraftUI.fuseModIdx];
+      const sp = fuseCraftSpell(base, mod);
+      if (sp) { spellCraftUI.msg = '융합 완료: ' + sp.name; spellCraftUI.msgT = 3; }
     }
   } else if (spellCraftUI.tab === 'library') {
     if (!state.customSpells || state.customSpells.length === 0) return;
@@ -111,12 +143,13 @@ function renderSpellCraft() {
   // 탭
   const tabs = [
     { id:'craft',   name:'창조' },
+    { id:'fuse',    name:'융합' },
     { id:'library', name:'라이브러리 (' + ((state.customSpells||[]).length) + ')' },
   ];
   for (let i = 0; i < tabs.length; i++) {
-    const tx = 8 + i * 80;
+    const tx = 8 + i * 76;
     const active = spellCraftUI.tab === tabs[i].id;
-    if (active) pxDraw(tx, 15, 76, 10, '#3a1e5c');
+    if (active) pxDraw(tx, 15, 72, 10, '#3a1e5c');
     drawText(tabs[i].name, tx + 4, 17, active ? '#ffefa8' : '#8a7ab5');
   }
 
@@ -170,6 +203,58 @@ function renderSpellCraft() {
     drawText((isSel ? '▶ ' : '  ') + '[SPACE] 창조하기   (비용: ' + cost + ' RP  ·  보유: ' + Math.floor(state.research||0) + ')', 14, y + 21, canAfford ? '#3ac762' : '#c81616');
 
     drawText('WS 축 선택   AD 값 변경   SPACE 창조', W/2 - textWidth('WS 축 선택   AD 값 변경   SPACE 창조')/2, H - 8, '#8a7ab5');
+  } else if (spellCraftUI.tab === 'fuse') {
+    const bases = getOwnedActiveSkills();
+    const mods = getOwnedAllSkills();
+    if (bases.length === 0) {
+      drawText('활성 스킬을 최소 하나 이상 소유해야 합니다.', W/2 - 130, 60, '#c81616');
+      drawText('스킬 트리에서 LMB/Q/E 스킬을 습득하세요.', W/2 - 130, 75, '#8a7ab5');
+      return;
+    }
+    drawText('AD 좌우 · WS 스킬 선택 · SPACE 융합', W/2 - textWidth('AD 좌우 · WS 스킬 선택 · SPACE 융합')/2, 30, '#8a7ab5');
+
+    // 좌: BASE (활성 스킬만)
+    const listY = 45, listH = 88, colW = (W - 20) / 2;
+    for (const side of [0, 1]) {
+      const items = side === 0 ? bases : mods;
+      const idx = side === 0 ? spellCraftUI.fuseBaseIdx : spellCraftUI.fuseModIdx;
+      const x = 8 + side * (colW + 4);
+      const isActiveSide = spellCraftUI.fuseSide === side;
+      pxDraw(x, listY, colW, listH, '#1a0e2e');
+      if (isActiveSide) { pxDraw(x, listY, 2, listH, '#e8c547'); }
+      drawText(side === 0 ? '[BASE - 활성 스킬]' : '[MODIFIER - 소유 스킬]', x + 4, listY + 2, isActiveSide ? '#ffefa8' : '#8a7ab5');
+      const visRows = 8;
+      const start = Math.max(0, Math.min(items.length - visRows, idx - Math.floor(visRows / 2)));
+      for (let i = 0; i < visRows; i++) {
+        const k = start + i;
+        if (k >= items.length) break;
+        const it = items[k];
+        const rowY = listY + 12 + i * 9;
+        if (k === idx) pxDraw(x + 2, rowY - 1, colW - 4, 9, isActiveSide ? '#3a1e5c' : '#2a1548');
+        const slotCol = it.slot === 'passive' ? '#8a7ab5' : (it.slot === 'lmb' ? '#ff6666' : (it.slot === 'q' ? '#8bd8ff' : '#e8c547'));
+        drawText('[' + (it.slot || '?').toUpperCase() + ']', x + 4, rowY, slotCol);
+        drawText(it.name.slice(0, 16), x + 32, rowY, k === idx ? '#ffefa8' : '#c8b898');
+      }
+    }
+
+    // 융합 미리보기
+    const base = bases[spellCraftUI.fuseBaseIdx];
+    const mod  = mods[spellCraftUI.fuseModIdx];
+    if (base && mod) {
+      const axes = fuseSkillsToAxes(base, mod);
+      const spellPreview = { element: axes.element, traj: axes.traj, trigger: axes.trigger, chant: axes.chant };
+      const st = computeSpellStats(spellPreview);
+      const boxY = listY + listH + 4;
+      pxDraw(8, boxY, W - 16, H - boxY - 24, '#1a0e2e');
+      pxDraw(8, boxY, 2, H - boxY - 24, '#00ffcc');
+      drawText('융합 결과: [' + base.name + '] + [' + mod.name + ']', 14, boxY + 3, '#00ffcc');
+      drawText('속성:' + st.e.name + '   궤도:' + st.t.name + '   기폭:' + st.g.name + '   영창:' + st.c.name, 14, boxY + 13, '#e8d9b0');
+      drawText('예상 DMG ' + Math.round(st.dmg) + ' · CD ' + st.cd.toFixed(2) + 's · MP ' + st.cost, 14, boxY + 23, '#8bd8ff');
+      const cost = nextFusionCost();
+      const canAfford = (state.research||0) >= cost;
+      drawText('[SPACE] 융합 창조   (비용: ' + cost + ' RP  ·  보유: ' + Math.floor(state.research||0) + ')', 14, boxY + 34, canAfford ? '#3ac762' : '#c81616');
+    }
+    return;
   } else {
     // 라이브러리
     const list = state.customSpells || [];

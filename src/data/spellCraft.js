@@ -151,3 +151,117 @@ function nextSpellCraftCost() {
   _spellState();
   return 300 + (state.customSpells.length * 500);
 }
+
+// =====================================================================
+// SKILL FUSION - 소유한 스킬 2개를 조합해 커스텀 주문 생성
+// =====================================================================
+
+// 스킬 이름/설명에서 축 값을 추론
+function _skillToAxes(sk) {
+  if (!sk) return { element:'fire', traj:'straight', trigger:'impact', chant:'balanced' };
+  const s = ((sk.name || '') + ' ' + (sk.desc || '')).toLowerCase();
+  let element = 'fire';
+  if (/ice|frost|freeze|cryo|snow|cold|blizzard/.test(s))    element = 'ice';
+  else if (/thunder|lightning|spark|arc|storm|electric/.test(s)) element = 'thunder';
+  else if (/void|shadow|dark|null|abyss|curse/.test(s))       element = 'void';
+  else if (/holy|light|divine|angel|heal|bless/.test(s))      element = 'holy';
+  else if (/fire|flame|burn|inferno|ember|meteor/.test(s))    element = 'fire';
+
+  let traj = 'straight';
+  if (/homing|missile|track|seek/.test(s))                   traj = 'homing';
+  else if (/spiral|nova|circle|orbit|rotate/.test(s))         traj = 'spiral';
+  else if (/arc|curve|bend/.test(s))                          traj = 'arc';
+  else if (/split|prism|shotgun|spread|multi|fan|starfall/.test(s)) traj = 'spread';
+
+  let trigger = 'impact';
+  if (/explod|meteor|nova|boom|blast|aoe/.test(s))            trigger = 'delay';
+  else if (/pierce|lance|arrow|beam/.test(s))                 trigger = 'pierce';
+  else if (/chain|jump|bounce/.test(s))                       trigger = 'chain';
+  else if (/ground|field|aura|zone|puddle/.test(s))           trigger = 'ground';
+
+  // 영창 - CD/MP 기반. cd 함수 있으면 lv=1 값 사용, 없으면 balanced.
+  let chant = 'balanced';
+  try {
+    const cd = typeof sk.cd === 'function' ? sk.cd(1) : (sk.cd || 0.35);
+    if (cd < 0.3) chant = 'quick';
+    else if (cd > 1.2) chant = 'slow';
+  } catch(_){}
+  return { element, traj, trigger, chant };
+}
+
+// 두 스킬을 합쳐서 최종 축 계산 - 베이스가 우세 (element/traj), 모디파이어가 세부 (trigger/chant)
+function fuseSkillsToAxes(baseSkill, modSkill) {
+  const a = _skillToAxes(baseSkill);
+  const b = _skillToAxes(modSkill);
+  return {
+    element: a.element,             // 베이스가 속성 결정
+    traj:    b.traj !== 'straight' ? b.traj : a.traj,  // 모디파이어가 특별한 궤도면 우선
+    trigger: b.trigger,             // 모디파이어가 기폭 결정
+    chant:   a.chant,               // 베이스가 시전 속도 결정
+  };
+}
+
+// 소유한 활성 스킬 (lmb/q/e slot) 목록
+function getOwnedActiveSkills() {
+  if (typeof SKILL_BY_ID === 'undefined') return [];
+  const owned = state.ownedSkills || {};
+  const out = [];
+  for (const id of Object.keys(owned)) {
+    const sk = SKILL_BY_ID[id];
+    if (!sk) continue;
+    if (sk.slot === 'passive') continue;
+    out.push(sk);
+  }
+  return out;
+}
+
+// 모든 소유 스킬 (모디파이어용)
+function getOwnedAllSkills() {
+  if (typeof SKILL_BY_ID === 'undefined') return [];
+  const owned = state.ownedSkills || {};
+  const out = [];
+  for (const id of Object.keys(owned)) {
+    const sk = SKILL_BY_ID[id];
+    if (sk) out.push(sk);
+  }
+  return out;
+}
+
+// 융합 크래프트 - 두 스킬 조합 → 커스텀 주문 생성. name 자동 조합.
+function fuseCraftSpell(baseSkill, modSkill) {
+  _spellState();
+  if (!baseSkill || !modSkill) { showMsg('두 스킬을 선택해주세요.', 2); return null; }
+  if (baseSkill.id === modSkill.id) { showMsg('같은 스킬끼리는 융합할 수 없습니다.', 2); return null; }
+  const cost = nextFusionCost();
+  if ((state.research||0) < cost) { showMsg('연구가 부족합니다 (' + cost + ' RP)', 3); return null; }
+  const axes = fuseSkillsToAxes(baseSkill, modSkill);
+  state.research -= cost;
+  const name = _fusionName(baseSkill, modSkill);
+  const id = 'scf_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const spell = {
+    id, name,
+    element: axes.element, traj: axes.traj, trigger: axes.trigger, chant: axes.chant,
+    baseSkillId: baseSkill.id, modSkillId: modSkill.id,
+    fused: true,
+    createdAt: Date.now(),
+  };
+  state.customSpells.push(spell);
+  if (state.equippedSpell === null) state.equippedSpell = id;
+  if (typeof showAchievementBanner === 'function') showAchievementBanner('스킬 융합', spell.name, '#00ffcc');
+  if (typeof sfx === 'function') sfx('jackpot');
+  if (typeof saveAccountData === 'function') saveAccountData();
+  return spell;
+}
+
+// 융합 비용 - 조금 더 저렴 (창의성 장려)
+function nextFusionCost() {
+  _spellState();
+  return 200 + (state.customSpells.length * 300);
+}
+
+// 자동 이름 - 앞 스킬 접두어 + 뒤 스킬 접미어
+function _fusionName(base, mod) {
+  const bn = (base.name || '').split(/\s+/)[0];
+  const mn = (mod.name || '').split(/\s+/).pop();
+  return bn + '-' + mn;
+}
