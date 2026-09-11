@@ -7,9 +7,14 @@ const spellCraftUI = {
   tab: 'craft',        // 'craft' | 'fuse' | 'library'
   // craft 상태
   eIdx: 0, tIdx: 0, gIdx: 0, cIdx: 0,
-  cursor: 0,           // 0:element 1:traj 2:trigger 3:chant 4:name 5:craft
+  cursor: 0,           // 0:element 1:traj 2:trigger 3:chant 4:craft
   inputBuf: '',
   namingMode: false,
+  // 재료 하위 모드
+  ingredientMode: false,
+  ingCursor: 0,        // 재료 리스트 커서
+  ingScroll: 0,
+  ingredients: {},     // {id: count}
   // library
   libCursor: 0,
   // fusion
@@ -24,7 +29,9 @@ function openSpellCraft() {
   spellCraftUI.tab = 'craft';
   spellCraftUI.cursor = 0;
   spellCraftUI.namingMode = false;
+  spellCraftUI.ingredientMode = false;
   spellCraftUI.inputBuf = '';
+  spellCraftUI.ingredients = {};
   state.scene = 'spellCraft';
 }
 
@@ -40,14 +47,40 @@ function _spellCraftPreview() {
 function updateSpellCraft(dt) {
   if (spellCraftUI.msgT > 0) spellCraftUI.msgT -= dt;
 
+  // 재료 편집 모드
+  if (spellCraftUI.ingredientMode) {
+    const list = SPELL_INGREDIENTS;
+    if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; spellCraftUI.ingCursor = (spellCraftUI.ingCursor - 1 + list.length) % list.length; sfx('hit'); }
+    if (keys['KeyS'] || keys['ArrowDown']) { keys['KeyS']=false; keys['ArrowDown']=false; spellCraftUI.ingCursor = (spellCraftUI.ingCursor + 1) % list.length; sfx('hit'); }
+    const cur = list[spellCraftUI.ingCursor];
+    const step = (keys['ShiftLeft'] || keys['ShiftRight']) ? 10 : 1;
+    const bigStep = 50;
+    if (keys['KeyA'] || keys['ArrowLeft']) {
+      keys['KeyA']=false; keys['ArrowLeft']=false;
+      spellCraftUI.ingredients[cur.id] = Math.max(0, (spellCraftUI.ingredients[cur.id] || 0) - step);
+      sfx('hit');
+    }
+    if (keys['KeyD'] || keys['ArrowRight']) {
+      keys['KeyD']=false; keys['ArrowRight']=false;
+      spellCraftUI.ingredients[cur.id] = Math.min(500, (spellCraftUI.ingredients[cur.id] || 0) + step);
+      sfx('hit');
+    }
+    if (keys['KeyQ']) { keys['KeyQ']=false; spellCraftUI.ingredients[cur.id] = Math.max(0, (spellCraftUI.ingredients[cur.id] || 0) - bigStep); }
+    if (keys['KeyE']) { keys['KeyE']=false; spellCraftUI.ingredients[cur.id] = Math.min(500, (spellCraftUI.ingredients[cur.id] || 0) + bigStep); }
+    if (keys['KeyC']) { keys['KeyC']=false; spellCraftUI.ingredients = {}; spellCraftUI.msg = '재료 전부 제거'; spellCraftUI.msgT = 2; }
+    if (keys['Escape'] || keys['KeyR'] || keys['Tab']) { keys['Escape']=false; keys['KeyR']=false; keys['Tab']=false; spellCraftUI.ingredientMode = false; }
+    return;
+  }
+
   // 이름 입력 모드
   if (spellCraftUI.namingMode) {
     if (keys['Enter']) {
       keys['Enter'] = false;
       if (spellCraftUI.inputBuf.trim().length < 1) { spellCraftUI.msg = '1자 이상 입력'; spellCraftUI.msgT = 2; return; }
       const prev = _spellCraftPreview();
-      const sp = craftSpell(prev.element, prev.traj, prev.trigger, prev.chant, spellCraftUI.inputBuf.trim().slice(0, 20));
-      if (sp) { spellCraftUI.namingMode = false; spellCraftUI.inputBuf = ''; spellCraftUI.msg = '창조! [' + sp.name + ']'; spellCraftUI.msgT = 3; }
+      const sp = craftSpell(prev.element, prev.traj, prev.trigger, prev.chant, spellCraftUI.inputBuf.trim().slice(0, 20), spellCraftUI.ingredients);
+      if (sp) { spellCraftUI.namingMode = false; spellCraftUI.inputBuf = ''; spellCraftUI.ingredients = {}; spellCraftUI.msg = '창조! [' + sp.name + ']'; spellCraftUI.msgT = 3; }
+      else { spellCraftUI.namingMode = false; spellCraftUI.inputBuf = ''; }
       return;
     }
     if (keys['Backspace']) { keys['Backspace']=false; spellCraftUI.inputBuf = spellCraftUI.inputBuf.slice(0, -1); }
@@ -64,6 +97,8 @@ function updateSpellCraft(dt) {
   }
 
   if (spellCraftUI.tab === 'craft') {
+    // I 키로 재료 편집 모드 진입
+    if (keys['KeyI']) { keys['KeyI']=false; spellCraftUI.ingredientMode = true; return; }
     // WS 로 커서 이동 (5개: E/T/G/C/CRAFT)
     if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; spellCraftUI.cursor = (spellCraftUI.cursor - 1 + 5) % 5; sfx('hit'); }
     if (keys['KeyS'] || keys['ArrowDown']) { keys['KeyS']=false; keys['ArrowDown']=false; spellCraftUI.cursor = (spellCraftUI.cursor + 1) % 5; sfx('hit'); }
@@ -87,8 +122,8 @@ function updateSpellCraft(dt) {
           const nm = window.prompt('주문 이름 (2-20자):', '');
           if (nm && nm.trim().length >= 1) {
             const prev = _spellCraftPreview();
-            const sp = craftSpell(prev.element, prev.traj, prev.trigger, prev.chant, nm.trim().slice(0, 20));
-            if (sp) { spellCraftUI.msg = '창조! [' + sp.name + ']'; spellCraftUI.msgT = 3; }
+            const sp = craftSpell(prev.element, prev.traj, prev.trigger, prev.chant, nm.trim().slice(0, 20), spellCraftUI.ingredients);
+            if (sp) { spellCraftUI.ingredients = {}; spellCraftUI.msg = '창조! [' + sp.name + ']'; spellCraftUI.msgT = 3; }
           }
         } else {
           spellCraftUI.namingMode = true;
@@ -165,6 +200,54 @@ function renderSpellCraft() {
     drawText(tabs[i].name, tx + 4, 17, active ? '#ffefa8' : '#8a7ab5');
   }
 
+  // 재료 편집 오버레이
+  if (spellCraftUI.ingredientMode) {
+    ctx.fillStyle = 'rgba(0,0,0,0.9)'; ctx.fillRect(0, 0, W*PX, H*PX);
+    drawText('재료 물약 (Ingredients)', W/2 - textWidth('재료 물약 (Ingredients)', 2)/2, 6, '#ffefa8', 2);
+    drawText('WS 이동   AD ±1 (SHIFT ±10)   Q/E ±50   C 전체 제거   ESC/TAB 완료', W/2 - textWidth('WS 이동   AD ±1 (SHIFT ±10)   Q/E ±50   C 전체 제거   ESC/TAB 완료')/2, 22, '#8a7ab5');
+    // 리스트
+    const list = SPELL_INGREDIENTS;
+    const rowH = 10;
+    const visRows = 14;
+    const cursor = spellCraftUI.ingCursor;
+    const start = Math.max(0, Math.min(list.length - visRows, cursor - Math.floor(visRows/2)));
+    let totalIng = 0, totalCost = 0;
+    for (let i = 0; i < visRows; i++) {
+      const k = start + i;
+      if (k >= list.length) break;
+      const ing = list[k];
+      const cnt = spellCraftUI.ingredients[ing.id] || 0;
+      totalIng += cnt;
+      totalCost += cnt * INGREDIENT_UNIT_COST;
+      const y = 34 + i * rowH;
+      const isSel = k === cursor;
+      const unstable = cnt >= INGREDIENT_EXPLODE_AT;
+      if (isSel) pxDraw(4, y - 1, W - 8, rowH, unstable ? '#5a0020' : '#2a1548');
+      else if (unstable) pxDraw(4, y - 1, W - 8, rowH, '#3a0010');
+      const col = unstable ? '#ff2d80' : ing.color;
+      drawText(ing.name, 8, y, col);
+      drawText(String(cnt), 130, y, unstable ? '#ffff00' : '#e8d9b0');
+      // 진행 바
+      pxDraw(150, y + 2, 100, 4, '#1a0e2e');
+      const fill = Math.min(100, Math.floor(cnt / 3));   // 300 = 100 픽셀
+      pxDraw(150, y + 2, fill, 4, unstable ? '#ff2d80' : col);
+      // 300 표식
+      pxDraw(250, y, 1, 6, '#ffff00');
+      drawText(ing.desc, 8, y + 4, '#5a4a80');
+    }
+    // 총합 (전체 비용)
+    for (const k of Object.keys(spellCraftUI.ingredients)) {
+      const c = spellCraftUI.ingredients[k] || 0;
+      // already counted above? No - only visible rows counted. Recompute.
+    }
+    let tSum = 0, tCost = 0;
+    for (const k of Object.keys(spellCraftUI.ingredients)) { const c = spellCraftUI.ingredients[k] || 0; tSum += c; tCost += c * INGREDIENT_UNIT_COST; }
+    const unstableAny = unstableIngredients(spellCraftUI.ingredients);
+    const summaryCol = unstableAny.length ? '#ff2d80' : '#8bd8ff';
+    drawText('총 재료 개수: ' + tSum + '   추가 비용: ' + tCost + ' RP' + (unstableAny.length ? '   ★ 폭발 위험!' : ''), 8, H - 10, summaryCol);
+    return;
+  }
+
   if (spellCraftUI.namingMode) {
     ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0, 0, W*PX, H*PX);
     drawText('주문 이름 입력', W/2 - textWidth('주문 이름 입력', 2)/2, 55, '#ffefa8', 2);
@@ -204,9 +287,12 @@ function renderSpellCraft() {
     // 결과 미리보기 + 크래프트 버튼
     const y = 30 + 4 * 22;
     const isSel = spellCraftUI.cursor === 4;
-    const cost = nextSpellCraftCost();
+    const baseCost = nextSpellCraftCost();
+    const ingCost = ingredientCost(spellCraftUI.ingredients);
+    const cost = baseCost + ingCost;
     const preview = _spellCraftPreview();
     const st = computeSpellStats(preview);
+    _applyIngredientsToStats(st, spellCraftUI.ingredients);
     pxDraw(8, y, W - 16, 30, isSel ? '#2a1548' : '#1a0e2e');
     if (isSel) pxDraw(8, y, 2, 30, '#e8c547');
     drawText('예상 스탯:  DMG ' + Math.round(st.dmg) + '  ·  CD ' + st.cd.toFixed(2) + 's  ·  MP ' + st.cost, 14, y + 3, '#8bd8ff');
@@ -214,7 +300,25 @@ function renderSpellCraft() {
     const canAfford = (state.research||0) >= cost;
     drawText((isSel ? '▶ ' : '  ') + '[SPACE] 창조하기   (비용: ' + cost + ' RP  ·  보유: ' + Math.floor(state.research||0) + ')', 14, y + 21, canAfford ? '#3ac762' : '#c81616');
 
-    drawText('WS 축 선택   AD 값 변경   SPACE 창조', W/2 - textWidth('WS 축 선택   AD 값 변경   SPACE 창조')/2, H - 8, '#8a7ab5');
+    // 재료 요약 배너
+    const ingKeys = Object.keys(spellCraftUI.ingredients).filter(k => (spellCraftUI.ingredients[k]||0) > 0);
+    const bannerY = y + 32;
+    const bannerH = 12;
+    const unstable = unstableIngredients(spellCraftUI.ingredients);
+    const bannerCol = unstable.length ? '#ff2d80' : '#2a1548';
+    pxDraw(8, bannerY, W - 16, bannerH, bannerCol);
+    pxDraw(8, bannerY, 2, bannerH, unstable.length ? '#ffff00' : '#c86ade');
+    if (ingKeys.length === 0) {
+      drawText('[I] 재료 추가 (특수 효과 물약)', 14, bannerY + 3, '#c8b898');
+    } else {
+      const parts = ingKeys.slice(0, 4).map(k => (INGREDIENT_BY_ID[k]||{name:k}).name.replace(' 물약','') + ':' + spellCraftUI.ingredients[k]);
+      drawText('[I] 재료 ' + ingKeys.length + '종  ' + parts.join(' · ') + (ingKeys.length > 4 ? '...' : ''), 14, bannerY + 3, unstable.length ? '#ffff00' : '#c8b898');
+    }
+    if (unstable.length) {
+      drawText('★ 경고: 300+ 물약 → 시전 시 폭발!', W - textWidth('★ 경고: 300+ 물약 → 시전 시 폭발!') - 8, bannerY + 3, '#ffff00');
+    }
+
+    drawText('WS 축 선택   AD 값 변경   [I] 재료   SPACE 창조', W/2 - textWidth('WS 축 선택   AD 값 변경   [I] 재료   SPACE 창조')/2, H - 8, '#8a7ab5');
   } else if (spellCraftUI.tab === 'fuse') {
     const bases = getOwnedActiveSkills();
     const mods = getOwnedAllSkills();

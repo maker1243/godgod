@@ -37,6 +37,72 @@ const SPELL_CHANTS = [
   { id:'slow',     name:'심창', dmgMult:1.90, cdMult:2.20, costMult:2.00, castLabel:'느림 · 강력' },
 ];
 
+// =====================================================================
+// 물약 재료 (Ingredients) - 크래프트 시 넣어 특수 효과 부여.
+// 한 종류를 300 이상 넣으면 폭발 (크래프트 실패 + HP 감소).
+// 재료는 크래프트 시 RP 로 함께 구매됨 (개당 20 RP).
+// =====================================================================
+const INGREDIENT_UNIT_COST = 20;
+const INGREDIENT_EXPLODE_AT = 300;
+
+const SPELL_INGREDIENTS = [
+  { id:'atk',     name:'공격력 물약',   color:'#ff6666', desc:'+2% DMG per 물약' },
+  { id:'heal',    name:'생명 물약',     color:'#3ac762', desc:'시전 시 +1 HP per 물약 (최대 30/캐스트)' },
+  { id:'mp',      name:'마나 절약 물약',color:'#8bd8ff', desc:'MP 비용 -0.5% per 물약' },
+  { id:'speed',   name:'가속 물약',     color:'#ffefa8', desc:'투사체 속도 +1% per 물약' },
+  { id:'crit',    name:'크리티컬 물약', color:'#e8c547', desc:'+0.15% 크리티컬 확률 per 물약' },
+  { id:'pierce',  name:'관통 물약',     color:'#c86ade', desc:'+1 관통 per 50 물약' },
+  { id:'lifesteal',name:'흡혈 물약',    color:'#c81616', desc:'+0.15% 흡혈 per 물약' },
+  { id:'burn',    name:'화상 물약',     color:'#ff9c3d', desc:'적에게 화상 (+0.5% DoT per 물약)' },
+  { id:'freeze',  name:'냉동 물약',     color:'#5adcff', desc:'적을 냉동 (+0.02s per 물약)' },
+  { id:'stun',    name:'감전 물약',     color:'#ffff88', desc:'경직 확률 +0.1% per 물약' },
+  { id:'knock',   name:'넉백 물약',     color:'#a0a0a0', desc:'넉백 강도 +0.05 per 물약' },
+  { id:'multi',   name:'분열 물약',     color:'#ff2d80', desc:'추가 발사체 +1 per 100 물약' },
+  { id:'echo',    name:'메아리 물약',   color:'#c86ade', desc:'25% 확률로 즉시 재시전 (100 물약당 5%)' },
+  { id:'bounce',  name:'반사 물약',     color:'#8a5adc', desc:'벽 반사 횟수 +1 per 60 물약' },
+  { id:'shield', name:'수호 물약',      color:'#00c8ff', desc:'시전 시 0.3초 무적 (100 물약당 활성)' },
+];
+const INGREDIENT_BY_ID = Object.fromEntries(SPELL_INGREDIENTS.map(i => [i.id, i]));
+
+// 재료 총 비용 (RP)
+function ingredientCost(ing) {
+  let n = 0;
+  if (!ing) return 0;
+  for (const k of Object.keys(ing)) n += Math.max(0, Math.min(9999, ing[k] || 0));
+  return n * INGREDIENT_UNIT_COST;
+}
+
+// 폭발 위험 재료 목록
+function unstableIngredients(ing) {
+  const out = [];
+  if (!ing) return out;
+  for (const k of Object.keys(ing)) if ((ing[k] || 0) >= INGREDIENT_EXPLODE_AT) out.push(k);
+  return out;
+}
+
+// 재료가 적용된 스탯 계산
+function _applyIngredientsToStats(st, ing) {
+  if (!ing) return st;
+  const g = (k) => Math.max(0, Math.min(9999, ing[k] || 0));
+  st.dmg  *= (1 + g('atk') * 0.02);
+  st.cost = Math.max(1, Math.round(st.cost * (1 - g('mp') * 0.005)));
+  st.speed *= (1 + g('speed') * 0.01);
+  // 추가 필드 - castCustomSpell 에서 소비
+  st.critAdd     = g('crit') * 0.0015;
+  st.pierceAdd   = Math.floor(g('pierce') / 50);
+  st.lifestealAdd = g('lifesteal') * 0.0015;
+  st.burnDmg     = g('burn') * 0.005;
+  st.freezeAdd   = g('freeze') * 0.02;
+  st.stunChance  = g('stun') * 0.001;
+  st.knockAdd    = g('knock') * 0.05;
+  st.multiAdd    = Math.floor(g('multi') / 100);
+  st.echoChance  = g('echo') * 0.0005;
+  st.bounceAdd   = Math.floor(g('bounce') / 60);
+  st.shieldOnCast = g('shield') >= 100;
+  st.healPerCast  = Math.min(30, g('heal'));
+  return st;
+}
+
 // ID/이름으로 조회
 const SPELL_ELEMENT_BY_ID = Object.fromEntries(SPELL_ELEMENTS.map(e => [e.id, e]));
 const SPELL_TRAJ_BY_ID    = Object.fromEntries(SPELL_TRAJECTORIES.map(t => [t.id, t]));
@@ -64,14 +130,37 @@ function computeSpellStats(spell) {
   return { e, t, g, c, dmg, cd, cost, speed };
 }
 
-// 새 스펠 생성 (RP 비용). 이미 만든 개수에 따라 비용 증가.
-function craftSpell(element, traj, trigger, chant, name) {
+// 새 스펠 생성 (RP 비용). 이미 만든 개수에 따라 비용 증가. ingredients 부수 재료.
+function craftSpell(element, traj, trigger, chant, name, ingredients) {
   _spellState();
-  const cost = 300 + (state.customSpells.length * 500);
-  if ((state.research||0) < cost) { showMsg('연구가 부족합니다 (' + cost + ' RP)', 3); return null; }
-  state.research -= cost;
+  const baseCost = 300 + (state.customSpells.length * 500);
+  const ingCost = ingredientCost(ingredients);
+  const totalCost = baseCost + ingCost;
+  if ((state.research||0) < totalCost) { showMsg('연구가 부족합니다 (' + totalCost + ' RP)', 3); return null; }
+  // 폭발 체크 - 어떤 재료가 300 이상이면
+  const unstable = unstableIngredients(ingredients);
+  if (unstable.length > 0) {
+    state.research -= Math.floor(totalCost / 2);   // 절반은 소모
+    // 폭발 처리
+    if (typeof player !== 'undefined' && player) {
+      const damage = Math.floor(player.maxHp * 0.5);
+      player.hp = Math.max(1, player.hp - damage);
+      if (typeof spawnFloat === 'function') spawnFloat(player.x, player.y - 8, '-' + damage, '#ff2d80');
+    }
+    if (typeof state !== 'undefined') state.shake = 30;
+    if (typeof entities !== 'undefined' && entities.fx && player) {
+      entities.fx.push({ type:'ring', x: player.x, y: player.y, life: 0.7, max: 0.7, r0: 4, r1: 60, col: '#ff2d80' });
+    }
+    if (typeof sfx === 'function') sfx('bosskill');
+    const names = unstable.map(k => (INGREDIENT_BY_ID[k]||{name:k}).name).join(', ');
+    showMsg('★ 물약이 폭발했다! (' + names + ' >= 300) HP -50%', 6);
+    if (typeof showAchievementBanner === 'function') showAchievementBanner('불안정한 마법', names, '#ff2d80');
+    if (typeof saveAccountData === 'function') saveAccountData();
+    return null;
+  }
+  state.research -= totalCost;
   const id = 'sc_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-  const spell = { id, name: name || '무명 주문', element, traj, trigger, chant, createdAt: Date.now() };
+  const spell = { id, name: name || '무명 주문', element, traj, trigger, chant, ingredients: ingredients || {}, createdAt: Date.now() };
   state.customSpells.push(spell);
   // 첫 스펠은 자동 장착
   if (state.equippedSpell === null) state.equippedSpell = id;
@@ -129,8 +218,17 @@ function castCustomSpell(p, ang, slot) {
   const spell = getEquippedSpell(slot || 'lmb');
   if (!spell) return false;   // 폴백: 원래 슬롯 스킬
   const st = computeSpellStats(spell);
+  // 재료 특수 효과 적용
+  _applyIngredientsToStats(st, spell.ingredients || {});
   if (p.mp < st.cost) return false;
   p.mp -= st.cost;
+  // 재료: 시전 시 회복
+  if (st.healPerCast > 0) {
+    p.hp = Math.min(p.maxHp, p.hp + st.healPerCast);
+    if (typeof spawnFloat === 'function') spawnFloat(p.x, p.y - 8, '+' + st.healPerCast, '#3ac762');
+  }
+  // 재료: 시전 시 무적 (수호 물약 100+ 시)
+  if (st.shieldOnCast) p.invuln = Math.max(p.invuln || 0, 0.3);
   // 슬롯별 CD 저장 (충돌 방지)
   const cdKey = 'cs_' + (slot || 'lmb');
   p.cd[cdKey] = st.cd * (p.cdMult || 1);
@@ -140,8 +238,9 @@ function castCustomSpell(p, ang, slot) {
   const dmg = st.dmg * (p.baseDmg || 1);
   const traj = st.t; const trig = st.g; const el = st.e;
 
-  const count = traj.count || 1;
-  const spread = traj.spread || 0;
+  let count = traj.count || 1;
+  count += (st.multiAdd || 0);
+  const spread = traj.spread || (count > 1 ? 0.2 : 0);
 
   // 융합 주문은 spell.id 별 고유 비주얼 등록 & 사용
   const visKey = (spell.fused && typeof ensureFusionVisual === 'function') ? ensureFusionVisual(spell) : null;
@@ -161,8 +260,25 @@ function castCustomSpell(p, ang, slot) {
     if (traj.homing) b.homing = true;
     if (traj.spin)   { b._sc_spin = traj.spin; b._sc_t = 0; }
     if (traj.arc)    { b._sc_arc = traj.arc; }
+    // 재료: 관통 추가
+    const totalPierce = (trig.pierceLeft || 0) + (st.pierceAdd || 0);
+    if (totalPierce > 0) { b.pierce = true; b._pierceLeft = totalPierce; }
+    // 재료: 반사 추가
+    if (st.bounceAdd > 0) b.bounces = st.bounceAdd;
+    // 재료: 크리티컬 추가 (플레이어 crit 에 임시 부스트)
+    if (st.critAdd > 0) b._critBoost = st.critAdd;
+    // 재료: 흡혈
+    if (st.lifestealAdd > 0) b._lifesteal = (b._lifesteal || 0) + st.lifestealAdd;
+    // 재료: 화상
+    if (st.burnDmg > 0) { b._burn = 3; b._burnDmgRate = st.burnDmg; }
+    // 재료: 냉동
+    if (st.freezeAdd > 0) b.freeze = Math.max(b.freeze || 0, st.freezeAdd);
+    // 재료: 감전
+    if (st.stunChance > 0) b._stunChance = st.stunChance;
+    // 재료: 넉백
+    if (st.knockAdd > 0) b.knockback = (b.knockback || 0) + st.knockAdd;
     // 기폭
-    if (trig.pierceLeft) { b.pierce = true; b._pierceLeft = trig.pierceLeft; }
+    if (trig.pierceLeft) { /* already handled above */ }
     if (trig.chainLeft)  { b._chainLeft = trig.chainLeft; b._chainR = trig.chainR; }
     if (trig.delay)      { b._delayFuse = trig.delay; b._aoeR = trig.aoeR; }
     if (trig.ground)     { b._groundFuse = 0; b._groundDur = trig.ground; b._groundR = trig.groundR; }
@@ -173,6 +289,18 @@ function castCustomSpell(p, ang, slot) {
     if (spell.element === 'holy')    { b._lifesteal = 0.05; }
 
     entities.bullets.push(b);
+  }
+  // 재료: 메아리 - 확률적 즉시 재시전
+  if (st.echoChance > 0 && Math.random() < st.echoChance) {
+    // 무한 재귀 방지: 임시로 재료 없이 한 번만
+    const echo = Object.assign({}, spell, { ingredients: {} });
+    const bak = state.equippedSpells[slot || 'lmb'];
+    state.customSpells.push(echo);
+    state.equippedSpells[slot || 'lmb'] = echo.id;
+    try { castCustomSpell(p, ang, slot); } catch(_){}
+    // 정리
+    state.customSpells.pop();
+    state.equippedSpells[slot || 'lmb'] = bak;
   }
   // 삼관마도
   if (p.threecrown && typeof threecrownCastEffect === 'function') threecrownCastEffect(p, ang);

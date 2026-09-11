@@ -111,15 +111,19 @@ function activeTouchButtons() {
       // 액션
       btn(295, 170, 12, 'OK', 'Space'),
       btn(295, 145, 10, 'TAB', 'Tab'),
+      btn(295, 120, 10, 'SH', 'ShiftLeft'),
       btn(295, 22,  10, 'ESC', 'Escape'),
-      // 라이브러리 슬롯
-      btn(80,  175, 9, '1',  'Digit1'),
-      btn(102, 175, 9, '2',  'Digit2'),
-      btn(124, 175, 9, '3',  'Digit3'),
-      btn(150, 175, 9, 'X',  'KeyX'),
-      btn(172, 175, 9, 'Q',  'KeyQ'),
-      btn(200, 175, 10, '←', 'Backspace'),
-      btn(228, 175, 10, '⏎', 'Enter'),
+      // 라이브러리 슬롯 + 재료
+      btn(70,  175, 9, '1',  'Digit1'),
+      btn(90,  175, 9, '2',  'Digit2'),
+      btn(110, 175, 9, '3',  'Digit3'),
+      btn(130, 175, 9, 'I',  'KeyI'),
+      btn(150, 175, 9, 'Q',  'KeyQ'),
+      btn(170, 175, 9, 'E',  'KeyE'),
+      btn(190, 175, 9, 'X',  'KeyX'),
+      btn(212, 175, 9, 'C',  'KeyC'),
+      btn(232, 175, 10, '←', 'Backspace'),
+      btn(258, 175, 10, '⏎', 'Enter'),
     ];
   }
   if (sc === 'clan') {
