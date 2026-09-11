@@ -106,6 +106,7 @@ function _cipherFinish(correct) {
   if (correct) {
     state.research = (state.research || 0) + cipherQuest.rewardRp;
     state.cipherSolvedCount = (state.cipherSolvedCount || 0) + 1;
+    if (typeof repAdd === 'function') { repAdd('academy', 3); repAdd('noble', 1); }
     if (typeof statAdd === 'function') { statAdd('ciphersSolved', 1); statAdd('rpEarnedTotal', cipherQuest.rewardRp); }
     if (typeof weeklyAdd === 'function') weeklyAdd('weekly_ciphers', 1);
     if (typeof checkAchievements === 'function') checkAchievements();

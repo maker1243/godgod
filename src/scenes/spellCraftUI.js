@@ -115,7 +115,7 @@ function updateSpellCraft(dt) {
     if (!state.customSpells || state.customSpells.length === 0) return;
     if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; spellCraftUI.libCursor = (spellCraftUI.libCursor - 1 + state.customSpells.length) % state.customSpells.length; sfx('hit'); }
     if (keys['KeyS'] || keys['ArrowDown']) { keys['KeyS']=false; keys['ArrowDown']=false; spellCraftUI.libCursor = (spellCraftUI.libCursor + 1) % state.customSpells.length; sfx('hit'); }
-    if (keys['KeyE']) { keys['KeyE']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id); spellCraftUI.msg = '장착: ' + sp.name; spellCraftUI.msgT = 2; } }
+    if (keys['KeyE'] || keys['Space'] || keys['Enter']) { keys['KeyE']=false; keys['Space']=false; keys['Enter']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id); spellCraftUI.msg = '장착 완료: ' + sp.name; spellCraftUI.msgT = 2.5; if (typeof sfx === 'function') sfx('level'); } }
     if (keys['KeyX']) { keys['KeyX']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { deleteSpell(sp.id); spellCraftUI.libCursor = Math.max(0, spellCraftUI.libCursor - 1); spellCraftUI.msg = '삭제됨'; spellCraftUI.msgT = 2; } }
     if (keys['KeyQ']) { keys['KeyQ']=false; equipSpell(null); spellCraftUI.msg = '기본 화염구로 전환'; spellCraftUI.msgT = 2; }
   }
@@ -264,12 +264,15 @@ function renderSpellCraft() {
       return;
     }
     // 헤더
-    drawText('WS 이동   E 장착   X 삭제   Q 기본 화염구', 8, 30, '#8a7ab5');
+    drawText('WS 이동   [E/SPACE] 장착   X 삭제   Q 기본 화염구', 8, 30, '#8a7ab5');
+    // 현재 장착 표시
+    const eq = getEquippedSpell();
+    drawText(eq ? '현재 장착: ★ ' + eq.name : '현재 장착: (기본 화염구)', 8, 40, eq ? '#ff00ff' : '#8a7ab5');
     // 목록
     const rowH = 22;
     for (let i = 0; i < list.length; i++) {
       const sp = list[i];
-      const y = 45 + i * rowH;
+      const y = 55 + i * rowH;
       if (y > H - 20) break;
       const isSel = spellCraftUI.libCursor === i;
       const isEq  = state.equippedSpell === sp.id;

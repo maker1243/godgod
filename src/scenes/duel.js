@@ -448,6 +448,7 @@ function onRoundEnd(outcome) {
       const gold = Math.floor(80 * diffMult);
       state.gold += gold;
       academy.duelWins = (academy.duelWins || 0) + 1;
+      if (typeof repAdd === 'function') { repAdd('royal', 4); repAdd('noble', 2); }
     } else {
       // 패자: 패배 보너스 (골드 위주). GPA는 소량 감소.
       const gpaLoss = 0.05 * diffMult;

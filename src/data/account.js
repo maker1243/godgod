@@ -65,6 +65,7 @@ const state = {
   outerVisited: {},                // 외부 맵 랜드마크 방문 기록
   customSpells: [],                // 창조한 커스텀 주문 배열
   equippedSpell: null,             // 장착 중인 주문 id
+  faction: null,                   // {house, school, rep}
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -172,6 +173,7 @@ function loadAccountData() {
     if (d.outerVisited && typeof d.outerVisited === 'object' && typeof outerMap !== 'undefined') outerMap.visited = d.outerVisited;
     if (Array.isArray(d.customSpells)) state.customSpells = d.customSpells;
     if (typeof d.equippedSpell === 'string' || d.equippedSpell === null) state.equippedSpell = d.equippedSpell;
+    if (d.faction && typeof d.faction === 'object') state.faction = d.faction;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -243,6 +245,7 @@ function saveAccountData() {
     outerVisited: (typeof outerMap !== 'undefined' ? outerMap.visited : {}) || {},
     customSpells: state.customSpells || [],
     equippedSpell: state.equippedSpell || null,
+    faction: state.faction || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

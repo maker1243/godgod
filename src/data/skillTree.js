@@ -1021,6 +1021,19 @@ function canBuySkill(s) {
 
 // 시전
 function castSlot(p, slotName, ang) {
+  // 커스텀 주문 (융합/조합) 장착 시 LMB 슬롯을 오버라이드
+  if (slotName === 'lmb' && state.equippedSpell && typeof castCustomSpell === 'function') {
+    // CD 는 커스텀 주문 자체에서 관리 (p.cd.fire).
+    if ((p.cd.fire || 0) > 0) return false;
+    if (castCustomSpell(p, ang)) {
+      // 시전 링 이펙트
+      if (typeof entities !== 'undefined' && entities.fx) {
+        entities.fx.push({ type: 'castRing', x: p.x, y: p.y, life: 0.3, max: 0.3, r0: 4, r1: 14, col: '#ff00ff' });
+      }
+      return true;
+    }
+    // 실패 시 (MP 부족 등) 원래 슬롯 스킬로 폴백
+  }
   const skillId = p.slots[slotName];
   if (!skillId) return false;
   const s = SKILL_BY_ID[skillId];
