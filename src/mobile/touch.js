@@ -100,6 +100,76 @@ function activeTouchButtons() {
       btn(300, 22,  12, 'OK',  'Space'),
     ];
   }
+  // === 신규 씬들 - WSAD + SPACE + ESC + 필요시 특수 키 ===
+  if (sc === 'spellCraft') {
+    return [
+      // 방향 (좌하단 D-pad 유사)
+      btn(30,  145, 10, '↑', 'KeyW'),
+      btn(30,  175, 10, '↓', 'KeyS'),
+      btn(15,  160, 10, '◀', 'KeyA'),
+      btn(45,  160, 10, '▶', 'KeyD'),
+      // 액션
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 145, 10, 'TAB', 'Tab'),
+      btn(295, 22,  10, 'ESC', 'Escape'),
+      // 라이브러리 슬롯
+      btn(80,  175, 9, '1',  'Digit1'),
+      btn(102, 175, 9, '2',  'Digit2'),
+      btn(124, 175, 9, '3',  'Digit3'),
+      btn(150, 175, 9, 'X',  'KeyX'),
+      btn(172, 175, 9, 'Q',  'KeyQ'),
+      btn(200, 175, 10, '←', 'Backspace'),
+      btn(228, 175, 10, '⏎', 'Enter'),
+    ];
+  }
+  if (sc === 'clan') {
+    return [
+      btn(30,  145, 10, '↑', 'KeyW'),
+      btn(30,  175, 10, '↓', 'KeyS'),
+      btn(15,  160, 10, '◀', 'KeyA'),
+      btn(45,  160, 10, '▶', 'KeyD'),
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 22,  10, 'ESC', 'Escape'),
+      btn(80,  175, 9, 'C', 'KeyC'),
+      btn(102, 175, 9, 'D', 'KeyD'),
+      btn(124, 175, 9, 'X', 'KeyX'),
+      btn(150, 175, 9, '1', 'Digit1'),
+      btn(172, 175, 9, '2', 'Digit2'),
+      btn(194, 175, 9, '3', 'Digit3'),
+      btn(216, 175, 9, '4', 'Digit4'),
+      btn(238, 175, 9, '5', 'Digit5'),
+      btn(260, 175, 10, '⏎', 'Enter'),
+    ];
+  }
+  if (sc === 'faction') {
+    return [
+      btn(30,  145, 10, '↑', 'KeyW'),
+      btn(30,  175, 10, '↓', 'KeyS'),
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 22,  10, 'ESC', 'Escape'),
+    ];
+  }
+  if (sc === 'outerMap') {
+    // outerMap은 이동 + SPACE만 필요. 조이스틱은 showJoysticks 로 확장.
+    return [
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 145, 12, 'RUN', 'ShiftLeft'),
+      btn(20,  22,  10, 'ESC', 'Escape'),
+    ];
+  }
+  if (sc === 'principalRoom' || sc === 'elaraEnding' || sc === 'epilogue') {
+    return [
+      btn(30,  145, 10, '↑', 'KeyW'),
+      btn(30,  175, 10, '↓', 'KeyS'),
+      btn(15,  160, 10, '◀', 'KeyA'),
+      btn(45,  160, 10, '▶', 'KeyD'),
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 145, 10, 'F', 'KeyF'),
+      btn(295, 22,  10, 'ESC', 'Escape'),
+      btn(80,  175, 9, '1', 'Digit1'),
+      btn(102, 175, 9, '2', 'Digit2'),
+    ];
+  }
   return [];
 }
 
@@ -110,7 +180,8 @@ function showJoysticks() {
     state.scene === 'arenaWave' ||
     state.scene === 'arenaAI' ||
     state.scene === 'arenaRoom' ||
-    state.scene === 'academy'
+    state.scene === 'academy' ||
+    state.scene === 'outerMap'
   );
 }
 

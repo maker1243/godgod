@@ -64,7 +64,8 @@ const state = {
   clan: null,                      // {name, motto, xp, contribTotal}
   outerVisited: {},                // 외부 맵 랜드마크 방문 기록
   customSpells: [],                // 창조한 커스텀 주문 배열
-  equippedSpell: null,             // 장착 중인 주문 id
+  equippedSpell: null,             // (legacy) 장착 중인 주문 id - lmb 슬롯
+  equippedSpells: { lmb:null, q:null, e:null },   // 슬롯별 커스텀 주문 id
   faction: null,                   // {house, school, rep}
 };
 
@@ -173,6 +174,7 @@ function loadAccountData() {
     if (d.outerVisited && typeof d.outerVisited === 'object' && typeof outerMap !== 'undefined') outerMap.visited = d.outerVisited;
     if (Array.isArray(d.customSpells)) state.customSpells = d.customSpells;
     if (typeof d.equippedSpell === 'string' || d.equippedSpell === null) state.equippedSpell = d.equippedSpell;
+    if (d.equippedSpells && typeof d.equippedSpells === 'object') state.equippedSpells = Object.assign({lmb:null, q:null, e:null}, d.equippedSpells);
     if (d.faction && typeof d.faction === 'object') state.faction = d.faction;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
@@ -245,6 +247,7 @@ function saveAccountData() {
     outerVisited: (typeof outerMap !== 'undefined' ? outerMap.visited : {}) || {},
     customSpells: state.customSpells || [],
     equippedSpell: state.equippedSpell || null,
+    equippedSpells: state.equippedSpells || { lmb:null, q:null, e:null },
     faction: state.faction || null,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,

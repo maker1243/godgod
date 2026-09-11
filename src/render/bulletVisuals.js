@@ -481,12 +481,44 @@ const DEPT_VISUALS = {
 // BULLET_VISUALS 에 병합
 for (const k of Object.keys(DEPT_VISUALS)) BULLET_VISUALS[k] = DEPT_VISUALS[k];
 
-// 학과 visual 의 슬롯 변형: Q 는 파도 모션, E 는 나선 모션 (교수 보상 스킬용).
-// 원본 draw 는 그대로 재사용하고 move 만 붙임.
+// 학과 visual 의 슬롯 변형: 각 슬롯이 시각적으로 확실히 구분되도록 오버레이 추가.
+// LMB: 기본 draw (원본)
+// Q  : 하늘색 후광 + 파도 모션 + 얼음 파편 파티클
+// E  : 자주색 후광 + 확장 링 + 나선 모션 + 강한 파티클
 for (const k of Object.keys(DEPT_VISUALS)) {
   const base = DEPT_VISUALS[k];
-  BULLET_VISUALS[k + '_q'] = { draw: base.draw, move: _mWave };
-  BULLET_VISUALS[k + '_e'] = { draw: base.draw, move: _mSpiral };
+  BULLET_VISUALS[k + '_q'] = {
+    draw: (b, ang) => {
+      // Q 슬롯: 얼음 계열 후광 (하늘색)
+      const pulse = 0.4 + Math.sin(state.time * 4 + b.x) * 0.2;
+      ctx.globalAlpha = pulse * 0.5;
+      pxDraw(b.x - 5, b.y - 5, 10, 10, '#8bd8ff');
+      ctx.globalAlpha = 1;
+      base.draw(b, ang);
+      // 얼음 파편 파티클
+      if (Math.random() < 0.3) spawnParticle(b.x + rand(-2,2), b.y + rand(-2,2), '#ddf5ff', 0.3, 2, 30);
+    },
+    move: _mWave,
+  };
+  BULLET_VISUALS[k + '_e'] = {
+    draw: (b, ang) => {
+      // E 슬롯: 자주색 확장 링 + 강한 후광
+      const pulse = 0.5 + Math.sin(state.time * 6 + b.x) * 0.3;
+      ctx.globalAlpha = pulse * 0.55;
+      pxDraw(b.x - 6, b.y - 6, 12, 12, '#c86ade');
+      ctx.globalAlpha = 1;
+      // 회전 링
+      const t = state.time * 8;
+      for (let i = 0; i < 4; i++) {
+        const a = t + i * Math.PI / 2;
+        pxDraw(b.x + Math.cos(a) * 6 - 1, b.y + Math.sin(a) * 6 - 1, 2, 2, '#ff80ff');
+      }
+      base.draw(b, ang);
+      // 팬시 파티클
+      if (Math.random() < 0.5) spawnParticle(b.x + rand(-3,3), b.y + rand(-3,3), '#ffb8ff', 0.4, 2, 40);
+    },
+    move: _mSpiral,
+  };
 }
 
 // --- 스킬 이름 → visual 자동 매핑 ---
@@ -576,6 +608,11 @@ function _initAutoVisuals() {
   for (const cat of Object.keys(SKILL_TREE)) {
     for (const s of SKILL_TREE[cat].skills) {
       if (SKILL_VISUAL[s.id]) continue;
+      // 스킬이 자신의 visual 을 명시했으면 (교수 보상 등) 그것을 우선 사용
+      if (s.visual && typeof s.visual === 'string' && BULLET_VISUALS[s.visual]) {
+        SKILL_VISUAL[s.id] = s.visual;
+        continue;
+      }
       // 스킬 opts 의 kind 를 알 방법이 없으니 이름에서 유추
       const guessedKind = /ICE|FROST|GLACIER|CRYO|HAIL|SNOW|BLIZZARD/.test(s.name.toUpperCase()) ? 'ice' : 'fire';
       SKILL_VISUAL[s.id] = deriveVisualFromName(s.name, guessedKind);

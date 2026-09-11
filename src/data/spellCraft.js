@@ -46,6 +46,10 @@ const SPELL_CHANT_BY_ID   = Object.fromEntries(SPELL_CHANTS.map(c => [c.id, c]))
 function _spellState() {
   if (!state.customSpells) state.customSpells = [];
   if (typeof state.equippedSpell === 'undefined') state.equippedSpell = null;
+  // 새 다중 슬롯 저장소: {lmb, q, e}
+  if (!state.equippedSpells || typeof state.equippedSpells !== 'object') {
+    state.equippedSpells = { lmb: state.equippedSpell || null, q: null, e: null };
+  }
 }
 
 function computeSpellStats(spell) {
@@ -86,26 +90,51 @@ function deleteSpell(id) {
   if (typeof saveAccountData === 'function') saveAccountData();
 }
 
-function equipSpell(id) {
+// slot: 'lmb'|'q'|'e'. 미지정 시 lmb 로.
+function equipSpell(id, slot) {
   _spellState();
+  slot = slot || 'lmb';
   if (id && !state.customSpells.find(s => s.id === id)) return;
-  state.equippedSpell = id;
+  state.equippedSpells[slot] = id;
+  // 하위 호환: lmb 슬롯은 equippedSpell 도 갱신
+  if (slot === 'lmb') state.equippedSpell = id;
   if (typeof saveAccountData === 'function') saveAccountData();
 }
 
-function getEquippedSpell() {
+function getEquippedSpell(slot) {
   _spellState();
-  if (!state.equippedSpell) return null;
-  return state.customSpells.find(s => s.id === state.equippedSpell) || null;
+  slot = slot || 'lmb';
+  const id = state.equippedSpells[slot];
+  if (!id) return null;
+  return state.customSpells.find(s => s.id === id) || null;
 }
 
-// castCustomSpell - update.js 의 castFire 대신 호출됨 (equippedSpell 세팅 시)
-function castCustomSpell(p, ang) {
-  const spell = getEquippedSpell();
-  if (!spell) return false;   // 폴백: 원래 castFire
+// 스펠 id가 어느 슬롯에 장착됐는지 (0개 이상) — UI 표시용
+function equippedSlotsFor(id) {
+  _spellState();
+  const out = [];
+  for (const s of ['lmb', 'q', 'e']) if (state.equippedSpells[s] === id) out.push(s);
+  return out;
+}
+
+function unequipSlot(slot) {
+  _spellState();
+  state.equippedSpells[slot] = null;
+  if (slot === 'lmb') state.equippedSpell = null;
+  if (typeof saveAccountData === 'function') saveAccountData();
+}
+
+// castCustomSpell - 지정한 슬롯의 커스텀 주문을 시전. 실패 시 원래 슬롯 스킬로 폴백.
+function castCustomSpell(p, ang, slot) {
+  const spell = getEquippedSpell(slot || 'lmb');
+  if (!spell) return false;   // 폴백: 원래 슬롯 스킬
   const st = computeSpellStats(spell);
   if (p.mp < st.cost) return false;
   p.mp -= st.cost;
+  // 슬롯별 CD 저장 (충돌 방지)
+  const cdKey = 'cs_' + (slot || 'lmb');
+  p.cd[cdKey] = st.cd * (p.cdMult || 1);
+  // 하위 호환
   p.cd.fire = st.cd * (p.cdMult || 1);
 
   const dmg = st.dmg * (p.baseDmg || 1);

@@ -113,7 +113,24 @@ function updateClan(dt) {
 
   // main
   if (keys['Escape'] || keys['KeyR']) { keys['Escape']=false; keys['KeyR']=false; state.scene='academy'; return; }
-  if (keys['KeyC']) { keys['KeyC']=false; if (!state.clan) { clan.mode='create_name'; clan.inputBuf=''; } }
+  if (keys['KeyC']) {
+    keys['KeyC']=false;
+    if (!state.clan) {
+      const isTouch = (typeof touch !== 'undefined') && touch.enabled;
+      if (isTouch && typeof window !== 'undefined' && window.prompt) {
+        const nm = window.prompt('클랜 이름 (2-20자):', '');
+        if (nm && nm.trim().length >= 2) {
+          const mt = window.prompt('클랜 문장/모토 (2-40자, 선택):', '') || '';
+          state.clan = { xp:0, contribTotal:0, name: nm.trim().slice(0, 20), motto: mt.trim().slice(0, 40) };
+          showAchievementBanner('클랜 창설', state.clan.name, '#e8c547');
+          if (typeof sfx === 'function') sfx('jackpot');
+          if (typeof saveAccountData === 'function') saveAccountData();
+        }
+      } else {
+        clan.mode='create_name'; clan.inputBuf='';
+      }
+    }
+  }
   if (keys['KeyD']) { keys['KeyD']=false; if (state.clan) clan.mode='donate'; }
   if (keys['KeyX'] && state.clan) {
     keys['KeyX']=false;

@@ -199,6 +199,15 @@ for (const facKey of Object.keys(FACULTY_REWARD_SKILLS)) {
   for (const slot of Object.keys(set)) {
     const s = set[slot];
     s.category = cat;
+    // 슬롯별 고유 이펙트: visual 이 dept_* 이면 Q → _q, E → _e 자동 부여.
+    // (LMB 는 그대로, passive 는 무관)
+    if (s.visual && typeof s.visual === 'string' && s.visual.indexOf('dept_') === 0) {
+      const hasSuffix = /_(q|e)$/.test(s.visual);
+      if (!hasSuffix) {
+        if (slot === 'q') s.visual = s.visual + '_q';
+        else if (slot === 'e') s.visual = s.visual + '_e';
+      }
+    }
     if (typeof SKILL_TREE !== 'undefined' && SKILL_TREE[cat]) SKILL_TREE[cat].skills.push(s);
     if (typeof SKILL_BY_ID !== 'undefined') SKILL_BY_ID[s.id] = s;
   }

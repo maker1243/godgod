@@ -81,9 +81,19 @@ function updateSpellCraft(dt) {
     if (keys['Space'] || keys['Enter']) {
       keys['Space']=false; keys['Enter']=false;
       if (spellCraftUI.cursor === 4) {
-        // 창조 시도 → 이름 입력 모드
-        spellCraftUI.namingMode = true;
-        spellCraftUI.inputBuf = '';
+        // 모바일: 브라우저 prompt 로 즉시 입력. 데스크톱: 인라인 입력 모드.
+        const isTouch = (typeof touch !== 'undefined') && touch.enabled;
+        if (isTouch && typeof window !== 'undefined' && typeof window.prompt === 'function') {
+          const nm = window.prompt('주문 이름 (2-20자):', '');
+          if (nm && nm.trim().length >= 1) {
+            const prev = _spellCraftPreview();
+            const sp = craftSpell(prev.element, prev.traj, prev.trigger, prev.chant, nm.trim().slice(0, 20));
+            if (sp) { spellCraftUI.msg = '창조! [' + sp.name + ']'; spellCraftUI.msgT = 3; }
+          }
+        } else {
+          spellCraftUI.namingMode = true;
+          spellCraftUI.inputBuf = '';
+        }
       }
     }
   } else if (spellCraftUI.tab === 'fuse') {
@@ -115,9 +125,11 @@ function updateSpellCraft(dt) {
     if (!state.customSpells || state.customSpells.length === 0) return;
     if (keys['KeyW'] || keys['ArrowUp'])   { keys['KeyW']=false; keys['ArrowUp']=false; spellCraftUI.libCursor = (spellCraftUI.libCursor - 1 + state.customSpells.length) % state.customSpells.length; sfx('hit'); }
     if (keys['KeyS'] || keys['ArrowDown']) { keys['KeyS']=false; keys['ArrowDown']=false; spellCraftUI.libCursor = (spellCraftUI.libCursor + 1) % state.customSpells.length; sfx('hit'); }
-    if (keys['KeyE'] || keys['Space'] || keys['Enter']) { keys['KeyE']=false; keys['Space']=false; keys['Enter']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id); spellCraftUI.msg = '장착 완료: ' + sp.name; spellCraftUI.msgT = 2.5; if (typeof sfx === 'function') sfx('level'); } }
+    if (keys['Space'] || keys['Enter'] || keys['Digit1']) { keys['Space']=false; keys['Enter']=false; keys['Digit1']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id, 'lmb'); spellCraftUI.msg = 'LMB 장착: ' + sp.name; spellCraftUI.msgT = 2.5; if (typeof sfx === 'function') sfx('level'); } }
+    if (keys['Digit2']) { keys['Digit2']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id, 'q'); spellCraftUI.msg = 'Q 슬롯 장착: ' + sp.name; spellCraftUI.msgT = 2.5; if (typeof sfx === 'function') sfx('level'); } }
+    if (keys['Digit3']) { keys['Digit3']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { equipSpell(sp.id, 'e'); spellCraftUI.msg = 'E 슬롯 장착: ' + sp.name; spellCraftUI.msgT = 2.5; if (typeof sfx === 'function') sfx('level'); } }
     if (keys['KeyX']) { keys['KeyX']=false; const sp = state.customSpells[spellCraftUI.libCursor]; if (sp) { deleteSpell(sp.id); spellCraftUI.libCursor = Math.max(0, spellCraftUI.libCursor - 1); spellCraftUI.msg = '삭제됨'; spellCraftUI.msgT = 2; } }
-    if (keys['KeyQ']) { keys['KeyQ']=false; equipSpell(null); spellCraftUI.msg = '기본 화염구로 전환'; spellCraftUI.msgT = 2; }
+    if (keys['KeyQ']) { keys['KeyQ']=false; unequipSlot('lmb'); unequipSlot('q'); unequipSlot('e'); spellCraftUI.msg = '모든 슬롯 해제 (기본 스킬로 복원)'; spellCraftUI.msgT = 2.5; }
   }
 }
 
@@ -264,10 +276,19 @@ function renderSpellCraft() {
       return;
     }
     // 헤더
-    drawText('WS 이동   [E/SPACE] 장착   X 삭제   Q 기본 화염구', 8, 30, '#8a7ab5');
-    // 현재 장착 표시
-    const eq = getEquippedSpell();
-    drawText(eq ? '현재 장착: ★ ' + eq.name : '현재 장착: (기본 화염구)', 8, 40, eq ? '#ff00ff' : '#8a7ab5');
+    drawText('WS 이동   1:LMB · 2:Q · 3:E 슬롯 장착   X 삭제   Q 전체 해제', 8, 30, '#8a7ab5');
+    // 슬롯별 현재 장착
+    const slotColors = { lmb:'#ff00ff', q:'#8bd8ff', e:'#ff2d80' };
+    let hx = 8;
+    for (const slot of ['lmb', 'q', 'e']) {
+      const eq = getEquippedSpell(slot);
+      const label = slot.toUpperCase() + ':';
+      drawText(label, hx, 40, slotColors[slot]);
+      hx += textWidth(label) + 2;
+      const nm = eq ? '★ ' + eq.name : '(기본)';
+      drawText(nm, hx, 40, eq ? '#ffefa8' : '#5a4a80');
+      hx += textWidth(nm) + 8;
+    }
     // 목록
     const rowH = 22;
     for (let i = 0; i < list.length; i++) {
@@ -275,12 +296,14 @@ function renderSpellCraft() {
       const y = 55 + i * rowH;
       if (y > H - 20) break;
       const isSel = spellCraftUI.libCursor === i;
-      const isEq  = state.equippedSpell === sp.id;
+      const slots = (typeof equippedSlotsFor === 'function') ? equippedSlotsFor(sp.id) : [];
+      const isEq  = slots.length > 0;
       pxDraw(8, y, W - 16, rowH - 2, isSel ? '#2a1548' : '#1a0e2e');
       if (isSel) pxDraw(8, y, 2, rowH - 2, '#e8c547');
       const el = SPELL_ELEMENT_BY_ID[sp.element] || SPELL_ELEMENTS[0];
       const st = computeSpellStats(sp);
-      drawText((isEq ? '★ ' : '  ') + sp.name, 14, y + 2, isEq ? '#ffefa8' : el.color);
+      const slotTag = slots.length ? '[' + slots.map(s => s.toUpperCase()).join('|') + '] ' : '  ';
+      drawText(slotTag + sp.name, 14, y + 2, isEq ? '#ffefa8' : el.color);
       drawText(el.name + ' / ' + (SPELL_TRAJ_BY_ID[sp.traj]||{}).name + ' / ' + (SPELL_TRIGGER_BY_ID[sp.trigger]||{}).name + ' / ' + (SPELL_CHANT_BY_ID[sp.chant]||{}).name, 14, y + 11, '#c8b898');
       drawText('DMG ' + Math.round(st.dmg) + ' · CD ' + st.cd.toFixed(2) + 's · MP ' + st.cost, W - 130, y + 6, '#8bd8ff');
     }
