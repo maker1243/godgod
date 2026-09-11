@@ -165,34 +165,42 @@ const POTION_ORDER = ['heal','mana','swift','fury','guard'];
 // ---------- Academy ----------
 // 학원 허브: 문 4개 (던전/도서관/교실/아레나) + NPC들
 const academy = {
-  room: { x: 20, y: 30, w: 280, h: 150 },
+  // 방(월드) 크기 대폭 확장 - 카메라가 플레이어를 따라감.
+  room: { x: 20, y: 30, w: 900, h: 600 },
+  cam:  { x: 0, y: 0 },
   npcs: [
-    { x: 80,  y: 110, name: 'ELARA',   msgs: [
+    // 원본 위치는 좁은 방 시절 (80,110)/(220,100). 확장된 세계 배치:
+    { x: 200, y: 180, name: 'ELARA',   msgs: [
         'THE SEAL WEAKENED AGAIN LAST NIGHT.',
         'THE CORE HUMS BEHIND MY DREAMS.',
         'YOU LOOK STRONGER TODAY.',
         'MY FAMILY THINKS I STUDY POTIONS.',
         'ELARA: I TRUST YOU.',
       ], color: NPC_PAL, bond: 0 },
-    { x: 220, y: 100, name: 'MERCHANT', color: NPC_SHOP_PAL, shop: true },
+    { x: 700, y: 200, name: 'MERCHANT', color: NPC_SHOP_PAL, shop: true },
   ],
-  door:      { x: 268, y: 45,  w: 12, h: 18, kind: 'dungeon',   label: 'DUNGEON'  },
+  // 문 배치: 큰 월드 곳곳에 흩어지도록 재배치.
+  // 층 1 (상단, y=45): 진입 코어 - 던전/도서관/교실.
+  door:      { x: 850, y: 45,  w: 12, h: 18, kind: 'dungeon',   label: 'DUNGEON'  },
   libDoor:   { x: 42,  y: 45,  w: 12, h: 18, kind: 'library',   label: 'LIBRARY'  },
-  classDoor: { x: 140, y: 45,  w: 12, h: 18, kind: 'classroom', label: 'CLASS'    },
-  arenaDoor: { x: 268, y: 152, w: 12, h: 18, kind: 'arena',     label: 'ARENA'    },
-  extraDoor: { x: 42,  y: 152, w: 12, h: 18, kind: 'extra',     label: 'EXTRA'    },
-  extremeDoor:{x: 140, y: 152, w: 12, h: 18, kind: 'extreme',   label: 'EXTREME'  },
-  infernoDoor:{x: 204, y: 152, w: 12, h: 18, kind: 'inferno',   label: 'INFERNO'  },
-  cipherDoor:{ x: 200, y: 95,  w: 12, h: 18, kind: 'cipher',    label: 'CIPHER',    hidden:true },
-  profDoor:  { x: 88,  y: 95,  w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
-  trainDoor: { x: 160, y: 95,  w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
-  legacyDoor:{ x: 120, y: 60,  w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
-  customDoor:{ x: 180, y: 60,  w: 12, h: 18, kind: 'customize', label: 'STYLE'  },
-  clanDoor:  { x: 220, y: 60,  w: 12, h: 18, kind: 'clan',      label: 'CLAN'   },
-  spellDoor: { x: 100, y: 60,  w: 12, h: 18, kind: 'spellcraft', label: 'SPELL' },
-  factionDoor:{ x: 60, y: 60,  w: 12, h: 18, kind: 'faction',    label: 'HOUSE' },
-  exitDoor:  { x: 260, y: 60,  w: 12, h: 18, kind: 'exitworld', label: 'EXIT',  hidden:true },
-  principalDoor:{ x: 20, y: 60, w: 12, h: 18, kind: 'principal', label: 'PRIN', hidden:true },
+  classDoor: { x: 440, y: 45,  w: 12, h: 18, kind: 'classroom', label: 'CLASS'    },
+  // 층 2 (하단, y=610): 도전 시련 - 아레나/엑스트라/익스트림/인페르노
+  arenaDoor: { x: 850, y: 610, w: 12, h: 18, kind: 'arena',     label: 'ARENA'    },
+  extraDoor: { x: 42,  y: 610, w: 12, h: 18, kind: 'extra',     label: 'EXTRA'    },
+  extremeDoor:{x: 300, y: 610, w: 12, h: 18, kind: 'extreme',   label: 'EXTREME'  },
+  infernoDoor:{x: 580, y: 610, w: 12, h: 18, kind: 'inferno',   label: 'INFERNO'  },
+  // 층 3 (동쪽 벽): 이야기/훈련 - 사이퍼/교수/훈련장
+  cipherDoor:{ x: 750, y: 300, w: 12, h: 18, kind: 'cipher',    label: 'CIPHER',    hidden:true },
+  profDoor:  { x: 160, y: 300, w: 12, h: 18, kind: 'professor', label: 'PROF',      hidden:true },
+  trainDoor: { x: 450, y: 300, w: 12, h: 18, kind: 'training',  label: 'TRAIN'  },
+  // 층 4 (중앙 벨트, y=170): 성장 시스템 - 유산/스타일/클랜/스펠/가문
+  legacyDoor:{ x: 100, y: 170, w: 12, h: 18, kind: 'legacy',    label: 'LEGACY' },
+  customDoor:{ x: 500, y: 170, w: 12, h: 18, kind: 'customize', label: 'STYLE'  },
+  clanDoor:  { x: 620, y: 170, w: 12, h: 18, kind: 'clan',      label: 'CLAN'   },
+  spellDoor: { x: 300, y: 170, w: 12, h: 18, kind: 'spellcraft', label: 'SPELL' },
+  factionDoor:{ x: 800, y: 170, w: 12, h: 18, kind: 'faction',    label: 'HOUSE' },
+  exitDoor:  { x: 850, y: 460, w: 12, h: 18, kind: 'exitworld', label: 'EXIT',  hidden:true },
+  principalDoor:{ x: 42, y: 460, w: 12, h: 18, kind: 'principal', label: 'PRIN', hidden:true },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
   hotkeys: [null, null, null],  // 1,2,3 슬롯에 할당된 포션 종류
   bestArena: 0,
@@ -431,7 +439,9 @@ function updateAcademy(dt) {
   const len = Math.hypot(mx, my);
   if (len > 0) { mx /= len; my /= len; }
 
-  const spd = 55;
+  // 확장된 학원: 기본 이동 속도 증가 + SHIFT 로 스프린트
+  const sprint = (keys['ShiftLeft'] || keys['ShiftRight']) ? 2.0 : 1.0;
+  const spd = 80 * sprint;
   player.x += mx * spd * dt;
   player.y += my * spd * dt;
 
@@ -442,6 +452,13 @@ function updateAcademy(dt) {
   if (mx < 0) player.facing = -1;
   if (mx > 0) player.facing = 1;
   player.animT += dt * (len > 0 ? 6 : 2);
+
+  // 카메라 팔로우 - 플레이어를 화면 중앙에 배치, 월드 경계 clamp
+  const camTx = clamp(player.x - W/2, r.x - 4, r.x + r.w - W + 4);
+  const camTy = clamp(player.y - H/2, r.y - 30, r.y + r.h - H + 30);
+  // 부드러운 lerp
+  academy.cam.x += (camTx - academy.cam.x) * Math.min(1, dt * 8);
+  academy.cam.y += (camTy - academy.cam.y) * Math.min(1, dt * 8);
 
   // 상호작용
   if (keys['Space']) {

@@ -572,9 +572,11 @@ function goTo(scene) {
   if (scene === 'academy') {
     state.day++;
     player = createPlayer();
-    player.x = academy.room.x + 40;
-    player.y = academy.room.y + academy.room.h - 20;
+    // 학원 중앙 광장 근처로 스폰
+    player.x = academy.room.x + academy.room.w / 2;
+    player.y = academy.room.y + academy.room.h / 2;
     state.cam.x = 0; state.cam.y = 0;
+    if (academy.cam) { academy.cam.x = 0; academy.cam.y = 0; }
     if (state.gpa <= 0.5) {
       showMsg('EXPELLED - GAME OVER', 6);
     }

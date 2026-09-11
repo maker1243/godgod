@@ -184,37 +184,61 @@ function renderAcademy() {
     ctx.translate((Math.random() - 0.5) * q * PX, (Math.random() - 0.5) * q * PX);
     state._quakeApplied = true;
   }
-  // 배경 (창문 밖 노을)
+  // 배경 (창문 밖 노을) - 화면 고정
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H*PX);
   bgGrad.addColorStop(0, '#3a2050');
   bgGrad.addColorStop(0.5, '#8a4a70');
   bgGrad.addColorStop(1, '#c86840');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W*PX, 30*PX);
-  // 방 배경
   ctx.fillStyle = '#3a2a4a';
   ctx.fillRect(0, 30*PX, W*PX, (H-30)*PX);
-  // 방 바닥 격자
+
+  // === 여기부터 월드 좌표: 카메라 오프셋 적용 ===
+  const cam = academy.cam || { x: 0, y: 0 };
+  ctx.save();
+  ctx.translate(-cam.x * PX, -cam.y * PX);
+  const r = academy.room;
+
+  // 방 바닥 격자 - 카메라 뷰포트 안에만 그리기
   ctx.fillStyle = '#2a1a3a';
-  for (let x = 0; x < W; x += 16) {
-    for (let y = 30; y < H; y += 16) {
-      if (((x/16 + y/16) & 1) === 0) {
+  const gx0 = Math.max(r.x, Math.floor(cam.x / 16) * 16);
+  const gy0 = Math.max(r.y, Math.floor(cam.y / 16) * 16);
+  const gx1 = Math.min(r.x + r.w, cam.x + W + 16);
+  const gy1 = Math.min(r.y + r.h, cam.y + H + 16);
+  for (let x = gx0; x < gx1; x += 16) {
+    for (let y = gy0; y < gy1; y += 16) {
+      if (((Math.floor(x/16) + Math.floor(y/16)) & 1) === 0) {
         ctx.fillRect(x*PX, y*PX, 16*PX, 16*PX);
       }
     }
   }
-  // 방 벽
-  const r = academy.room;
+  // 방 벽 (외곽)
   ctx.fillStyle = '#1a0e2e';
   ctx.fillRect((r.x-4)*PX, (r.y-4)*PX, (r.w+8)*PX, 4*PX);
   ctx.fillRect((r.x-4)*PX, (r.y+r.h)*PX, (r.w+8)*PX, 4*PX);
   ctx.fillRect((r.x-4)*PX, r.y*PX, 4*PX, r.h*PX);
   ctx.fillRect((r.x+r.w)*PX, r.y*PX, 4*PX, r.h*PX);
-  // 벽돌 패턴
+  // 벽돌 패턴 (상단 벽)
   ctx.fillStyle = '#3a1e5c';
   for (let x = r.x; x < r.x + r.w; x += 12) {
     ctx.fillRect(x*PX, (r.y-2)*PX, 10*PX, PX);
   }
+  // 층 구분 벽 (중앙 벨트/문 층 시각화)
+  ctx.fillStyle = 'rgba(30, 18, 60, 0.55)';
+  ctx.fillRect(r.x*PX, 155*PX, r.w*PX, 2*PX);      // 문 벨트 위쪽 라인
+  ctx.fillRect(r.x*PX, 200*PX, r.w*PX, 2*PX);      // 벨트 아래
+  ctx.fillRect(r.x*PX, 285*PX, r.w*PX, 2*PX);
+  ctx.fillRect(r.x*PX, 335*PX, r.w*PX, 2*PX);
+  ctx.fillRect(r.x*PX, 595*PX, r.w*PX, 2*PX);
+  // 표지판 텍스트 (지역 이름)
+  ctx.globalAlpha = 0.5;
+  drawText('- 진입 코어 -',       r.x + 20,  50,  '#8a7ab5');
+  drawText('- 성장의 전당 -',     r.x + 20,  170, '#8a7ab5');
+  drawText('- 학문의 홀 -',       r.x + 20,  305, '#8a7ab5');
+  drawText('- 심연의 계단 -',     r.x + 20,  455, '#8a7ab5');
+  drawText('- 시련의 광장 -',     r.x + 20,  615, '#8a7ab5');
+  ctx.globalAlpha = 1;
 
   // NPC
   for (const n of academy.npcs) {
@@ -312,7 +336,10 @@ function renderAcademy() {
   // 플레이어
   drawPlayer(player.x, player.y, false);
 
-  // 학원 HUD
+  // === 월드 좌표 종료 ===
+  ctx.restore();
+
+  // 학원 HUD (화면 좌표)
   renderAcademyHUD();
   // 아침 이벤트: 상단 티커
   if (typeof drawMorningEventTicker === 'function') drawMorningEventTicker();
@@ -346,7 +373,62 @@ function renderAcademyHUD() {
   }
 
   // 하단 힌트
-  drawText('WASD MOVE  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX  [H] HELP', 4, H - 10, '#5a4a80');
+  drawText('WASD MOVE  [SHIFT] SPRINT  [SPACE] INTERACT  [C] DIFFICULTY  [X] CODEX  [H] HELP', 4, H - 10, '#5a4a80');
+  // 학원 미니맵 (우하단): 큰 월드 조망
+  if (typeof academy !== 'undefined' && academy.room) {
+    const r = academy.room;
+    const mmW = 78, mmH = 52, mmX = W - mmW - 4, mmY = H - mmH - 14;
+    pxDraw(mmX - 1, mmY - 1, mmW + 2, mmH + 2, '#000');
+    pxDraw(mmX, mmY, mmW, mmH, '#1a0e2e');
+    // 층 라인
+    const yScale = mmH / r.h, xScale = mmW / r.w;
+    // 문 점
+    const allDoors = [
+      { d: academy.door,       col:'#ff6666' },
+      { d: academy.libDoor,    col:'#8bd8ff' },
+      { d: academy.classDoor,  col:'#c8b898' },
+      { d: academy.arenaDoor,  col:'#e8c547' },
+      { d: academy.extraDoor,  col:'#c86ade' },
+      { d: academy.extremeDoor,col:'#ff2d2d' },
+      { d: academy.infernoDoor,col:'#ff00ff' },
+      { d: academy.trainDoor,  col:'#3ac762' },
+      { d: academy.legacyDoor, col:'#ffefa8' },
+      { d: academy.customDoor, col:'#c86ade' },
+      { d: academy.clanDoor,   col:'#ff9c3d' },
+      { d: academy.spellDoor,  col:'#c86ade' },
+      { d: academy.factionDoor,col:'#e8c547' },
+      { d: academy.cipherDoor, col:'#ff0000' },
+      { d: academy.profDoor,   col:'#00c8ff' },
+      { d: academy.exitDoor,   col:'#ff2d2d' },
+      { d: academy.principalDoor, col:'#e8c547' },
+    ];
+    for (const it of allDoors) {
+      if (!it.d || it.d.hidden) continue;
+      const dx = mmX + Math.floor((it.d.x - r.x) * xScale);
+      const dy = mmY + Math.floor((it.d.y - r.y) * yScale);
+      pxDraw(dx, dy, 1, 1, it.col);
+    }
+    // NPC
+    for (const n of (academy.npcs || [])) {
+      const nx = mmX + Math.floor((n.x - r.x) * xScale);
+      const ny = mmY + Math.floor((n.y - r.y) * yScale);
+      pxDraw(nx, ny, 1, 1, n.shop ? '#e8c547' : '#c8b898');
+    }
+    // 플레이어
+    const px = mmX + Math.floor((player.x - r.x) * xScale);
+    const py = mmY + Math.floor((player.y - r.y) * yScale);
+    pxDraw(px - 1, py - 1, 2, 2, '#ffefa8');
+    // 카메라 뷰포트 사각형
+    const cam = academy.cam || { x:0, y:0 };
+    const vx = mmX + Math.floor((cam.x - r.x) * xScale);
+    const vy = mmY + Math.floor((cam.y - r.y) * yScale);
+    const vw = Math.max(3, Math.floor(W * xScale));
+    const vh = Math.max(3, Math.floor(H * yScale));
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = PX;
+    ctx.strokeRect(vx*PX, vy*PX, vw*PX, vh*PX);
+    drawText('학원', mmX, mmY - 8, '#8a7ab5');
+  }
   // 활성 게임 모드 (상단 우측)
   if (typeof activeModeLabels === 'function') {
     const labels = activeModeLabels();
