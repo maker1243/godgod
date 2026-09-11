@@ -42,6 +42,8 @@ function updateEnding(dt) {
       state.gold = Math.floor(state.gold * 0.5);
       state.gpa = Math.max(0, state.gpa - 0.4);
     }
+    // 장비 내구도 마모 (사망/후퇴 포함, 클리어 시에도)
+    if (typeof wearEquipmentAfterRun === 'function') wearEquipmentAfterRun();
     goTo('academy');
   }
 }

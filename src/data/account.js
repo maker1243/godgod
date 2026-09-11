@@ -67,6 +67,11 @@ const state = {
   equippedSpell: null,             // (legacy) 장착 중인 주문 id - lmb 슬롯
   equippedSpells: { lmb:null, q:null, e:null },   // 슬롯별 커스텀 주문 id
   faction: null,                   // {house, school, rep}
+  equipment: null,                 // {staff:{dur,level}, robe:{dur,level}}
+  magicTools: {},                  // {toolId: count}
+  blackMarketVisited: false,       // 시장 방문 기록 (재접근 조건)
+  buffs: {},                       // 일회성 버프 (bossHpDown, duelBonus)
+  marketVoidBonus: 1,              // 마도구/정보로 얻은 영구 배율
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -176,6 +181,11 @@ function loadAccountData() {
     if (typeof d.equippedSpell === 'string' || d.equippedSpell === null) state.equippedSpell = d.equippedSpell;
     if (d.equippedSpells && typeof d.equippedSpells === 'object') state.equippedSpells = Object.assign({lmb:null, q:null, e:null}, d.equippedSpells);
     if (d.faction && typeof d.faction === 'object') state.faction = d.faction;
+    if (d.equipment && typeof d.equipment === 'object') state.equipment = d.equipment;
+    if (d.magicTools && typeof d.magicTools === 'object') state.magicTools = d.magicTools;
+    if (typeof d.blackMarketVisited === 'boolean') state.blackMarketVisited = d.blackMarketVisited;
+    if (d.buffs && typeof d.buffs === 'object') state.buffs = d.buffs;
+    if (typeof d.marketVoidBonus === 'number') state.marketVoidBonus = d.marketVoidBonus;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -249,6 +259,11 @@ function saveAccountData() {
     equippedSpell: state.equippedSpell || null,
     equippedSpells: state.equippedSpells || { lmb:null, q:null, e:null },
     faction: state.faction || null,
+    equipment: state.equipment || null,
+    magicTools: state.magicTools || {},
+    blackMarketVisited: !!state.blackMarketVisited,
+    buffs: state.buffs || {},
+    marketVoidBonus: state.marketVoidBonus || 1,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

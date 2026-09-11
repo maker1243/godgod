@@ -500,6 +500,13 @@ function spawnBoss(room) {
   boss.hitFlash = 0; boss.freeze = 0; boss.slow = 0; boss.stun = 0;
   boss.isBoss = true;
   boss.attackCd = boss.attackCd || 2;
+  // 정보 브로커 버프: 교수 약점 자료 (1회용, 보스 HP -20%)
+  if (state.buffs && state.buffs.bossHpDown) {
+    boss.hp = Math.max(1, Math.floor(boss.hp * 0.8));
+    boss.maxHp = boss.hp;
+    state.buffs.bossHpDown = 0;
+    if (typeof showMsg === 'function') showMsg('★ 정보 활용: 보스 HP -20%', 3);
+  }
   entities.enemies.push(boss);
   sfx('boss');
 }

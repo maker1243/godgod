@@ -153,6 +153,20 @@ function activeTouchButtons() {
       btn(295, 22,  10, 'ESC', 'Escape'),
     ];
   }
+  if (sc === 'blackMarket') {
+    return [
+      btn(30,  145, 10, '↑', 'KeyW'),
+      btn(30,  175, 10, '↓', 'KeyS'),
+      btn(295, 170, 12, 'OK', 'Space'),
+      btn(295, 145, 10, 'TAB','Tab'),
+      btn(295, 22,  10, 'ESC','Escape'),
+      btn(80,  175, 9, '1', 'Digit1'),
+      btn(102, 175, 9, '2', 'Digit2'),
+      btn(124, 175, 9, '3', 'Digit3'),
+      btn(150, 175, 9, 'F', 'KeyF'),
+      btn(172, 175, 9, 'U', 'KeyU'),
+    ];
+  }
   if (sc === 'outerMap') {
     // outerMap은 이동 + SPACE만 필요. 조이스틱은 showJoysticks 로 확장.
     return [
