@@ -73,15 +73,64 @@ function isProfBeaten(key) {
   return !!(b[key + '_a'] || b[key + '_b'] || b[key]);
 }
 
-// 지하 랜덤 이벤트 - 30초마다.
+// 지하 랜덤 이벤트 - 20~40초마다 발동. 종류: buff/loot/hazard/encounter/story/environmental.
 const UNDER_EVENTS = [
-  { title:'유령의 노래',   life:20, effect:(p)=>{ p.mp = Math.min(p.maxMp, p.mp + 30); return '+30 MP'; } },
-  { title:'옛 마도사의 축복', life:20, effect:(p)=>{ p.hp = Math.min(p.maxHp, p.hp + 40); return '+40 HP'; } },
-  { title:'잊혀진 금고',   life:15, effect:(p)=>{ state.gold = (state.gold||0) + 50; return '+50 G'; } },
-  { title:'금서 조각',     life:15, effect:(p)=>{ state.research = (state.research||0) + 200; return '+200 RP'; } },
-  { title:'봉인의 반향',   life:12, effect:(p)=>{ p.baseDmg *= 1.05; return 'DMG +5%'; } },
-  { title:'저주받은 지반', life:10, effect:(p)=>{ p.hp = Math.max(1, p.hp - 20); return '-20 HP' } },
-  { title:'폐허의 기계',   life:15, effect:(p)=>{ p.speed = (p.speed||100) * 1.10; return 'SPD +10%'; } },
+  // === 회복/버프 (긍정) ===
+  { title:'유령의 노래',       life:20, kind:'buff',   effect:(p)=>{ p.mp = Math.min(p.maxMp, p.mp + 30); return '+30 MP'; } },
+  { title:'옛 마도사의 축복', life:20, kind:'buff',   effect:(p)=>{ p.hp = Math.min(p.maxHp, p.hp + 40); return '+40 HP'; } },
+  { title:'봉인의 반향',       life:12, kind:'buff',   effect:(p)=>{ p.baseDmg *= 1.05; return 'DMG +5%'; } },
+  { title:'폐허의 기계',       life:15, kind:'buff',   effect:(p)=>{ p.speed = (p.speed||100) * 1.10; return 'SPD +10%'; } },
+  { title:'천장의 촛불',       life:18, kind:'buff',   effect:(p)=>{ p.critAdd = (p.critAdd||0) + 0.05; return '크리 +5%'; } },
+  { title:'수맥의 활력',       life:25, kind:'buff',   effect:(p)=>{ p.maxHp += 30; p.hp += 30; return '최대 HP +30'; } },
+  { title:'박쥐의 감각',       life:15, kind:'buff',   effect:(p)=>{ p.dodge = (p.dodge||0) + 0.08; return '회피 +8%'; } },
+  { title:'선조의 지혜',       life:20, kind:'buff',   effect:(p)=>{ p.cdMult = (p.cdMult||1) * 0.90; return 'CD -10%'; } },
+  { title:'봉인 사슬',         life:15, kind:'buff',   effect:(p)=>{ p.pierceAdd = (p.pierceAdd||0) + 1; return '관통 +1'; } },
+
+  // === 획득 (자원) ===
+  { title:'잊혀진 금고',       life:15, kind:'loot',   effect:(p)=>{ state.gold = (state.gold||0) + 50; return '+50 G'; } },
+  { title:'금서 조각',         life:15, kind:'loot',   effect:(p)=>{ state.research = (state.research||0) + 200; return '+200 RP'; } },
+  { title:'거대 금고 발견',    life:10, kind:'loot',   effect:(p)=>{ const g = 200 + Math.floor(Math.random()*300); state.gold = (state.gold||0) + g; return '+' + g + ' G'; } },
+  { title:'교수의 유품',       life:12, kind:'loot',   effect:(p)=>{ const rp = 500 + Math.floor(Math.random()*1500); state.research = (state.research||0) + rp; return '+' + rp + ' RP'; } },
+  { title:'봉인의 부적',       life:12, kind:'loot',   effect:(p)=>{ if (typeof _ensureArtifactsState==='function') _ensureArtifactsState(); if (state.artifacts && typeof ARTIFACT_DEFS!=='undefined' && ARTIFACT_DEFS.length && Math.random()<0.3) { const pick = ARTIFACT_DEFS[Math.floor(Math.random()*ARTIFACT_DEFS.length)]; if (!state.artifacts.owned[pick.id]) { state.artifacts.owned[pick.id] = true; return '아티팩트 ' + pick.name + '!'; } } return '아무것도 없음'; } },
+  { title:'풀리지 않은 룬',    life:15, kind:'loot',   effect:(p)=>{ if (typeof unlockStoryFragment==='function') { const pool = ['wanderer_evt','mirror_evt','timetraveler_evt','renn_bond','elara_true','chronoheart']; const pick = pool[Math.floor(Math.random()*pool.length)]; unlockStoryFragment(pick); return '스토리 조각'; } return '+300 RP'; } },
+  { title:'포션 상자',         life:10, kind:'loot',   effect:(p)=>{ academy.inventory.heal = (academy.inventory.heal||0) + 2; academy.inventory.mana = (academy.inventory.mana||0) + 2; if (typeof recomputeHotkeys==='function') recomputeHotkeys(); return '힐 +2, 마나 +2'; } },
+
+  // === 위험 (부정) ===
+  { title:'저주받은 지반',     life:10, kind:'hazard', effect:(p)=>{ p.hp = Math.max(1, p.hp - 20); return '-20 HP'; } },
+  { title:'가스 누출',         life:15, kind:'hazard', effect:(p)=>{ p.hp = Math.max(1, p.hp - Math.floor(p.maxHp * 0.15)); return '-15% HP (독)'; } },
+  { title:'중력 왜곡',         life:15, kind:'hazard', effect:(p)=>{ p.speed = (p.speed||100) * 0.7; return 'SPD -30%'; } },
+  { title:'마력 봉쇄',         life:12, kind:'hazard', effect:(p)=>{ p.mp = 0; return 'MP 전부 소진'; } },
+  { title:'저주 인장',         life:20, kind:'hazard', effect:(p)=>{ p.baseDmg *= 0.85; return 'DMG -15% (한 방문)'; } },
+  { title:'실체 없는 손',      life:12, kind:'hazard', effect:(p)=>{ const g = Math.min(100, Math.floor((state.gold||0) * 0.05)); state.gold = Math.max(0, (state.gold||0) - g); return '-' + g + ' G (도둑맞음)'; } },
+
+  // === 조우 (몹 스폰) ===
+  { title:'유령 무리 등장!',   life:8,  kind:'encounter', effect:(p)=>{ for (let i = 0; i < 4; i++) _spawnUnderEnemy(); return '유령 4마리 스폰'; } },
+  { title:'그림자 왕의 방문',  life:6,  kind:'encounter', effect:(p)=>{ for (let i = 0; i < 2; i++) { _spawnUnderEnemy(); const e = underground.enemies[underground.enemies.length-1]; if (e) { e.hp *= 4; e.dmg *= 2; e.r = 8; e.kind = 'shadow_king'; } } return '그림자 왕 2마리'; } },
+  { title:'교수의 잔영',       life:8,  kind:'encounter', effect:(p)=>{ for (let i = 0; i < 3; i++) { _spawnUnderEnemy(); const e = underground.enemies[underground.enemies.length-1]; if (e) { e.hp *= 2; e.dmg = Math.floor(e.dmg * 1.5); e.kind = 'prof_echo'; } } return '교수의 잔영 3마리'; } },
+
+  // === 환경 / 지형 ===
+  { title:'천장 균열',         life:25, kind:'env',    effect:(p)=>{ underground.rainStones = performance.now() + 25000; return '25초간 낙석 위험'; } },
+  { title:'푸른 안개',         life:20, kind:'env',    effect:(p)=>{ underground.foggy = performance.now() + 20000; return '시야 감소'; } },
+  { title:'포털 발견',         life:8,  kind:'env',    effect:(p)=>{ const rm = PROF_ROOMS.filter(r => isProfBeaten(r.key)); if (rm.length) { const t = rm[Math.floor(Math.random()*rm.length)]; underground.playerX = t.x; underground.playerY = t.y - 30; return '순간이동!'; } return '포털이 사라졌다'; } },
+  { title:'빛의 웅덩이',       life:15, kind:'env',    effect:(p)=>{ p.hp = p.maxHp; p.mp = p.maxMp; return '완전 회복'; } },
+  { title:'시간 왜곡',         life:15, kind:'env',    effect:(p)=>{ underground.spawnT += 20; return '20초간 몹 스폰 정지'; } },
+
+  // === 스토리 / 특수 ===
+  { title:'엘라라의 속삭임',   life:12, kind:'story',  effect:(p)=>{ if (typeof unlockStoryFragment==='function') unlockStoryFragment('elara_true'); return '엘라라의 진짜 이름'; } },
+  { title:'교장의 유령',       life:12, kind:'story',  effect:(p)=>{ if (typeof unlockStoryFragment==='function') unlockStoryFragment('principal'); state.research = (state.research||0) + 1000; return '+1000 RP + 조각'; } },
+  { title:'봉인의 심장',       life:15, kind:'story',  effect:(p)=>{ if (typeof unlockStoryFragment==='function') unlockStoryFragment('chronoheart'); if (typeof repAdd==='function') repAdd('underground', 5); return '뒷골목 +5'; } },
+  { title:'시간의 방랑자',     life:12, kind:'story',  effect:(p)=>{ if (typeof unlockStoryFragment==='function') unlockStoryFragment('timetraveler_evt'); return '시간 여행자와 조우'; } },
+
+  // === 도박 (양날의 검) ===
+  { title:'금화 세 개',        life:10, kind:'gamble', effect:(p)=>{ const r = Math.random(); if (r < 0.3) { state.gold = (state.gold||0) + 1000; return '대박! +1000 G'; } if (r < 0.7) { state.gold = (state.gold||0) + 100; return '보통. +100 G'; } state.gold = Math.max(0, (state.gold||0) - 200); return '실패. -200 G'; } },
+  { title:'저주받은 서약',     life:12, kind:'gamble', effect:(p)=>{ p.baseDmg *= 1.25; p.maxHp = Math.floor(p.maxHp * 0.8); p.hp = Math.min(p.hp, p.maxHp); return 'DMG +25%, 최대 HP -20%'; } },
+  { title:'악마의 계약',       life:12, kind:'gamble', effect:(p)=>{ state.gold = (state.gold||0) + 500; p.hp = Math.max(1, p.hp - 30); return '+500 G · -30 HP'; } },
+  { title:'행운의 룬',         life:15, kind:'gamble', effect:(p)=>{ const rp = Math.random() < 0.5 ? 500 : -200; state.research = Math.max(0, (state.research||0) + rp); return (rp > 0 ? '+' : '') + rp + ' RP'; } },
+
+  // === 평판 / 소셜 ===
+  { title:'뒷골목 접선',       life:10, kind:'rep',    effect:(p)=>{ if (typeof repAdd==='function') { repAdd('underground', 8); repAdd('academy', -3); } return '뒷골목 +8, 학원 -3'; } },
+  { title:'학원 첩자',         life:10, kind:'rep',    effect:(p)=>{ if (typeof repAdd==='function') { repAdd('academy', 6); repAdd('underground', -4); } state.gold = (state.gold||0) + 200; return '학원 +6, 뒷골목 -4, +200 G'; } },
+  { title:'방랑자의 지도',     life:10, kind:'rep',    effect:(p)=>{ if (typeof repAdd==='function') repAdd('wanderer', 10); return '방랑자 +10'; } },
 ];
 
 function _spawnUnderEnemy() {
@@ -186,19 +235,38 @@ function updateUnderground(dt) {
     if (e.hp <= 0) underground.enemies.splice(i, 1);
   }
 
-  // 랜덤 이벤트 (30초마다)
+  // 랜덤 이벤트 (20~40초마다). 여러 이벤트가 겹칠 수 있도록 큐잉.
+  if (!underground.eventQueue) underground.eventQueue = [];
   underground.eventT -= dt;
-  if (underground.eventT <= 0 && !underground.activeEvent) {
+  if (underground.eventT <= 0) {
     const ev = UNDER_EVENTS[Math.floor(Math.random() * UNDER_EVENTS.length)];
-    const result = ev.effect(player);
-    underground.activeEvent = { title: ev.title, result, life: ev.life, max: ev.life };
-    underground.eventT = 30 + Math.random() * 15;
-    if (typeof sfx === 'function') sfx('level');
+    let result;
+    try { result = ev.effect(player); } catch(e) { result = '(효과 실패)'; }
+    const eventCol = { buff:'#3ac762', loot:'#e8c547', hazard:'#c81616', encounter:'#ff2d80', env:'#8bd8ff', story:'#c86ade', gamble:'#ff9c3d', rep:'#ffefa8' }[ev.kind] || '#e8c547';
+    underground.eventQueue.push({ title: ev.title, result, life: ev.life, max: ev.life, col: eventCol, kind: ev.kind });
+    // 최대 3개까지만 유지
+    if (underground.eventQueue.length > 3) underground.eventQueue.shift();
+    underground.eventT = 20 + Math.random() * 20;
+    if (typeof sfx === 'function') sfx(ev.kind === 'hazard' ? 'hurt' : ev.kind === 'gamble' ? 'jackpot' : 'level');
+    if (ev.kind === 'story' && typeof showAchievementBanner === 'function') showAchievementBanner('지하의 발견', ev.title, eventCol);
   }
-  if (underground.activeEvent) {
-    underground.activeEvent.life -= dt;
-    if (underground.activeEvent.life <= 0) underground.activeEvent = null;
+  // 이벤트 큐 tick
+  for (let i = underground.eventQueue.length - 1; i >= 0; i--) {
+    underground.eventQueue[i].life -= dt;
+    if (underground.eventQueue[i].life <= 0) underground.eventQueue.splice(i, 1);
   }
+  // 환경 효과 tick
+  const now = performance.now();
+  if (underground.rainStones && now < underground.rainStones) {
+    // 5% 초당 낙석 = 낙석 발생 확률
+    if (Math.random() < 0.05 * dt * 20) {
+      const dmg = 15 + Math.floor(Math.random() * 25);
+      if (player) { player.hp = Math.max(1, player.hp - dmg); }
+      if (typeof spawnFloat === 'function') spawnFloat(underground.playerX, underground.playerY - 8, '-' + dmg + ' 낙석', '#c81616');
+    }
+  }
+  if (underground.rainStones && now >= underground.rainStones) underground.rainStones = 0;
+  if (underground.foggy && now >= underground.foggy) underground.foggy = 0;
 
   if (keys['Escape'] || keys['KeyR']) {
     keys['Escape']=false; keys['KeyR']=false;
@@ -323,15 +391,42 @@ function renderUnderground() {
   ctx.lineWidth = PX;
   ctx.strokeRect(vx*PX, vy*PX, vw*PX, vh*PX);
 
-  // 활성 이벤트 배너
-  if (underground.activeEvent) {
-    const ev = underground.activeEvent;
-    const boxW = 200, bx = W/2 - boxW/2, by = 26;
-    pxDraw(bx, by, boxW, 20, '#1a0e2e');
-    pxDraw(bx, by, boxW, 1, '#e8c547');
-    pxDraw(bx, by + 19, boxW, 1, '#e8c547');
-    drawText('◈ ' + ev.title, bx + 6, by + 3, '#e8c547');
+  // 이벤트 큐 (좌하단에서 위로 스택 - 최근이 위)
+  const queue = underground.eventQueue || [];
+  const boxW = 180, boxH = 20;
+  for (let i = 0; i < Math.min(3, queue.length); i++) {
+    const ev = queue[queue.length - 1 - i];
+    if (!ev) continue;
+    const bx = 4, by = H - 44 - i * (boxH + 2);
+    const fadeIn = ev.life > ev.max - 0.4 ? (ev.max - ev.life) / 0.4 : 1;
+    const fadeOut = ev.life < 0.6 ? (ev.life / 0.6) : 1;
+    ctx.globalAlpha = Math.min(1, Math.min(fadeIn, fadeOut));
+    pxDraw(bx, by, boxW, boxH, '#1a0e2e');
+    pxDraw(bx, by, boxW, 1, ev.col);
+    pxDraw(bx, by + boxH - 1, boxW, 1, ev.col);
+    drawText('◈ ' + ev.title, bx + 6, by + 3, ev.col);
     drawText(ev.result + '  (' + ev.life.toFixed(1) + 's)', bx + 6, by + 12, '#ffefa8');
+    ctx.globalAlpha = 1;
+  }
+
+  // 환경 효과 오버레이 (푸른 안개, 낙석 경고)
+  if (underground.foggy && performance.now() < underground.foggy) {
+    ctx.fillStyle = 'rgba(140, 220, 255, 0.18)';
+    ctx.fillRect(0, 0, W*PX, H*PX);
+    // 안개 파티클
+    for (let i = 0; i < 4; i++) {
+      const x = (state.time * 20 + i * 100) % (W + 60) - 30;
+      const y = 30 + (i * 40) % (H - 60);
+      ctx.fillStyle = 'rgba(200, 240, 255, 0.15)';
+      ctx.fillRect(x*PX, y*PX, 40*PX, 20*PX);
+    }
+  }
+  if (underground.rainStones && performance.now() < underground.rainStones) {
+    // 상단에 붉은 경고
+    const t = state.time * 4;
+    ctx.fillStyle = 'rgba(200, 22, 22, ' + (0.15 + Math.sin(t) * 0.10) + ')';
+    ctx.fillRect(0, 12*PX, W*PX, 6*PX);
+    drawText('★ 낙석 경고 ★', W/2 - textWidth('★ 낙석 경고 ★')/2, 14, '#ffff00');
   }
 
   // 메시지
