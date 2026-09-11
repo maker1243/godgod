@@ -576,12 +576,18 @@ function updateDungeon(dt) {
   // 시련 모드: 단계별 타이머. 시간 초과 시 추방.
   if (state.dungeonMode === 'trial' && state.dungeonStart) {
     const isStage2 = state.trialStage === 2;
+    const isStage3 = state.trialStage === 3;
     const elapsed = (performance.now() - state.dungeonStart) / 1000;
-    const limit = isStage2
-      ? ((typeof ULTRA_TRIAL_TIME_SEC !== 'undefined') ? ULTRA_TRIAL_TIME_SEC : 40)
-      : ((typeof MAX_TRIAL_TIME_SEC !== 'undefined') ? MAX_TRIAL_TIME_SEC : 60);
+    const limit = isStage3
+      ? ((typeof TRANSCEND_TRIAL_TIME_SEC !== 'undefined') ? TRANSCEND_TRIAL_TIME_SEC : 60)
+      : isStage2
+        ? ((typeof ULTRA_TRIAL_TIME_SEC !== 'undefined') ? ULTRA_TRIAL_TIME_SEC : 40)
+        : ((typeof MAX_TRIAL_TIME_SEC !== 'undefined') ? MAX_TRIAL_TIME_SEC : 60);
     if (elapsed >= limit) {
-      if (isStage2) {
+      if (isStage3) {
+        const banMs = (typeof TRANSCEND_TRIAL_BAN_MS !== 'undefined') ? TRANSCEND_TRIAL_BAN_MS : 30*60*1000;
+        state.transcendTrialBanUntil = Date.now() + banMs;
+      } else if (isStage2) {
         const banMs = (typeof ULTRA_TRIAL_BAN_MS !== 'undefined') ? ULTRA_TRIAL_BAN_MS : 10*60*1000;
         state.ultraTrialBanUntil = Date.now() + banMs;
       } else {
@@ -589,7 +595,7 @@ function updateDungeon(dt) {
         state.trialBanUntil = Date.now() + banMs;
       }
       if (typeof saveAccountData === 'function') saveAccountData();
-      showMsg('시련 실패 - 추방됨. ' + (isStage2 ? '10' : '5') + '분 후 재도전 가능.', 5);
+      showMsg('시련 실패 - 추방됨. ' + (isStage3 ? '30' : isStage2 ? '10' : '5') + '분 후 재도전 가능.', 5);
       sfx('die');
       state.dungeonMode = 'normal';
       state.dungeonStart = 0;
@@ -737,7 +743,15 @@ function updateDungeon(dt) {
         if (state.dungeonMode === 'trial') {
           const cat = state.trialCategory || 'magic';
           const isStage2 = state.trialStage === 2;
-          if (isStage2) {
+          const isStage3 = state.trialStage === 3;
+          if (isStage3) {
+            state.transcendCleared = state.transcendCleared || {};
+            state.transcendCleared[cat] = true;
+            state.transcendTrialBanUntil = 0;
+            state.research = (state.research || 0) + 1e12;   // 초월 보상
+            showMsg('★★★ ' + cat.toUpperCase() + ' 초월 스킬 해금! +1T RP ★★★', 6);
+            if (typeof showAchievementBanner === 'function') showAchievementBanner('초월의 시련', cat.toUpperCase(), '#ff00ff');
+          } else if (isStage2) {
             state.ultraCleared = state.ultraCleared || {};
             state.ultraCleared[cat] = true;
             state.ultraTrialBanUntil = 0;

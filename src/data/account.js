@@ -73,6 +73,8 @@ const state = {
   buffs: {},                       // 일회성 버프 (bossHpDown, duelBonus)
   marketVoidBonus: 1,              // 마도구/정보로 얻은 영구 배율
   undergroundClaimed: {},          // 지하 교수방 보상 수령 기록
+  transcendCleared: {},            // 3단계 초월 시련 통과 카테고리 {magic:true, ...}
+  transcendTrialBanUntil: 0,       // 초월 시련 실패 후 쿨다운
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -188,6 +190,8 @@ function loadAccountData() {
     if (d.buffs && typeof d.buffs === 'object') state.buffs = d.buffs;
     if (typeof d.marketVoidBonus === 'number') state.marketVoidBonus = d.marketVoidBonus;
     if (d.undergroundClaimed && typeof d.undergroundClaimed === 'object' && typeof underground !== 'undefined') underground.claimed = d.undergroundClaimed;
+    if (d.transcendCleared && typeof d.transcendCleared === 'object') state.transcendCleared = d.transcendCleared;
+    if (typeof d.transcendTrialBanUntil === 'number') state.transcendTrialBanUntil = d.transcendTrialBanUntil;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -267,6 +271,8 @@ function saveAccountData() {
     buffs: state.buffs || {},
     marketVoidBonus: state.marketVoidBonus || 1,
     undergroundClaimed: (typeof underground !== 'undefined' ? underground.claimed : {}) || {},
+    transcendCleared: state.transcendCleared || {},
+    transcendTrialBanUntil: state.transcendTrialBanUntil || 0,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,

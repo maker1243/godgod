@@ -368,11 +368,37 @@ function ultraTrialBossDefFor(cat) {
   return ULTRA_TRIAL_BOSS_DEFS[cat] || ULTRA_TRIAL_BOSS_DEFS.magic;
 }
 
+// === 3단계: 초월의 시련 (TRANSCEND) - ULTRA 위 ===
+// HP + DMG × 1e30 (사용자 요청). 초월 스킬 해금.
+const TRANSCEND_TRIAL_HP = ULTRA_TRIAL_HP * 1e30;      // 1e37
+const TRANSCEND_TRIAL_TIME_SEC = 60;
+const TRANSCEND_TRIAL_BAN_MS = 30 * 60 * 1000;         // 실패 시 30분 쿨다운
+
+function _makeTranscendDef(baseDef) {
+  return Object.assign({}, baseDef, {
+    name: 'TRANSCEND ' + baseDef.name,
+    r: baseDef.r + 8,
+    baseHp: TRANSCEND_TRIAL_HP,
+    baseDmg: Math.round(baseDef.baseDmg * 1e15),        // DMG 1e15 배 (즉사급)
+    aura: 'rgba(255, 0, 255, 0.6)',
+    accent: '#ff00ff',
+    update(e, dt, sm, room) { baseDef.update(e, dt * 2.2, sm, room); },
+  });
+}
+const TRANSCEND_TRIAL_BOSS_DEFS = {};
+for (const cat of Object.keys(TRIAL_BOSS_DEFS)) {
+  TRANSCEND_TRIAL_BOSS_DEFS[cat] = _makeTranscendDef(TRIAL_BOSS_DEFS[cat]);
+}
+function transcendTrialBossDefFor(cat) {
+  return TRANSCEND_TRIAL_BOSS_DEFS[cat] || TRANSCEND_TRIAL_BOSS_DEFS.magic;
+}
+
 // 시련 보스 스폰 (buildRoom→spawnBoss 에서 trial 모드일 때 호출)
 function spawnTrialBoss(room) {
   const cat = state.trialCategory || 'magic';
   const isStage2 = state.trialStage === 2;
-  const def = isStage2 ? ultraTrialBossDefFor(cat) : trialBossDefFor(cat);
+  const isStage3 = state.trialStage === 3;
+  const def = isStage3 ? transcendTrialBossDefFor(cat) : (isStage2 ? ultraTrialBossDefFor(cat) : trialBossDefFor(cat));
   const boss = {
     x: room.x + room.w/2, y: room.y + 50, vx: 0, vy: 0,
     r: def.r, kind: 'trial',           // 렌더 커스텀 브랜치가 처리 (drawEnemy 참조)
@@ -388,7 +414,7 @@ function spawnTrialBoss(room) {
     _trialGlyph: def.glyph,
     _trialSpriteKind: def.spriteKind,
     _trialCat: cat,
-    _trialStage: isStage2 ? 2 : 1,
+    _trialStage: isStage3 ? 3 : (isStage2 ? 2 : 1),
   };
   // 난이도 티어 배율 적용 (bossHpMult, dmgMult). 2단계 보스는 이미 1e44 HP 라 곱해도 큰 차이 없음.
   if (typeof currentDifficulty === 'function') {

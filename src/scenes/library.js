@@ -27,8 +27,9 @@ function libSetTab(t) {
 // 현재 뷰의 노드 목록
 function libNodes() {
   const all = SKILL_TREE[library.tab].skills;
-  if (library.viewMode === 'ultra')  return all.filter(s => s.isUltra);
-  if (library.viewMode === 'max')    return all.filter(s => s.isMax && !s.isUltra);
+  if (library.viewMode === 'transcend') return all.filter(s => s.isTranscend);
+  if (library.viewMode === 'ultra')  return all.filter(s => s.isUltra && !s.isTranscend);
+  if (library.viewMode === 'max')    return all.filter(s => s.isMax && !s.isUltra && !s.isTranscend);
   return all.filter(s => !s.isMax);
 }
 
@@ -142,10 +143,29 @@ function updateLibrary(dt) {
     const banT1         = state.trialBanUntil      && Date.now() < state.trialBanUntil;
     const banT2         = state.ultraTrialBanUntil && Date.now() < state.ultraTrialBanUntil;
 
-    if (library.viewMode === 'ultra') {
+    const clearedT3 = state.transcendCleared && state.transcendCleared[cat];
+    const banT3     = state.transcendTrialBanUntil && Date.now() < state.transcendTrialBanUntil;
+
+    if (library.viewMode === 'transcend') {
       library.viewMode = 'base';
       library.cursor = 0;
       libFlash('BASE VIEW'); sfx('hit');
+    } else if (library.viewMode === 'ultra') {
+      // ULTRA 뷰에서 시련 버튼 → TRANSCEND 뷰 또는 3단계 시련 진입
+      if (clearedT3) {
+        library.viewMode = 'transcend'; library.cursor = 0;
+        libFlash('TRANSCEND VIEW - 초월 스킬'); sfx('level');
+      } else if (!clearedT2) {
+        libFlash('ULTRA 시련 먼저 통과해야 합니다.'); sfx('hurt');
+      } else if (banT3) {
+        libFlash('TRANSCEND 추방 중. ' + Math.ceil((state.transcendTrialBanUntil - Date.now())/1000) + '초 후.'); sfx('hurt');
+      } else {
+        state.trialCategory = cat;
+        state.trialStage = 3;
+        libFlash('★★★ 3단계 초월 시련 (' + cat.toUpperCase() + '). HP × 1e30. 60초! ★★★'); sfx('boss');
+        state.dungeonMode = 'trial';
+        goTo('dungeon');
+      }
     } else if (library.viewMode === 'max') {
       if (clearedT2) {
         library.viewMode = 'ultra'; library.cursor = 0;
