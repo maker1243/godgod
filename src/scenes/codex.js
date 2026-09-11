@@ -260,11 +260,19 @@ function codexEntries() {
       for (const k of keys) {
         const frag = (typeof _pickStoryLang === 'function') ? _pickStoryLang(k) : STORY_FRAGMENTS[k];
         const has = !!state.storyFragments[k];
-        out.push({
-          title: (has ? '📖 ' : '🔒 ') + (frag ? frag.title : k),
-          sub: has ? (frag ? frag.lines[0] : '') : '???',
-          color: has ? '#c8b898' : '#5a4a80',
-        });
+        // 얻지 못한 조각: 힌트 표시 (제목은 ??? 유지, 서브에 힌트)
+        let title, sub, col;
+        if (has) {
+          title = '📖 ' + (frag ? frag.title : k);
+          sub = frag ? frag.lines[0] : '';
+          col = '#c8b898';
+        } else {
+          title = '🔒 ???';
+          const hint = (typeof getStoryFragmentHint === 'function') ? getStoryFragmentHint(k) : '조건 미기록';
+          sub = '힌트: ' + hint;
+          col = '#8a7ab5';
+        }
+        out.push({ title, sub, color: col });
       }
     }
   } else if (codex.tab === 'trials') {

@@ -161,6 +161,14 @@ function updateBullets(dt) {
     // 적 히트
     for (const e of entities.enemies) {
       if (dist(b, e) < b.r + e.r) {
+        // 초월 시련 부활 무적 - 데미지 완전 무효 (히트만 소비)
+        if (e._trInvuln && e._trInvuln > 0) {
+          if (typeof spawnFloat === 'function') spawnFloat(e.x, e.y - 6, 'INVULN', '#ff00ff');
+          e.hitFlash = 0.08;
+          b.hits = (b.hits||0) + 1;
+          if (!(b.pierce || hasPerk('lmbpierce'))) { b.life = 0; break; }
+          continue;
+        }
         let finalDmg = b.dmg * dmgMult;
         // 트레잇: BOSS SLAYER
         if ((e.isBoss || e.isProfessor) && player.bossDmgMult) finalDmg *= player.bossDmgMult;

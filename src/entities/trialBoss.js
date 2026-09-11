@@ -370,19 +370,55 @@ function ultraTrialBossDefFor(cat) {
 
 // === 3단계: 초월의 시련 (TRANSCEND) - ULTRA 위 ===
 // HP + DMG × 1e30 (사용자 요청). 초월 스킬 해금.
-const TRANSCEND_TRIAL_HP = ULTRA_TRIAL_HP * 1e30;      // 1e37
-const TRANSCEND_TRIAL_TIME_SEC = 60;
-const TRANSCEND_TRIAL_BAN_MS = 30 * 60 * 1000;         // 실패 시 30분 쿨다운
+// 극단 밸런스: HP 추가 x100, DMG 추가 x100, 40초 제한, 부활 x2, HP 재생, 무적 페이즈.
+const TRANSCEND_TRIAL_HP = ULTRA_TRIAL_HP * 1e32;      // 1e39 (기존 1e37 → x100)
+const TRANSCEND_TRIAL_TIME_SEC = 40;                    // 60 → 40 초 압박
+const TRANSCEND_TRIAL_BAN_MS = 60 * 60 * 1000;          // 30분 → 60분 쿨다운
+const TRANSCEND_REGEN_PER_SEC = 0.005;                  // 매 초 최대 HP 0.5% 재생
+const TRANSCEND_REBIRTH_HP_PCT = 0.30;                  // 30% 부활 (2 페이즈)
 
 function _makeTranscendDef(baseDef) {
   return Object.assign({}, baseDef, {
     name: 'TRANSCEND ' + baseDef.name,
-    r: baseDef.r + 8,
+    r: baseDef.r + 12,
     baseHp: TRANSCEND_TRIAL_HP,
-    baseDmg: Math.round(baseDef.baseDmg * 1e15),        // DMG 1e15 배 (즉사급)
-    aura: 'rgba(255, 0, 255, 0.6)',
+    baseDmg: Math.round(baseDef.baseDmg * 1e17),        // DMG 1e17 배 (기존 1e15 → x100)
+    aura: 'rgba(255, 0, 255, 0.75)',
     accent: '#ff00ff',
-    update(e, dt, sm, room) { baseDef.update(e, dt * 2.2, sm, room); },
+    update(e, dt, sm, room) {
+      // 페이즈 2 는 dt 왜곡을 x3 로 (기존 x2.2 대비 급격히 빨라짐)
+      const warp = (e._trPhase === 2) ? 3.0 : 2.4;
+      baseDef.update(e, dt * warp, sm, room);
+      // HP 재생 - 초당 최대 HP의 0.5%
+      if (!e._trInvuln || e._trInvuln <= 0) {
+        e.hp = Math.min(e.maxHp, e.hp + e.maxHp * TRANSCEND_REGEN_PER_SEC * dt);
+      } else {
+        e._trInvuln -= dt;
+        e.hitFlash = Math.max(e.hitFlash || 0, 0.15);
+      }
+      // 부활 트리거 - 30% HP 도달 시 무적 3초 + HP 유지 + DMG x3 + speed x2
+      if (!e._trRebirthed && e.hp <= e.maxHp * TRANSCEND_REBIRTH_HP_PCT) {
+        e._trRebirthed = true;
+        e._trPhase = 2;
+        e._trInvuln = 3.0;                              // 3초 완전 무적
+        e.hp = e.maxHp * TRANSCEND_REBIRTH_HP_PCT;      // 유지
+        e.dmg = Math.round(e.dmg * 3);
+        e.speed = (e.speed || 40) * 2;
+        state.shake = 40;
+        state._slowMoUntil = performance.now() + 2000;
+        if (typeof showMsg === 'function') showMsg('★★★ TRANSCEND 부활 - 완전 무적 3초 · DMG x3 · SPD x2 ★★★', 5);
+        if (typeof sfx === 'function') sfx('bosskill');
+        // 대폭발 이펙트
+        if (typeof entities !== 'undefined' && entities.fx) {
+          entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 1.5, max: 1.5, r0: 8, r1: 160, col: '#ff00ff' });
+        }
+        for (let i = 0; i < 100; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const s2 = 80 + Math.random() * 120;
+          if (typeof spawnParticle === 'function') spawnParticle(e.x, e.y, i % 2 ? '#ff00ff' : '#ffefa8', 1.5, 4, s2);
+        }
+      }
+    },
   });
 }
 const TRANSCEND_TRIAL_BOSS_DEFS = {};

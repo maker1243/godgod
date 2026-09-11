@@ -72,6 +72,48 @@ const STORY_FRAGMENTS = {
                        en:{ title:'Ashes of the Black Heart',        lines:['The Black Heart is gone. So are the seal\'s memories.','What remains in your hand is a fistful of ash.','From that ash, a new seal is growing.'] } },
 };
 
+// 얻지 못한 조각의 힌트 - 어디서 얻는지 안내
+const STORY_FRAGMENT_HINTS = {
+  // 계열별 교수 격파
+  kor:    '국어국문학과 李 교수 격파',
+  eng:    '영어영문학과 金 교수 격파',
+  biz:    '경영학과 朴 교수 격파',
+  psy:    '심리학과 崔 교수 격파',
+  phys:   '물리학과 鄭 교수 격파',
+  chem:   '화학과 姜 교수 격파',
+  cs:     '컴퓨터공학과 趙 교수 격파',
+  robot:  '로봇공학과 尹 교수 격파',
+  med:    '의예과 林 교수 격파',
+  phar:   '약학과 吳 교수 격파',
+  math:   '수학교육과 韓 교수 격파',
+  pe:     '체육교육과 徐 교수 격파',
+  paint:  '회화과 黃 교수 격파',
+  vocal:  '성악과 申 교수 격파',
+  phil:   '철학과 黃 교수 격파',
+  rel:    '종교학과 洪 교수 격파',
+  lib:    '문헌정보학과 白 교수 격파',
+  media:  '미디어커뮤니케이션학과 孫 교수 격파',
+  sculpt: '조소과 柳 교수 격파',
+  vdesign:'시각디자인학과 高 교수 격파',
+  chn:    '중어중문학과 呂 교수 격파',
+  jpn:    '일어일문학과 秋 교수 격파',
+  // 특수 이벤트
+  principal:         '교장 격파  ·  지하/지상 랜덤 이벤트',
+  blackheart_defeated:'검은 심장 격파 (봉인 부수기 결말)',
+  the_end_start:     '두 결말 중 하나의 에필로그 시청',
+  // 런 이벤트 & 랜드마크
+  wanderer_evt:      '던전 랜덤 이벤트(떠도는 교수)  ·  지상 잃어버린 도서관  ·  검은 시장 금서 사본  ·  지하 랜덤 이벤트',
+  mirror_evt:        '던전 랜덤 이벤트(거울)  ·  지상 재의 숲 or 거울 속의 나 이벤트',
+  timetraveler_evt:  '던전 랜덤 이벤트(시간 여행자)  ·  지상 유령 시장  ·  지하 랜덤 이벤트',
+  renn_bond:         '스토리 조각 5개 후 도서관 학생 RENN 대화  ·  지상 불탄 별관',
+  elara_true:        '엘라라 결말 대화 진입  ·  지상 엘라라의 잔영 or 지하 엘라라의 속삭임 이벤트',
+  chronoheart:       '엘라라 결말 대화 진입  ·  지하 봉인의 심장 이벤트',
+};
+
+function getStoryFragmentHint(key) {
+  return STORY_FRAGMENT_HINTS[key] || '조건 미기록  ·  탐험을 계속하세요';
+}
+
 // 언어에 맞춰 title/lines 를 골라주는 헬퍼
 function _pickStoryLang(key) {
   const f = STORY_FRAGMENTS[key];
