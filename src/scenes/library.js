@@ -240,21 +240,45 @@ function updateLibrary(dt) {
     sfx('level');
   }
 
-  // 장착 (Enter or F)
+  // 장착 (Enter or F). 슬롯에 이미 다른 스킬이 있어도 반드시 교체.
   if (keys['KeyF'] || keys['Enter']) {
     keys['KeyF'] = false; keys['Enter'] = false;
     const s = libNodes()[library.cursor];
     if (!s || !ownsSkill(s.id) || s.slot === 'passive') return;
-    // 슬롯 토글: 이미 장착됐으면 해제, 아니면 장착
+    // 슬롯 토글: 이미 이 스킬이 장착됐으면 해제, 아니면 (다른 스킬이라도) 교체
     if (state.equippedSlots[s.slot] === s.id) {
       state.equippedSlots[s.slot] = null;
       libFlash('UNEQUIPPED FROM ' + s.slot.toUpperCase());
     } else {
+      const prevId = state.equippedSlots[s.slot];
       state.equippedSlots[s.slot] = s.id;
-      libFlash('EQUIPPED TO ' + s.slot.toUpperCase());
+      libFlash((prevId ? 'REPLACED ' : 'EQUIPPED ') + s.slot.toUpperCase() + ': ' + s.name);
     }
+    // 커스텀 주문(spellCraft/fusion)이 같은 슬롯을 오버라이드 중이면 자동 해제
+    // (교수 리워드나 트리 스킬을 장착했는데 커스텀 주문이 여전히 시전되는 문제 방지)
+    if (state.equippedSpells && state.equippedSpells[s.slot]) {
+      state.equippedSpells[s.slot] = null;
+      if (s.slot === 'lmb') state.equippedSpell = null;
+      libFlash('커스텀 주문 오버라이드 해제 (' + s.slot.toUpperCase() + ')');
+    }
+    // 라이브 플레이어 재빌드로 즉시 반영
+    if (typeof refreshPlayerStats === 'function') try { refreshPlayerStats(); } catch(_){}
     saveProgress();
     sfx('hit');
+  }
+  // BACKSPACE / DELETE: 현재 슬롯 강제 해제
+  if (keys['Delete']) {
+    keys['Delete'] = false;
+    const s = libNodes()[library.cursor];
+    if (s && s.slot !== 'passive') {
+      state.equippedSlots[s.slot] = null;
+      if (state.equippedSpells) state.equippedSpells[s.slot] = null;
+      if (s.slot === 'lmb') state.equippedSpell = null;
+      libFlash('강제 해제: ' + s.slot.toUpperCase());
+      if (typeof refreshPlayerStats === 'function') try { refreshPlayerStats(); } catch(_){}
+      saveProgress();
+      sfx('hit');
+    }
   }
 
   // 나가기

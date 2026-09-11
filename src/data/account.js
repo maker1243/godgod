@@ -137,6 +137,19 @@ function loadAccountData() {
     const d = JSON.parse(raw);
     if (d.ownedSkills)   state.ownedSkills   = d.ownedSkills;
     if (d.equippedSlots) state.equippedSlots = d.equippedSlots;
+    // 이상 상태 정리: 소유하지 않은 스킬이 equippedSlots 에 남아있으면 제거
+    if (state.equippedSlots) {
+      for (const sl of ['lmb', 'q', 'e']) {
+        const sid = state.equippedSlots[sl];
+        if (sid && !(state.ownedSkills && state.ownedSkills[sid] > 0)) {
+          state.equippedSlots[sl] = null;
+        }
+      }
+      // LMB 가 비어 있으면 기본 파이어볼 복구
+      if (!state.equippedSlots.lmb && state.ownedSkills && state.ownedSkills['m01']) {
+        state.equippedSlots.lmb = 'm01';
+      }
+    }
     if (d.perks)         state.perks         = d.perks;
     if (typeof d.research === 'number')     state.research     = d.research;
     if (typeof d.gold === 'number')         state.gold         = d.gold;

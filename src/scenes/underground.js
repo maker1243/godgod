@@ -1,14 +1,36 @@
 // =====================================================================
-// Underground - 아카데미 지하 던전형 대형 맵.
-// 1200x800 월드, 카메라 팔로우. 22개 교수 방 (격파 시 해금).
-// 방마다 1회성 보상 + 스토리 조각. 방랑 몹 + 30초마다 랜덤 이벤트.
+// Underground - 5층 던전. 각 층마다 별도 방/몹/미니보스. 계단으로 이동.
+// 1200x800 월드, 카메라 팔로우. 22개 교수 방을 층별 분배.
 // =====================================================================
 
 const UNDER_W = 1200;
 const UNDER_H = 800;
+const UNDER_MAX_FLOOR = 5;
 
-// 각 교수 방 정보 - 위치 + 보상 정의
-// 방 개수 = 22 (FACULTY_PROFESSORS 총합). 격자로 배치.
+// 층별 배치 - 각 층에 어떤 교수 방(key)들과 계단(stair) 위치
+const UNDER_FLOOR_LAYOUTS = [
+  // Floor 1 (기초 학과 5)
+  { rooms:['kor','eng','biz','psy','phys'],       stair:{x: 1130, y: 700}, mobHp:1.0, mobDmg:1.0, mobCap:5, name:'지하 1층 - 기초의 홀' },
+  // Floor 2 (자연/공학 5)
+  { rooms:['chem','cs','robot','med','phar'],      stair:{x: 1130, y: 700}, mobHp:2.0, mobDmg:1.6, mobCap:7, name:'지하 2층 - 실험의 홀' },
+  // Floor 3 (교육/예술 4)
+  { rooms:['math','pe','paint','vocal'],           stair:{x: 1130, y: 700}, mobHp:3.5, mobDmg:2.4, mobCap:8, name:'지하 3층 - 창조의 홀' },
+  // Floor 4 (인문 심층 4)
+  { rooms:['phil','rel','lib','media'],            stair:{x: 1130, y: 700}, mobHp:6.0, mobDmg:3.5, mobCap:10, name:'지하 4층 - 사유의 홀' },
+  // Floor 5 (심연 4 + 미니보스)
+  { rooms:['sculpt','vdesign','chn','jpn'],        stair:null,              mobHp:12.0, mobDmg:5.0, mobCap:12, name:'지하 5층 - 심연', hasBoss:true },
+];
+
+// 방 좌표 매핑 - key 만 층별 분배, 좌표는 원본 유지
+const _PROF_ROOM_XY = {
+  kor:{x:200,y:180}, eng:{x:400,y:180}, biz:{x:600,y:180}, psy:{x:800,y:180}, phys:{x:1000,y:180},
+  chem:{x:200,y:180}, cs:{x:400,y:180}, robot:{x:600,y:180}, med:{x:800,y:180}, phar:{x:1000,y:180},
+  math:{x:250,y:220}, pe:{x:500,y:220}, paint:{x:750,y:220}, vocal:{x:1000,y:220},
+  phil:{x:250,y:220}, rel:{x:500,y:220}, lib:{x:750,y:220}, media:{x:1000,y:220},
+  sculpt:{x:250,y:250}, vdesign:{x:500,y:250}, chn:{x:750,y:250}, jpn:{x:1000,y:250},
+};
+
+// 각 교수 방 정보 - 하위 호환 (미니맵/힌트 등이 참조)
 const PROF_ROOMS = [
   // humanities (2)
   { key:'kor',    name:'李 교수의 방 (국문학과)',   x: 120, y: 140, col:'#c8a888' },
@@ -52,10 +74,31 @@ const underground = {
   claimed: {},              // {profKey: true} - 방 보상 수령 기록
   enemies: [],              // 방랑 몹
   eventT: 0,                // 다음 랜덤 이벤트까지
-  activeEvent: null,        // {title, effect, life}
+  activeEvent: null,
   msg: '', msgT: 0,
   spawnT: 0,
+  floor: 1,                 // 현재 층
+  descentT: 0,              // 계단 상호작용 쿨다운
+  boss: null,               // 5층 미니보스
+  bossDown: {},              // {층번호: true} - 층별 보스 격파 여부
 };
+
+function _currentLayout() {
+  return UNDER_FLOOR_LAYOUTS[Math.max(0, Math.min(UNDER_MAX_FLOOR - 1, (underground.floor || 1) - 1))];
+}
+
+// 현재 층에 표시되는 방 배열 반환 (좌표 + key + col)
+function _floorRooms() {
+  const layout = _currentLayout();
+  const rooms = [];
+  for (const k of layout.rooms) {
+    const src = PROF_ROOMS.find(r => r.key === k);
+    if (!src) continue;
+    const pos = _PROF_ROOM_XY[k] || { x: src.x, y: src.y };
+    rooms.push({ key: k, name: src.name, x: pos.x, y: pos.y, col: src.col });
+  }
+  return rooms;
+}
 
 function _initUnderground() {
   underground.playerX = 100;
@@ -66,6 +109,43 @@ function _initUnderground() {
   underground.eventT = 15;
   underground.spawnT = 3;
   underground.activeEvent = null;
+  underground.floor = 1;
+  underground.descentT = 0;
+  underground.boss = null;
+}
+
+// 층 이동
+function _underDescend() {
+  if (underground.floor >= UNDER_MAX_FLOOR) return;
+  underground.floor += 1;
+  underground.playerX = 100;
+  underground.playerY = 700;
+  underground.enemies = [];
+  underground.boss = null;
+  underground.eventT = 8;
+  underground.msg = _currentLayout().name + ' 진입!';
+  underground.msgT = 4;
+  if (typeof sfx === 'function') sfx('boss');
+  if (typeof showAchievementBanner === 'function') showAchievementBanner('지하 하강', _currentLayout().name, '#c86ade');
+  // 5층은 미니보스 스폰
+  if (_currentLayout().hasBoss && !underground.bossDown[underground.floor]) {
+    underground.boss = {
+      x: 600, y: 400, r: 20,
+      hp: 5000 * (1 + (state.finalCleared||0)),
+      maxHp: 5000 * (1 + (state.finalCleared||0)),
+      dmg: 50, patternT: 0, phase: 1, hitT: 0,
+    };
+  }
+  if (typeof saveAccountData === 'function') saveAccountData();
+}
+function _underAscend() {
+  if (underground.floor <= 1) return;
+  underground.floor -= 1;
+  underground.playerX = _currentLayout().stair ? _currentLayout().stair.x - 30 : 200;
+  underground.playerY = _currentLayout().stair ? _currentLayout().stair.y : 200;
+  underground.enemies = [];
+  underground.msg = _currentLayout().name + ' 복귀';
+  underground.msgT = 3;
 }
 
 function isProfBeaten(key) {
@@ -134,17 +214,19 @@ const UNDER_EVENTS = [
 ];
 
 function _spawnUnderEnemy() {
-  // 플레이어 근처가 아닌 지점에 스폰
   let x, y, tries = 0;
   do {
     x = 40 + Math.random() * (UNDER_W - 80);
     y = 40 + Math.random() * (UNDER_H - 80);
     tries++;
   } while (Math.hypot(x - underground.playerX, y - underground.playerY) < 120 && tries < 10);
+  const L = _currentLayout();
+  const baseHp = 30 + (state.finalCleared||0) * 20;
+  const baseDmg = 5 + (state.finalCleared||0) * 2;
   underground.enemies.push({
-    x, y, vx: 0, vy: 0, r: 5,
-    hp: 30 + (state.finalCleared||0) * 20,
-    dmg: 5 + (state.finalCleared||0) * 2,
+    x, y, vx: 0, vy: 0, r: 5 + Math.min(4, Math.floor(underground.floor / 2)),
+    hp: Math.floor(baseHp * L.mobHp),
+    dmg: Math.floor(baseDmg * L.mobDmg),
     hitT: 0,
     kind: Math.random() < 0.3 ? 'ghost' : 'shade',
   });
@@ -170,8 +252,85 @@ function updateUnderground(dt) {
   underground.camX = clamp(underground.playerX - W/2, 0, UNDER_W - W);
   underground.camY = clamp(underground.playerY - H/2, 0, UNDER_H - H);
 
-  // 방 상호작용
-  for (const rm of PROF_ROOMS) {
+  // 방 상호작용 - 현재 층 방만
+  const _rooms = _floorRooms();
+  // 계단 상호작용
+  const layout = _currentLayout();
+  if (layout.stair) {
+    const sd = Math.hypot(underground.playerX - layout.stair.x, underground.playerY - layout.stair.y);
+    if (sd < 22 && (keys['Space'] || keys['Enter']) && underground.descentT <= 0) {
+      keys['Space']=false; keys['Enter']=false;
+      // 미니보스 층은 보스 격파해야 하강 가능
+      if (layout.hasBoss && !underground.bossDown[underground.floor]) {
+        underground.msg = '미니보스를 먼저 격파해야 합니다';
+        underground.msgT = 3;
+      } else {
+        _underDescend();
+        underground.descentT = 0.6;
+        return;
+      }
+    }
+  }
+  // 상승 계단 (플레이어 시작 지점에 항상 있음: 층 > 1)
+  if (underground.floor > 1) {
+    const ud = Math.hypot(underground.playerX - 60, underground.playerY - 700);
+    if (ud < 20 && (keys['Space'] || keys['Enter']) && underground.descentT <= 0) {
+      keys['Space']=false; keys['Enter']=false;
+      _underAscend();
+      underground.descentT = 0.6;
+      return;
+    }
+  }
+  if (underground.descentT > 0) underground.descentT -= dt;
+
+  // 미니보스 (5층)
+  if (underground.boss) {
+    const b = underground.boss;
+    const a = Math.atan2(underground.playerY - b.y, underground.playerX - b.x);
+    b.x += Math.cos(a) * 20 * dt;
+    b.y += Math.sin(a) * 20 * dt;
+    b.patternT -= dt;
+    if (b.patternT <= 0) {
+      // 8방향 발사
+      if (typeof entities !== 'undefined' && entities.ebullets) {
+        for (let i = 0; i < 12; i++) {
+          const ang = (i / 12) * Math.PI * 2 + state.time;
+          entities.ebullets.push({ x: b.x, y: b.y, vx: Math.cos(ang) * 120, vy: Math.sin(ang) * 120, r: 4, dmg: b.dmg, life: 3, kind: 'shadow' });
+        }
+      }
+      b.patternT = 2.5;
+    }
+    if (b.hitT > 0) b.hitT -= dt;
+    // 접촉 데미지
+    const bd = Math.hypot(underground.playerX - b.x, underground.playerY - b.y);
+    if (bd < b.r + 6 && player && (!player.invuln || player.invuln <= 0)) {
+      player.hp = Math.max(1, player.hp - b.dmg * 2);
+      player.invuln = 0.6;
+    }
+    // 격파: 플레이어 발사체 스캔 (근사)
+    if (typeof entities !== 'undefined' && entities.bullets) {
+      for (const pb of entities.bullets) {
+        if (Math.hypot(pb.x - b.x, pb.y - b.y) < pb.r + b.r) {
+          b.hp -= pb.dmg;
+          pb.life = 0;
+          b.hitT = 0.15;
+        }
+      }
+    }
+    if (b.hp <= 0) {
+      underground.bossDown[underground.floor] = true;
+      underground.msg = '★ 지하 ' + underground.floor + '층 심연의 보스 격파!';
+      underground.msgT = 5;
+      state.research = (state.research||0) + 50000;
+      state.gold = (state.gold||0) + 5000;
+      if (typeof showAchievementBanner === 'function') showAchievementBanner('심연의 보스 격파', '지하 5층 정복', '#ff2d80');
+      if (typeof sfx === 'function') sfx('bosskill');
+      underground.boss = null;
+      if (typeof saveAccountData === 'function') saveAccountData();
+    }
+  }
+
+  for (const rm of _rooms) {
     const d = Math.hypot(underground.playerX - rm.x, underground.playerY - rm.y);
     if (d < 22 && (keys['Space'] || keys['Enter'])) {
       keys['Space']=false; keys['Enter']=false;
@@ -212,11 +371,12 @@ function updateUnderground(dt) {
     }
   }
 
-  // 방랑 몹 스폰 (최대 6마리)
+  // 방랑 몹 스폰 - 층별 개수 제한
+  const capL = _currentLayout();
   underground.spawnT -= dt;
-  if (underground.spawnT <= 0 && underground.enemies.length < 6) {
+  if (underground.spawnT <= 0 && underground.enemies.length < capL.mobCap) {
     _spawnUnderEnemy();
-    underground.spawnT = 6 + Math.random() * 6;
+    underground.spawnT = 4 + Math.random() * 4;
   }
   // 몹 이동/접촉 데미지
   for (let i = underground.enemies.length - 1; i >= 0; i--) {
@@ -306,8 +466,57 @@ function renderUnderground() {
   ctx.fillRect(0, 0, 6*PX, UNDER_H*PX);
   ctx.fillRect((UNDER_W-6)*PX, 0, 6*PX, UNDER_H*PX);
 
-  // 방
-  for (const rm of PROF_ROOMS) {
+  // 계단 (하강)
+  const layoutR = _currentLayout();
+  if (layoutR.stair) {
+    const sx = layoutR.stair.x, sy = layoutR.stair.y;
+    // 미니보스 층이면 보스 격파 안 되었을 때 잠금
+    const stairLocked = layoutR.hasBoss && !underground.bossDown[underground.floor];
+    ctx.fillStyle = stairLocked ? '#3a2a4a' : '#c86ade';
+    ctx.fillRect((sx - 12)*PX, (sy - 12)*PX, 24*PX, 24*PX);
+    ctx.fillStyle = '#0a0510';
+    for (let i = 0; i < 6; i++) ctx.fillRect((sx - 10 + i * 4)*PX, (sy - 10 + i * 4)*PX, 2*PX, 2*PX);
+    drawText('↓', sx - 3, sy - 3, stairLocked ? '#5a4a80' : '#ffefa8');
+    if (Math.hypot(underground.playerX - sx, underground.playerY - sy) < 40) {
+      drawText('하강 계단 (F' + (underground.floor + 1) + ')', sx - textWidth('하강 계단 (F' + (underground.floor + 1) + ')')/2, sy - 26, stairLocked ? '#c81616' : '#ffefa8');
+      if (Math.hypot(underground.playerX - sx, underground.playerY - sy) < 22) {
+        drawText(stairLocked ? '[보스 격파 필요]' : '[SPACE 하강]', sx - textWidth(stairLocked ? '[보스 격파 필요]' : '[SPACE 하강]')/2, sy + 26, stairLocked ? '#c81616' : '#ffefa8');
+      }
+    }
+  }
+  // 상승 계단 (플레이어 시작 지점, 층 > 1)
+  if (underground.floor > 1) {
+    const ax = 60, ay = 700;
+    ctx.fillStyle = '#8bd8ff';
+    ctx.fillRect((ax - 10)*PX, (ay - 10)*PX, 20*PX, 20*PX);
+    drawText('↑', ax - 3, ay - 3, '#0a0510');
+    if (Math.hypot(underground.playerX - ax, underground.playerY - ay) < 40) {
+      drawText('상승 계단 (F' + (underground.floor - 1) + ')', ax - textWidth('상승 계단 (F' + (underground.floor - 1) + ')')/2, ay - 24, '#8bd8ff');
+      if (Math.hypot(underground.playerX - ax, underground.playerY - ay) < 20) {
+        drawText('[SPACE 상승]', ax - textWidth('[SPACE 상승]')/2, ay + 24, '#8bd8ff');
+      }
+    }
+  }
+
+  // 미니보스 (5층)
+  if (underground.boss) {
+    const b = underground.boss;
+    ctx.fillStyle = 'rgba(255, 45, 128, ' + (0.4 + Math.sin(state.time * 3) * 0.3) + ')';
+    ctx.beginPath(); ctx.arc(b.x*PX, b.y*PX, (b.r + 6)*PX, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = b.hitT > 0 ? '#ffefa8' : '#c81616';
+    ctx.beginPath(); ctx.arc(b.x*PX, b.y*PX, b.r*PX, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#050505';
+    ctx.beginPath(); ctx.arc(b.x*PX, b.y*PX, (b.r - 4)*PX, 0, Math.PI*2); ctx.fill();
+    drawText('심연의 지배자', b.x - textWidth('심연의 지배자')/2, b.y - b.r - 10, '#ff2d80');
+    // HP 바
+    const bw = 60, ratio = b.hp / b.maxHp;
+    pxDraw(b.x - bw/2, b.y + b.r + 4, bw, 4, '#1a0e2e');
+    pxDraw(b.x - bw/2, b.y + b.r + 4, Math.floor(bw * ratio), 4, '#c81616');
+  }
+
+  // 방 - 현재 층만
+  const roomsR = _floorRooms();
+  for (const rm of roomsR) {
     const locked = !isProfBeaten(rm.key);
     const claimed = underground.claimed[rm.key];
     // 방 - 원형 (28px 반경)
@@ -363,7 +572,7 @@ function renderUnderground() {
   pxDraw(0, 0, W, 12, '#1a0e2e');
   const claimedCnt = Object.keys(underground.claimed).length;
   const unlockedCnt = PROF_ROOMS.filter(r => isProfBeaten(r.key)).length;
-  drawText('학원 지하  ·  개방된 방 ' + unlockedCnt + '/' + PROF_ROOMS.length + '  ·  수령 ' + claimedCnt, 4, 3, '#c86ade');
+  drawText('★ ' + _currentLayout().name + '  ·  F' + underground.floor + '/' + UNDER_MAX_FLOOR + '  ·  수령 ' + claimedCnt + '/' + PROF_ROOMS.length, 4, 3, '#c86ade');
   drawText('HP ' + Math.floor(player ? player.hp : 0) + '/' + Math.floor(player ? player.maxHp : 100), W - 100, 3, '#ff6666');
   drawText('[R/ESC] 나가기', W - textWidth('[R/ESC] 나가기') - 4, H - 10, '#5a4a80');
   drawText('WASD 이동 · SHIFT 달리기 · SPACE 상호작용', W/2 - textWidth('WASD 이동 · SHIFT 달리기 · SPACE 상호작용')/2, H - 10, '#8a7ab5');
@@ -372,11 +581,24 @@ function renderUnderground() {
   const mmW = 88, mmH = 60, mmX = W - mmW - 4, mmY = 14;
   pxDraw(mmX - 1, mmY - 1, mmW + 2, mmH + 2, '#000');
   pxDraw(mmX, mmY, mmW, mmH, '#100510');
-  for (const rm of PROF_ROOMS) {
+  // 현재 층 방만 미니맵 표시
+  for (const rm of _floorRooms()) {
     const dx = mmX + Math.floor((rm.x / UNDER_W) * mmW);
     const dy = mmY + Math.floor((rm.y / UNDER_H) * mmH);
     const c = !isProfBeaten(rm.key) ? '#3a2a4a' : (underground.claimed[rm.key] ? '#5a4a80' : rm.col);
     pxDraw(dx - 1, dy - 1, 2, 2, c);
+  }
+  // 계단 미니맵
+  const layoutM = _currentLayout();
+  if (layoutM.stair) {
+    const sMx = mmX + Math.floor((layoutM.stair.x / UNDER_W) * mmW);
+    const sMy = mmY + Math.floor((layoutM.stair.y / UNDER_H) * mmH);
+    pxDraw(sMx - 1, sMy - 1, 3, 3, '#c86ade');
+  }
+  if (underground.boss) {
+    const bMx = mmX + Math.floor((underground.boss.x / UNDER_W) * mmW);
+    const bMy = mmY + Math.floor((underground.boss.y / UNDER_H) * mmH);
+    pxDraw(bMx - 1, bMy - 1, 3, 3, '#ff2d80');
   }
   // 플레이어 마커
   const pMx = mmX + Math.floor((underground.playerX / UNDER_W) * mmW);
