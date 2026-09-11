@@ -167,8 +167,8 @@ function activeTouchButtons() {
       btn(172, 175, 9, 'U', 'KeyU'),
     ];
   }
-  if (sc === 'outerMap') {
-    // outerMap은 이동 + SPACE만 필요. 조이스틱은 showJoysticks 로 확장.
+  if (sc === 'outerMap' || sc === 'underground') {
+    // 조이스틱은 showJoysticks 로 확장. 액션 버튼만.
     return [
       btn(295, 170, 12, 'OK', 'Space'),
       btn(295, 145, 12, 'RUN', 'ShiftLeft'),
@@ -199,7 +199,8 @@ function showJoysticks() {
     state.scene === 'arenaAI' ||
     state.scene === 'arenaRoom' ||
     state.scene === 'academy' ||
-    state.scene === 'outerMap'
+    state.scene === 'outerMap' ||
+    state.scene === 'underground'
   );
 }
 

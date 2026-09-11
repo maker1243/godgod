@@ -91,6 +91,7 @@ function update(dt) {
     case 'spellCraft':   updateSpellCraft(dt); break;
     case 'faction':      updateFaction(dt); break;
     case 'blackMarket':  updateBlackMarket(dt); break;
+    case 'underground':  updateUnderground(dt); break;
     case 'shop':      updateShop(dt); break;
     case 'classroom': updateClassroom(dt); break;
     case 'arena':     updateArenaMenu(dt); break;
@@ -201,6 +202,7 @@ const academy = {
   spellDoor: { x: 300, y: 170, w: 12, h: 18, kind: 'spellcraft', label: 'SPELL' },
   factionDoor:{ x: 800, y: 170, w: 12, h: 18, kind: 'faction',    label: 'HOUSE' },
   marketDoor:{ x: 350, y: 460, w: 12, h: 18, kind: 'blackmarket', label: 'MARKET' },
+  underDoor:{ x: 500, y: 460, w: 12, h: 18, kind: 'underground', label: 'UNDER' },
   exitDoor:  { x: 850, y: 460, w: 12, h: 18, kind: 'exitworld', label: 'EXIT',  hidden:true },
   principalDoor:{ x: 42, y: 460, w: 12, h: 18, kind: 'principal', label: 'PRIN', hidden:true },
   inventory: { heal: 0, mana: 0, swift: 0, fury: 0, guard: 0 },
@@ -245,7 +247,7 @@ if (state.account) {
 function _placeCipherDoorRandom() {
   const r = academy.room;
   const w = 12, h = 18;
-  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor, academy.factionDoor, academy.marketDoor];
+  const others = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor, academy.factionDoor, academy.marketDoor, academy.underDoor];
   for (let t = 0; t < 40; t++) {
     const x = Math.floor(r.x + 10 + Math.random() * (r.w - w - 20));
     const y = Math.floor(r.y + 20 + Math.random() * (r.h - h - 40));
@@ -487,7 +489,7 @@ function updateAcademy(dt) {
       }
     }
     // 문들
-    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor, academy.factionDoor, academy.marketDoor, academy.exitDoor, academy.principalDoor];
+    const doors = [academy.door, academy.libDoor, academy.classDoor, academy.arenaDoor, academy.extraDoor, academy.extremeDoor, academy.infernoDoor, academy.cipherDoor, academy.profDoor, academy.trainDoor, academy.legacyDoor, academy.customDoor, academy.clanDoor, academy.spellDoor, academy.factionDoor, academy.marketDoor, academy.underDoor, academy.exitDoor, academy.principalDoor];
     for (const d of doors) {
       if (d.hidden) continue;   // 숨겨진 문은 상호작용 불가
       if (Math.abs(player.x - (d.x + d.w/2)) < 10 && Math.abs(player.y - (d.y + d.h/2)) < 12) {
@@ -547,6 +549,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'clan')      { openClanScene(); }
         else if (d.kind === 'spellcraft'){ openSpellCraft(); }
         else if (d.kind === 'faction')   { openFactionScene(); }
+        else if (d.kind === 'underground'){ if (typeof _initUnderground === 'function') _initUnderground(); goTo('underground'); }
         else if (d.kind === 'blackmarket'){
           if (typeof canAccessBlackMarket === 'function' && !canAccessBlackMarket()) {
             showMsg('접근 불가: 뒷골목 평판 10 이상 또는 평민 가문 필요', 3);

@@ -72,6 +72,7 @@ const state = {
   blackMarketVisited: false,       // 시장 방문 기록 (재접근 조건)
   buffs: {},                       // 일회성 버프 (bossHpDown, duelBonus)
   marketVoidBonus: 1,              // 마도구/정보로 얻은 영구 배율
+  undergroundClaimed: {},          // 지하 교수방 보상 수령 기록
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -186,6 +187,7 @@ function loadAccountData() {
     if (typeof d.blackMarketVisited === 'boolean') state.blackMarketVisited = d.blackMarketVisited;
     if (d.buffs && typeof d.buffs === 'object') state.buffs = d.buffs;
     if (typeof d.marketVoidBonus === 'number') state.marketVoidBonus = d.marketVoidBonus;
+    if (d.undergroundClaimed && typeof d.undergroundClaimed === 'object' && typeof underground !== 'undefined') underground.claimed = d.undergroundClaimed;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -264,6 +266,7 @@ function saveAccountData() {
     blackMarketVisited: !!state.blackMarketVisited,
     buffs: state.buffs || {},
     marketVoidBonus: state.marketVoidBonus || 1,
+    undergroundClaimed: (typeof underground !== 'undefined' ? underground.claimed : {}) || {},
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,
