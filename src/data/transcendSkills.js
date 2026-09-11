@@ -61,6 +61,79 @@ const TRANSCEND_SKILL_DEFS = [
     dmg: 6e18, speed: 260, r: 5, life: 2.5, count: 3, spread: 0.25, homing: true, mp: 75, cd: 1.3, kind: 'fire',
     desc:'맥동하는 아르카나 3발. 강력한 유도. DMG 6e18.',
     extra: {} },
+
+  // ========== 추가 초월 스킬 (10종 더) ==========
+  // fire family
+  { cat:'magic', id:'tr_hellfire', name:'지옥불의 심연', slot:'lmb', visual:'hellfire',
+    dmg: 1.6e18, speed: 300, r: 5, life: 1.6, count: 4, spread: 0.35, pierce: true, mp: 40, cd: 0.3, kind: 'fire',
+    desc:'지옥의 화염구 4발 관통. 화상 강화. DMG 1.6e18.',
+    extra: { _burn: 5, _burnDmgRate: 0.03 } },
+  { cat:'magic', id:'tr_phoenix', name:'불사조의 부활', slot:'e', visual:'phoenix',
+    dmg: 9e19, speed: 220, r: 12, life: 3, count: 12, spread: 6.28, homing: true, mp: 220, cd: 15, kind: 'fire',
+    desc:'12방향 불사조. 시전 시 HP 완전 회복. DMG 9e19.',
+    extra: {}, healOnCast: 9999 },
+  { cat:'magic', id:'tr_sunburst', name:'천상의 태양', slot:'q', visual:'sunburst',
+    dmg: 7e18, speed: 380, r: 4, life: 2.0, count: 6, spread: 0.28, pierce: true, mp: 85, cd: 1.5, kind: 'holy',
+    desc:'태양의 광선 6발 관통. DMG 7e18. 화상+회복.',
+    extra: { _burn: 3, _lifesteal: 0.08 } },
+
+  // engineering family
+  { cat:'engineering', id:'tr_railslug', name:'초자기 레일건', slot:'q', visual:'railslug',
+    dmg: 1e19, speed: 900, r: 3, life: 1.4, pierce: true, instant: true, count: 3, spread: 0.03, mp: 95, cd: 1.8, kind: 'fire',
+    desc:'초음속 3연발 관통. DMG 1e19.',
+    extra: {} },
+  { cat:'engineering', id:'tr_plasma', name:'플라즈마 폭풍', slot:'lmb', visual:'plasma_shot',
+    dmg: 1.7e18, speed: 340, r: 4, life: 1.5, count: 8, spread: 0.3, mp: 45, cd: 0.35, kind: 'thunder',
+    desc:'플라즈마 8발 발사. DMG 1.7e18.',
+    extra: {} },
+  { cat:'engineering', id:'tr_singularity', name:'특이점 발생', slot:'e', visual:'singularity',
+    dmg: 1.2e20, speed: 80, r: 15, life: 4, count: 4, spread: 6.28, homing: true, explosive: true, explodeR: 140, mp: 300, cd: 20, kind: 'shadow',
+    desc:'4개 특이점이 나선으로 회전. 압도적 광역. DMG 1.2e20.',
+    extra: {} },
+
+  // nature family
+  { cat:'nature', id:'tr_quakebolt', name:'대지의 진동', slot:'q', visual:'quakebolt',
+    dmg: 8e18, speed: 200, r: 6, life: 2.5, count: 5, spread: 0.5, explosive: true, explodeR: 60, mp: 90, cd: 1.6, kind: 'fire',
+    desc:'육각 대지 파편 5발. 광역 폭발. DMG 8e18.',
+    extra: {} },
+  { cat:'nature', id:'tr_natureorb', name:'세계수의 오브', slot:'e', visual:'natureorb',
+    dmg: 6e19, speed: 160, r: 10, life: 4, count: 8, spread: 6.28, homing: true, mp: 210, cd: 14, kind: 'holy',
+    desc:'세계수의 8방향 유도 오브. 강력한 흡혈. DMG 6e19.',
+    extra: { _lifesteal: 0.15 } },
+
+  // chaos family
+  { cat:'chaos', id:'tr_darkstar', name:'검은 별의 붕괴', slot:'e', visual:'darkstar',
+    dmg: 1e20, speed: 180, r: 12, life: 3.5, count: 20, spread: 6.28, homing: true, explosive: true, explodeR: 110, mp: 270, cd: 16, kind: 'shadow',
+    desc:'20방향 검은 별. 광역 저주. DMG 1e20.',
+    extra: { _curse: 5 } },
+  { cat:'chaos', id:'tr_doomsday', name:'종말의 심판', slot:'e', visual:'doomsday',
+    dmg: 1.5e20, speed: 140, r: 14, life: 4, count: 24, spread: 6.28, explosive: true, explodeR: 150, mp: 320, cd: 22, kind: 'shadow',
+    desc:'24방향 종말. 화면 전체를 삼킨다. DMG 1.5e20.',
+    extra: { _burn: 5, _burnDmgRate: 0.05 } },
+
+  // order family
+  { cat:'order', id:'tr_archangel', name:'대천사의 심판', slot:'q', visual:'archangel',
+    dmg: 8e18, speed: 300, r: 5, life: 2.5, count: 5, spread: 0.28, homing: true, mp: 90, cd: 1.6, kind: 'holy',
+    desc:'5개 대천사가 적을 추적. DMG 8e18. 회복.',
+    extra: { _lifesteal: 0.12 } },
+  { cat:'order', id:'tr_seraph', name:'세라핌의 노래', slot:'lmb', visual:'seraph',
+    dmg: 1.4e18, speed: 280, r: 4, life: 2.0, count: 7, spread: 0.4, pierce: true, mp: 45, cd: 0.35, kind: 'holy',
+    desc:'세라핌의 반짝임 7발 관통. DMG 1.4e18.',
+    extra: { _lifesteal: 0.05 }, healOnCast: 10 },
+  { cat:'order', id:'tr_hallow', name:'봉인의 원환', slot:'q', visual:'hallow',
+    dmg: 5e18, speed: 220, r: 8, life: 3.0, count: 3, spread: 0.35, explosive: true, explodeR: 60, mp: 75, cd: 1.4, kind: 'holy',
+    desc:'봉인의 링 3개가 폭발. DMG 5e18.',
+    extra: { _lifesteal: 0.08 } },
+
+  // exotic ultimate
+  { cat:'magic', id:'tr_bigbang', name:'대폭발', slot:'e', visual:'bigbang',
+    dmg: 2e20, speed: 100, r: 16, life: 5, count: 30, spread: 6.28, explosive: true, explodeR: 180, mp: 400, cd: 30, kind: 'fire',
+    desc:'우주의 시작. 30방향 대폭발. DMG 2e20.',
+    extra: {} },
+  { cat:'magic', id:'tr_supernova', name:'초신성 폭발', slot:'e', visual:'supernova',
+    dmg: 1.8e20, speed: 130, r: 14, life: 4, count: 28, spread: 6.28, explosive: true, explodeR: 160, mp: 350, cd: 25, kind: 'fire',
+    desc:'별의 죽음. 28방향 폭발. DMG 1.8e20.',
+    extra: { _burn: 6, _burnDmgRate: 0.06 } },
 ];
 
 // SKILL_TREE 에 등록. category 는 TRIAL 카테고리 (magic/chaos/order/nature/engineering)
