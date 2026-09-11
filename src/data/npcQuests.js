@@ -23,16 +23,29 @@ const ELARA_QUESTS = [
     check:()=>{ return Object.keys(state.storyFragments || {}).length >= 5; },
     reward:()=>{ state.research = (state.research||0) + 2000; return '+2000 RP'; } },
   { bond: 7, title:'ULTRA 도전',        desc:'ULTRA 시련 1회 통과',
-    check:()=>{ return Object.keys(state.ultraCleared || {}).length >= 1; },
-    reward:()=>{ state.gold += 500; return '+500G'; } },
-  { bond: 8, title:'모든 계열',         desc:'모든 계열 교수 1명씩 격파',
     check:()=>{
-      const keys = ['lit','phil','phys','chem','eng','med','math','pe','art','mus','rel'];
+      // ultraCleared 는 {magic:true} 형태로 저장됨. true 값만 카운트.
+      const uc = state.ultraCleared || {};
+      let n = 0;
+      for (const k of Object.keys(uc)) if (uc[k]) n++;
+      return n >= 1;
+    },
+    reward:()=>{ state.gold += 500; return '+500G'; } },
+  { bond: 8, title:'모든 계열',         desc:'서로 다른 계열 교수 5명 격파',
+    check:()=>{
+      // FACULTY_PROFESSORS 의 실제 키 사용 (kor/eng/biz/psy/phys/chem/cs/robot/med/phar/math/pe/
+      // paint/vocal/phil/rel/lib/media/sculpt/vdesign/chn/jpn). 서로 다른 계열 5개 이상 격파 시 통과.
+      const FACULTY_GROUPS = [
+        ['kor','eng'], ['biz','psy'], ['phys','chem'], ['cs','robot'],
+        ['med','phar'], ['math','pe'], ['paint','vocal'], ['phil','rel'],
+        ['lib','media'], ['sculpt','vdesign'], ['chn','jpn'],
+      ];
       const beaten = state.professorsBeaten || {};
-      for (const k of keys) {
-        if (!(beaten[k+'_a'] || beaten[k+'_b'])) return false;
+      let groups = 0;
+      for (const grp of FACULTY_GROUPS) {
+        if (grp.some(k => beaten[k])) groups++;
       }
-      return true;
+      return groups >= 5;
     },
     reward:()=>{ state.research = (state.research||0) + 10000; return '+10000 RP'; } },
   { bond: 9, title:'교장 격파',         desc:'교장을 1회 이상 격파',
