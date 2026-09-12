@@ -560,7 +560,7 @@ function updateAcademy(dt) {
         else if (d.kind === 'cipher')    { if (typeof startCipherQuest === 'function') startCipherQuest(); }
         else if (d.kind === 'training')  { goTo('training'); }
         else if (d.kind === 'legacy')    { goTo('legacyLobby'); }
-        else if (d.kind === 'customize') { goTo('customize'); }
+        else if (d.kind === 'customize') { state.customizeVisited = true; goTo('customize'); }
         else if (d.kind === 'clan')      { openClanScene(); }
         else if (d.kind === 'spellcraft'){ openSpellCraft(); }
         else if (d.kind === 'faction')   { openFactionScene(); }

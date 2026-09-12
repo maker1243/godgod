@@ -4,37 +4,38 @@
 // 진행: 각 단계마다 미니 조건(킬 카운트/RP 등) → 자동 검사 → 완료 시 대사 + 보상.
 // =====================================================================
 
+// 유대 미션 - 새 콘텐츠(클랜/스펠크래프트/암시장/평판/지하/초월)를 반영해 재설계.
+// 초기 미션은 가볍고, 후반은 진짜 도전과 진행을 반영.
 const ELARA_QUESTS = [
-  { bond: 1, title:'첫 인사',           desc:'그저 인사만 나눈다.',
-    check:()=>true,   reward:()=>{ state.gold += 20; return '+20G'; } },
-  { bond: 2, title:'10마리 처치',       desc:'몹 10마리 처치',
-    check:()=>{ return (state.stats && state.stats.totalKills || 0) >= 10; },
-    reward:()=>{ state.research = (state.research||0) + 100; return '+100 RP'; } },
-  { bond: 3, title:'첫 시련',           desc:'아무 시련이든 하나 통과',
-    check:()=>{ return Object.keys(state.trialCleared || {}).length >= 1; },
-    reward:()=>{ state.gold += 100; return '+100G'; } },
-  { bond: 4, title:'교수 격파',         desc:'교수 1명 이상 격파',
-    check:()=>{ return Object.keys(state.professorsBeaten || {}).length >= 1; },
-    reward:()=>{ state.research = (state.research||0) + 500; return '+500 RP'; } },
-  { bond: 5, title:'암호 해독',         desc:'CIPHER 3회 성공',
-    check:()=>{ return (state.cipherSolvedCount || 0) >= 3; },
-    reward:()=>{ academy.inventory.heal = (academy.inventory.heal||0) + 5; if (typeof recomputeHotkeys === 'function') recomputeHotkeys(); return '+5 힐포션'; } },
-  { bond: 6, title:'스토리 조각',       desc:'스토리 조각 5개 수집',
-    check:()=>{ return Object.keys(state.storyFragments || {}).length >= 5; },
-    reward:()=>{ state.research = (state.research||0) + 2000; return '+2000 RP'; } },
-  { bond: 7, title:'ULTRA 도전',        desc:'ULTRA 시련 1회 통과',
+  // 1단계: 관찰 - NPC 3명과 인사 (아카데미 NPC 병합 시스템)
+  { bond: 1, title:'낯선 얼굴들',       desc:'아카데미 NPC 3명과 인사 (SPACE)',
     check:()=>{
-      // ultraCleared 는 {magic:true} 형태로 저장됨. true 값만 카운트.
-      const uc = state.ultraCleared || {};
+      // livingNpcInteract 는 NPC.bond 를 증가시킴. 아카데미 NPC 중 bond>=1 이 3명 이상.
+      const npcs = (typeof academy !== 'undefined' && academy.npcs) ? academy.npcs : [];
       let n = 0;
-      for (const k of Object.keys(uc)) if (uc[k]) n++;
-      return n >= 1;
+      for (const nc of npcs) { if ((nc.bond || 0) >= 1) n++; }
+      return n >= 3;
     },
-    reward:()=>{ state.gold += 500; return '+500G'; } },
-  { bond: 8, title:'모든 계열',         desc:'서로 다른 계열 교수 5명 격파',
+    reward:()=>{ state.gold += 50; return '+50 G'; } },
+
+  // 2단계: 스타일 - 캐릭터 커스터마이즈 열람 (외모 결정 자체가 관계 진전)
+  { bond: 2, title:'자기 표현',         desc:'STYLE 문 진입 후 팔레트/특성 최소 1회 변경',
+    check:()=>{ return !!state.customizeVisited; },
+    reward:()=>{ state.research = (state.research||0) + 200; return '+200 RP'; } },
+
+  // 3단계: 가문 결정
+  { bond: 3, title:'출신의 자각',       desc:'HOUSE 문에서 가문·학파 확정',
+    check:()=>{ return typeof hasFaction === 'function' && hasFaction(); },
+    reward:()=>{ state.gold += 200; return '+200 G'; } },
+
+  // 4단계: 주문 창조
+  { bond: 4, title:'첫 자작 마법',      desc:'SPELL 조합실에서 커스텀 주문 1개 창조',
+    check:()=>{ return Array.isArray(state.customSpells) && state.customSpells.length >= 1; },
+    reward:()=>{ academy.inventory.mana = (academy.inventory.mana||0) + 5; if (typeof recomputeHotkeys === 'function') recomputeHotkeys(); return '+5 마나 물약'; } },
+
+  // 5단계: 계열 결투 - 서로 다른 3계열 교수 격파
+  { bond: 5, title:'세 학문의 통달',    desc:'서로 다른 계열 교수 3명 격파',
     check:()=>{
-      // FACULTY_PROFESSORS 의 실제 키 사용 (kor/eng/biz/psy/phys/chem/cs/robot/med/phar/math/pe/
-      // paint/vocal/phil/rel/lib/media/sculpt/vdesign/chn/jpn). 서로 다른 계열 5개 이상 격파 시 통과.
       const FACULTY_GROUPS = [
         ['kor','eng'], ['biz','psy'], ['phys','chem'], ['cs','robot'],
         ['med','phar'], ['math','pe'], ['paint','vocal'], ['phil','rel'],
@@ -42,25 +43,55 @@ const ELARA_QUESTS = [
       ];
       const beaten = state.professorsBeaten || {};
       let groups = 0;
-      for (const grp of FACULTY_GROUPS) {
-        if (grp.some(k => beaten[k])) groups++;
-      }
-      return groups >= 5;
+      for (const grp of FACULTY_GROUPS) if (grp.some(k => beaten[k])) groups++;
+      return groups >= 3;
     },
-    reward:()=>{ state.research = (state.research||0) + 10000; return '+10000 RP'; } },
-  { bond: 9, title:'교장 격파',         desc:'교장을 1회 이상 격파',
-    check:()=>{ return (state.principalDefeated || 0) >= 1; },
-    reward:()=>{ state.research = (state.research||0) + 50000; return '+50000 RP'; } },
+    reward:()=>{ state.research = (state.research||0) + 1500; return '+1500 RP'; } },
+
+  // 6단계: 지하 진입 및 방 개방
+  { bond: 6, title:'지하의 발견',       desc:'지하 던전에서 교수의 방 3개 개방',
+    check:()=>{
+      const cl = (typeof underground !== 'undefined' && underground.claimed) ? underground.claimed : {};
+      return Object.keys(cl).filter(k => cl[k]).length >= 3;
+    },
+    reward:()=>{ if (typeof _ensureArtifactsState === 'function') _ensureArtifactsState(); state.gold = (state.gold||0) + 1000; return '+1000 G · 뒷골목 rep+3'; } },
+
+  // 7단계: 검은 시장 & 마도구
+  { bond: 7, title:'금기의 거래',       desc:'검은 시장 방문 + 마도구 1개 제작',
+    check:()=>{
+      if (!state.blackMarketVisited) return false;
+      if (!state.magicTools) return false;
+      let n = 0;
+      for (const k of Object.keys(state.magicTools)) n += state.magicTools[k] || 0;
+      return n >= 1;
+    },
+    reward:()=>{ state.research = (state.research||0) + 5000; return '+5000 RP'; } },
+
+  // 8단계: 클랜 창설 및 성장
+  { bond: 8, title:'무리의 지도자',     desc:'클랜 창설 후 LV 3 도달',
+    check:()=>{
+      if (!state.clan) return false;
+      // 클랜 XP 로 tier 조회 - 없으면 xpReq 로 판단
+      const xp = state.clan.xp || 0;
+      return xp >= 2000;   // CLAN_LEVELS[2].xpReq
+    },
+    reward:()=>{ state.research = (state.research||0) + 20000; state.gold = (state.gold||0) + 5000; return '+20k RP · +5k G'; } },
+
+  // 9단계: 지하 심연 정복
+  { bond: 9, title:'심연의 정복자',     desc:'지하 5층 심연의 지배자 격파',
+    check:()=>{
+      return !!(typeof underground !== 'undefined' && underground.bossDown && underground.bossDown[5]);
+    },
+    reward:()=>{ state.research = (state.research||0) + 100000; return '+100000 RP'; } },
+
+  // 10단계: 진실을 마주하다 (유지)
   { bond:10, title:'진실을 마주하다',   desc:'아카데미의 진실 컷씬 시청 (또는 모든 조각 수집)',
     check:()=>{
-      // 컷씬을 봤거나 (일반 경로), 이미 모든 조각을 모아 컷씬 트리거 조건을 충족한 경우
-      // 컷씬을 미처 못 본 유저도 자동 통과되도록 완화.
       if (state.academyTruthSeen) return true;
       if (typeof STORY_FRAGMENTS !== 'undefined' && state.storyFragments) {
         const total = Object.keys(STORY_FRAGMENTS).length;
         const owned = Object.keys(state.storyFragments).filter(k => STORY_FRAGMENTS[k]).length;
         if (owned >= total) {
-          // 조각을 다 모았는데 컷씬을 놓친 경우 - 자동으로 시청 처리
           state.academyTruthSeen = true;
           if (typeof saveAccountData === 'function') saveAccountData();
           return true;
@@ -69,7 +100,6 @@ const ELARA_QUESTS = [
       return false;
     },
     reward:()=>{
-      // 고유 아티팩트 지급
       if (typeof _ensureArtifactsState === 'function') _ensureArtifactsState();
       if (state.artifacts) state.artifacts.owned['god_arcana'] = true;
       return 'ARCANA CROWN 획득!';

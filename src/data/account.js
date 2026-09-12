@@ -75,6 +75,7 @@ const state = {
   undergroundClaimed: {},          // 지하 교수방 보상 수령 기록
   transcendCleared: {},            // 3단계 초월 시련 통과 카테고리 {magic:true, ...}
   transcendTrialBanUntil: 0,       // 초월 시련 실패 후 쿨다운
+  customizeVisited: false,         // 캐릭터 스타일 문 진입 여부 (엘라라 bond 2)
 };
 
 // 언어 설정 로드 (없으면 langSelect 씬)
@@ -205,6 +206,7 @@ function loadAccountData() {
     if (d.undergroundClaimed && typeof d.undergroundClaimed === 'object' && typeof underground !== 'undefined') underground.claimed = d.undergroundClaimed;
     if (d.transcendCleared && typeof d.transcendCleared === 'object') state.transcendCleared = d.transcendCleared;
     if (typeof d.transcendTrialBanUntil === 'number') state.transcendTrialBanUntil = d.transcendTrialBanUntil;
+    if (typeof d.customizeVisited === 'boolean') state.customizeVisited = d.customizeVisited;
     if (typeof academy !== 'undefined' && academy) {
       if (d.inventory)                    academy.inventory  = d.inventory;
       if (typeof d.bestArena === 'number') academy.bestArena = d.bestArena;
@@ -286,6 +288,7 @@ function saveAccountData() {
     undergroundClaimed: (typeof underground !== 'undefined' ? underground.claimed : {}) || {},
     transcendCleared: state.transcendCleared || {},
     transcendTrialBanUntil: state.transcendTrialBanUntil || 0,
+    customizeVisited: !!state.customizeVisited,
     inventory: (typeof academy !== 'undefined' && academy) ? academy.inventory : null,
     bestArena: (typeof academy !== 'undefined' && academy) ? academy.bestArena : 0,
     duelWins:  (typeof academy !== 'undefined' && academy) ? academy.duelWins  : 0,
