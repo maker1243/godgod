@@ -179,14 +179,25 @@ function deleteSpell(id) {
   if (typeof saveAccountData === 'function') saveAccountData();
 }
 
-// slot: 'lmb'|'q'|'e'. 미지정 시 lmb 로.
+// slot: 'lmb'|'q'|'e'. 미지정 시 lmb 로. 같은 슬롯에 같은 스펠이 이미 있으면 해제 (토글).
 function equipSpell(id, slot) {
   _spellState();
   slot = slot || 'lmb';
   if (id && !state.customSpells.find(s => s.id === id)) return;
-  state.equippedSpells[slot] = id;
-  // 하위 호환: lmb 슬롯은 equippedSpell 도 갱신
-  if (slot === 'lmb') state.equippedSpell = id;
+  // 토글: 이미 이 슬롯에 이 스펠이 장착돼 있으면 해제
+  if (state.equippedSpells[slot] === id) {
+    state.equippedSpells[slot] = null;
+    if (slot === 'lmb') state.equippedSpell = null;
+  } else {
+    // 이 스펠이 다른 슬롯에 있었다면 그 슬롯에서도 제거 (한 스펠은 한 슬롯만)
+    for (const s of ['lmb', 'q', 'e']) {
+      if (state.equippedSpells[s] === id) state.equippedSpells[s] = null;
+    }
+    state.equippedSpells[slot] = id;
+    if (slot === 'lmb') state.equippedSpell = id;
+  }
+  // 즉시 반영
+  if (typeof refreshPlayerStats === 'function') try { refreshPlayerStats(); } catch(_){}
   if (typeof saveAccountData === 'function') saveAccountData();
 }
 
