@@ -391,26 +391,37 @@ function updateBlackHeart(e, dt, sm) {
     for (const t of e._tentacles) { t.ang += dt * 0.5; t.phase += dt * 4; }
   }
 
-  // 패턴 사이클 - 페이즈 1: 순차, 페이즈 2: 랜덤, 페이즈 3: 2개 동시
-  e._patternT -= dt;
-  if (e._patternT <= 0) {
-    const cdMul = e._phase === 3 ? 0.5 : (e._phase === 2 ? 0.7 : 1);
-    if (e._phase === 3) {
-      // 페이즈 3: 두 개 패턴 동시 발사
-      const pat1 = BH_PATTERNS[Math.floor(Math.random() * BH_PATTERNS.length)];
-      const pat2 = BH_PATTERNS[Math.floor(Math.random() * BH_PATTERNS.length)];
-      try { pat1.fire(e); } catch(_){}
-      try { pat2.fire(e); } catch(_){}
-      e._patternT = ((pat1.cd + pat2.cd) / 2) * cdMul;
-    } else {
-      const pat = BH_PATTERNS[e._pattern];
+  // ===== 병렬 패턴 스케줄러 =====
+  // 여러 슬롯이 각자 독립된 타이머를 갖고 패턴을 발사. 페이즈가 높아질수록 슬롯 수 증가.
+  // 슬롯마다 다른 패턴을 선택 → 화면에 끊임없이 여러 종류의 패턴이 동시에 나옴.
+  if (!e._slots) {
+    e._slots = [];
+    // 초기 슬롯 셋업 (페이즈 1: 3, 2: 5, 3: 8)
+  }
+  const targetSlots = e._phase === 3 ? 8 : (e._phase === 2 ? 5 : 3);
+  // 부족하면 추가 - 초기 오프셋을 살짝씩 분산
+  while (e._slots.length < targetSlots) {
+    e._slots.push({
+      pat: Math.floor(Math.random() * BH_PATTERNS.length),
+      t: 0.5 + Math.random() * 2.0,        // 첫 발사까지의 지연을 분산
+    });
+  }
+  // 페이즈 감소 시 (부활 리셋) 초과 슬롯 제거는 안 함 - 계속 늘어나기만 함
+
+  const cdMul = e._phase === 3 ? 0.5 : (e._phase === 2 ? 0.7 : 1);
+  for (let i = 0; i < e._slots.length; i++) {
+    const slot = e._slots[i];
+    slot.t -= dt;
+    if (slot.t <= 0) {
+      const pat = BH_PATTERNS[slot.pat];
       if (pat) { try { pat.fire(e); } catch(_) {} }
-      e._patternT = pat.cd * cdMul;
-      if (e._phase === 1) {
-        e._pattern = (e._pattern + 1) % BH_PATTERNS.length;
-      } else {
-        e._pattern = Math.floor(Math.random() * BH_PATTERNS.length);
-      }
+      // 다음 패턴 선정 - 슬롯별 다양성 유지: 같은 슬롯에서 최근 패턴 재선정 금지 (연속 회피)
+      let next;
+      let tries = 0;
+      do { next = Math.floor(Math.random() * BH_PATTERNS.length); tries++; } while (next === slot.pat && tries < 4);
+      slot.pat = next;
+      // 다음 CD - 슬롯 간 타이머가 서로 겹치지 않도록 살짝 랜덤 오프셋 추가
+      slot.t = pat.cd * cdMul * (0.75 + Math.random() * 0.5) + (i * 0.08);
     }
   }
 }
