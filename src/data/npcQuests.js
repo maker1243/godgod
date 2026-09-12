@@ -109,19 +109,46 @@ const ELARA_QUESTS = [
     } },
 ];
 
+// 각 유대 단계 완료 시 나오는 승급 대사 (해당 미션에 특화). 인덱스 = bond 번호.
 const ELARA_LINES = [
-  '봉인이 어젯밤 다시 약해졌어.',
-  '너의 얼굴에서 오늘은 다른 빛이 보여.',
-  '나는 밤마다 이상한 꿈을 꿔. 코어의 소리...',
-  '엄마는 내가 포션이나 배우고 있다고 알아.',
-  '너는 우리와 달라. 그게 무서워.',
-  '교수님들이 왜 봉인되었는지 궁금하지 않아?',
-  '나는 진실이 두렵지만, 너와 함께라면 볼 수 있어.',
-  '이 아카데미의 지하에는 우리가 배워선 안 되는 것이 있어.',
-  '너는 이제 신에 가까워지고 있어. 조심해.',
-  '내가 처음부터 알았어. 너는 열쇠였어.',
-  '엘라라는 조용히 미소짓는다. 이제 그녀는 너의 유일한 아군이다.',
+  '(bond 0) 봉인이 어젯밤 다시 약해졌어.',                                    // bond 0 - 기본
+  '엘라라: 세 명이나 너와 인사했다니. 학원이 조금은 따뜻해졌네.',             // bond 1 - 낯선 얼굴들
+  '엘라라: 그 옷... 너에게 잘 어울려. 정말로.',                                // bond 2 - 자기 표현
+  '엘라라: 가문을 정했구나. 이제 학원이 너를 어떻게 볼지 두려워?',            // bond 3 - 출신의 자각
+  '엘라라: 네가 만든 주문에서 너의 냄새가 나. 처음 맡아본 마법이야.',         // bond 4 - 첫 자작 마법
+  '엘라라: 세 계열의 교수를 이겼다니. 나는 너를 조금 두려워하기 시작했어.',   // bond 5 - 세 학문의 통달
+  '엘라라: 지하에서 뭘 봤어? 나는 그곳의 소리를 매일 밤 들어.',                // bond 6 - 지하의 발견
+  '엘라라: 검은 시장에 갔다고? 그들이 나에 대해 뭐라고 해?',                  // bond 7 - 금기의 거래
+  '엘라라: 너를 따르는 사람들이 생겼어. 학원의 정치가 흔들리고 있어.',        // bond 8 - 무리의 지도자
+  '엘라라: 심연의 지배자를 이긴 사람은 47년 만이야. 교장 崔 이후로.',         // bond 9 - 심연의 정복자
+  '엘라라: 학원의 모든 권력자를 무너뜨렸구나. 이제 남은 건 나와 너뿐이야.',   // bond 10 - 학원의 정복
 ];
+
+// 미완료 상태에서 진행 중 대사 (미션별로 다른 힌트/독백)
+const ELARA_HINT_LINES = [
+  '엘라라: (아무 말도 하지 않는다)',                                          // bond 0
+  '엘라라: 다른 학생들과도 이야기해봐. 그들도 너를 지켜보고 있어.',           // 미션 1
+  '엘라라: 너의 모습을 스스로 정해봐. 나는 너의 진짜 색이 궁금해.',            // 미션 2
+  '엘라라: 이 학원에서는 태생이 문 하나를 여닫아. 어느 문 앞에 설 거야?',      // 미션 3
+  '엘라라: 남이 만든 마법이 아닌 너만의 마법을 갖고 와줘.',                    // 미션 4
+  '엘라라: 세 계열의 교수를 이겨봐. 학원의 지도가 너에게 다시 그려질 거야.',   // 미션 5
+  '엘라라: 지하로 내려가봐. 진실은 위층에 있지 않아.',                          // 미션 6
+  '엘라라: 검은 시장의 노인들과 마도구 제작자를 찾아봐. 그들이 아는 게 있어.',  // 미션 7
+  '엘라라: 너만의 무리를 만들어. 혼자서는 아카데미를 이길 수 없어.',            // 미션 8
+  '엘라라: 지하의 가장 깊은 곳. 심연의 지배자를 이겨야 해.',                    // 미션 9
+  '엘라라: 22명 교수와 교장. 학원 전체가 너에게 무릎을 꿇을 때까지.',           // 미션 10
+];
+
+// 접근 헬퍼
+function getElaraLineForBond(bond) {
+  if (bond < 0) bond = 0;
+  if (bond >= ELARA_LINES.length) bond = ELARA_LINES.length - 1;
+  return ELARA_LINES[bond];
+}
+function getElaraHintForBond(bond) {
+  const idx = Math.min(bond, ELARA_HINT_LINES.length - 1);
+  return ELARA_HINT_LINES[idx];
+}
 
 function _ensureNpcQuestsState() {
   if (!state.npcQuests) state.npcQuests = { elara: { bond: 0, done: {}, pendingRewards: [] } };
@@ -159,7 +186,9 @@ function autoAdvanceElaraBond() {
   if (advanced > 0) {
     if (typeof sfx === 'function') sfx('level');
     if (typeof showAchievementBanner === 'function') showAchievementBanner('엘라라 유대 승급 ×' + advanced, rewards.join(' | '), '#c86ade');
-    if (typeof showMsg === 'function') showMsg('엘라라: 그동안 지켜보고 있었어. (' + advanced + ' 단계 승급)', 5);
+    // 각 승급에 대응하는 대사가 있으면 도달한 최종 bond 대사를 우선 표시
+    const finalLine = getElaraLineForBond(el.bond);
+    if (typeof showMsg === 'function') showMsg(finalLine, 5);
     if (typeof saveAccountData === 'function') saveAccountData();
   }
   return advanced;
@@ -176,8 +205,8 @@ function elaraInteract() {
   // 현재 유대 단계
   const nextQ = ELARA_QUESTS[el.bond];
   if (!nextQ) {
-    // 최종 단계 이후
-    showMsg(ELARA_LINES[10] || '엘라라: ...', 4);
+    // 최종 단계 이후 - 최종 bond 승급 대사 반복
+    showMsg(getElaraLineForBond(el.bond) || '엘라라: ...', 5);
     return;
   }
   // 조건 만족 시 승격
@@ -185,15 +214,17 @@ function elaraInteract() {
     const rwd = (typeof nextQ.reward === 'function') ? nextQ.reward() : '';
     el.done[nextQ.bond] = Date.now();
     el.bond = nextQ.bond;
-    const line = ELARA_LINES[Math.min(el.bond, ELARA_LINES.length - 1)];
-    showMsg('엘라라: ' + line + '  (BOND ' + el.bond + ' · ' + rwd + ')', 5);
+    const line = getElaraLineForBond(el.bond);
+    showMsg(line + '  (BOND ' + el.bond + ' · ' + rwd + ')', 6);
     if (typeof sfx === 'function') sfx('level');
     if (typeof weeklyAdd === 'function') weeklyAdd('weekly_elaraBond', 1);
     if (typeof saveAccountData === 'function') saveAccountData();
     return;
   }
-  // 조건 미달 - 힌트
-  showMsg('엘라라 (BOND ' + el.bond + '/10) → 다음 조건: ' + nextQ.desc, 4);
+  // 조건 미달 - 미션별 대사 + 목표 힌트
+  const nextIdx = el.bond + 1;   // 진행 중인 미션 번호
+  const hintLine = getElaraHintForBond(nextIdx);
+  showMsg(hintLine + '  [BOND ' + nextIdx + '/10 · ' + nextQ.desc + ']', 5);
 }
 
 function elaraBond() {
