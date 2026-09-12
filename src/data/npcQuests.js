@@ -83,6 +83,40 @@ function _ensureNpcQuestsState() {
   if (!el.pendingRewards) el.pendingRewards = [];
 }
 
+// 아카데미 진입/틱마다 호출: 이미 조건 만족한 유대 미션 자동 클리어
+// (엘라라와 대화하지 않아도 진행). 여러 단계가 이미 만족된 경우 순차 처리.
+function autoAdvanceElaraBond() {
+  _ensureNpcQuestsState();
+  const el = state.npcQuests.elara;
+  let advanced = 0;
+  const rewards = [];
+  // 최대 10회 (bond 0..10) 순차. 결말 선택 조건 도달 시 멈춤.
+  for (let iter = 0; iter < 12; iter++) {
+    const nextQ = ELARA_QUESTS[el.bond];
+    if (!nextQ) break;
+    // 결말 선택 조건 도달 시 자동 진행 중단 (플레이어가 대화로 결말 선택하도록)
+    if (typeof canOfferEndingChoice === 'function' && canOfferEndingChoice()) break;
+    // check 실패 시 중단
+    let ok = false;
+    try { ok = !!nextQ.check(); } catch(_){}
+    if (!ok) break;
+    // 보상 지급
+    const rwd = (typeof nextQ.reward === 'function') ? (function(){ try { return nextQ.reward(); } catch(_) { return ''; } })() : '';
+    el.done[nextQ.bond] = Date.now();
+    el.bond = nextQ.bond;
+    advanced++;
+    rewards.push('BOND ' + el.bond + (rwd ? ' · ' + rwd : ''));
+    if (typeof weeklyAdd === 'function') weeklyAdd('weekly_elaraBond', 1);
+  }
+  if (advanced > 0) {
+    if (typeof sfx === 'function') sfx('level');
+    if (typeof showAchievementBanner === 'function') showAchievementBanner('엘라라 유대 승급 ×' + advanced, rewards.join(' | '), '#c86ade');
+    if (typeof showMsg === 'function') showMsg('엘라라: 그동안 지켜보고 있었어. (' + advanced + ' 단계 승급)', 5);
+    if (typeof saveAccountData === 'function') saveAccountData();
+  }
+  return advanced;
+}
+
 // SPACE 로 Elara 와 대화. 조건 만족 여부에 따라 다른 대사.
 function elaraInteract() {
   _ensureNpcQuestsState();

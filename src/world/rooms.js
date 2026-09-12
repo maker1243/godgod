@@ -584,6 +584,8 @@ function goTo(scene) {
     player.y = academy.room.y + academy.room.h / 2;
     state.cam.x = 0; state.cam.y = 0;
     if (academy.cam) { academy.cam.x = 0; academy.cam.y = 0; }
+    // 엘라라 유대 자동 승급 재검사
+    academy._elaraAutoChecked = false;
     if (state.gpa <= 0.5) {
       showMsg('EXPELLED - GAME OVER', 6);
     }

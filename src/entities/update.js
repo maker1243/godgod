@@ -265,6 +265,11 @@ function updateAcademy(dt) {
   if (typeof checkMorningEvent === 'function') checkMorningEvent();
   if (typeof tickTips === 'function') tickTips(dt);
   if (typeof checkDailyLogin === 'function' && !academy._dailyChecked) { academy._dailyChecked = true; checkDailyLogin(); }
+  // 엘라라 유대 자동 승급 - 이미 조건 만족한 미션이 있으면 대화 없이도 클리어
+  if (typeof autoAdvanceElaraBond === 'function' && !academy._elaraAutoChecked) {
+    academy._elaraAutoChecked = true;
+    try { autoAdvanceElaraBond(); } catch(_){}
+  }
   // 엘라라 결말 조건 - 첫 진입 시 자동 선택 다이얼로그
   if (typeof canOfferEndingChoice === 'function' && canOfferEndingChoice() && !academy._elaraEndingOffered) {
     academy._elaraEndingOffered = true;
