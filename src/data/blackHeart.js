@@ -5,15 +5,17 @@
 // dungeonMode='blackheart' 에서 spawnBoss 대신 spawnBlackHeart 호출.
 // =====================================================================
 
-const BLACKHEART_HP = 3937500000000000;   // 3.9375 * 10^15
+// 3단계 시련 보스 HP = ULTRA_TRIAL_HP × 1e32 = 1e39. 검은 심장은 그 × 1e10 = 1e49.
+const BLACKHEART_HP = 1e49;
+const BLACKHEART_DMG = 2e18;
 
 function spawnBlackHeart(room) {
   const boss = {
     x: room.x + room.w/2, y: room.y + 60, vx: 0, vy: 0,
-    r: 20,
+    r: 32,                            // 훨씬 크게
     kind: 'blackheart',
     hp: BLACKHEART_HP, maxHp: BLACKHEART_HP,
-    dmg: 200000, speed: 40,
+    dmg: BLACKHEART_DMG, speed: 50,
     xp: 0, gold: 0,
     hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
     isBoss: true,
@@ -24,10 +26,18 @@ function spawnBlackHeart(room) {
     _entryT: 5,
     _entryTotal: 5,
     _reviveArmed: true,
+    _rebirth2Armed: true,             // 2차 부활 (10% HP)
+    _tentacles: [],                   // 촉수 3~5개
+    _dmgRed: 0.15,                    // 상시 15% 감쇄
   };
+  // 촉수 초기화 (형상)
+  for (let i = 0; i < 5; i++) {
+    boss._tentacles.push({ ang: (i / 5) * Math.PI * 2, len: 20 + Math.random() * 8, phase: Math.random() * Math.PI * 2 });
+  }
   entities.enemies = [boss];
-  showMsg('검은 심장이 깨어난다.', 5);
+  showMsg('★ 검은 심장이 각성한다. 세상의 종말이 다가온다. ★', 6);
   if (typeof sfx === 'function') sfx('boss');
+  if (typeof state !== 'undefined') { state.shake = 40; state._slowMoUntil = performance.now() + 2000; }
 }
 
 // 20 개의 공격 패턴
@@ -193,6 +203,120 @@ const BH_PATTERNS = [
       spawnParticle(e.x + Math.cos(a)*40, e.y + Math.sin(a)*40, '#c81616', 0.6, 2, 60);
     }
   } },
+  // === 20~29: 신규 강화 패턴 ===
+  // 20. 촉수 채찍 (사방 촉수 확장 후 근접 광역)
+  { name:'tentacle_lash', cd: 3.5, fire(e) {
+    if (e._tentacles) for (const t of e._tentacles) t.len = 60;
+    setTimeout(() => {
+      if (e._tentacles) for (const t of e._tentacles) t.len = 20 + Math.random() * 8;
+      const rr = 60;
+      for (let a = 0; a < 12; a++) {
+        const ang = (a/12)*Math.PI*2;
+        entities.ebullets.push({ x: e.x + Math.cos(ang)*rr, y: e.y + Math.sin(ang)*rr, vx: Math.cos(ang)*80, vy: Math.sin(ang)*80, r: 5, dmg: e.dmg * 1.2, life: 1.5, kind: 'shadow', visual:'voidtear' });
+      }
+    }, 900);
+  } },
+  // 21. 나선 폭풍 (36발 이중 나선)
+  { name:'twin_spiral', cd: 4.0, fire(e) {
+    for (let i = 0; i < 36; i++) {
+      const a = (i / 36) * Math.PI * 2;
+      entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a)*130, vy: Math.sin(a)*130, r: 3, dmg: e.dmg * 0.9, life: 3, kind: 'shadow', _sc_spin: 4, visual:'chaosorb' });
+      entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a+Math.PI/36)*80, vy: Math.sin(a+Math.PI/36)*80, r: 3, dmg: e.dmg * 0.7, life: 3, kind: 'shadow', _sc_spin: -4, visual:'madnessorb' });
+    }
+  } },
+  // 22. 흑화 지대 (플레이어 위치 그라운드 필드 3개)
+  { name:'blackout_field', cd: 5.0, fire(e) {
+    for (let i = 0; i < 3; i++) {
+      const tx = player.x + rand(-40, 40), ty = player.y + rand(-40, 40);
+      if (entities.fx) entities.fx.push({ type:'warning', x: tx, y: ty, r: 30, life: 0.8, max: 0.8 });
+      setTimeout(() => {
+        entities.ebullets.push({ x: tx, y: ty, vx: 0, vy: 0, r: 30, dmg: e.dmg * 0.8, life: 4, kind: 'shadow', pierce: true, _isGround: true, _pierceLeft: 9999 });
+        if (entities.fx) entities.fx.push({ type:'ring', x: tx, y: ty, life: 4, max: 4, r0: 4, r1: 30, col: '#c86ade' });
+      }, 800);
+    }
+  } },
+  // 23. 심장의 고동 (전방향 링 3중)
+  { name:'heartbeat', cd: 3.0, fire(e) {
+    state.shake = 15;
+    for (let ring = 0; ring < 3; ring++) {
+      setTimeout(() => {
+        for (let i = 0; i < 20 + ring * 4; i++) {
+          const a = (i / (20 + ring * 4)) * Math.PI * 2 + ring * 0.15;
+          entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a)*140, vy: Math.sin(a)*140, r: 3, dmg: e.dmg * 0.7, life: 2, kind: 'fire', visual:'sacredorb' });
+        }
+        if (entities.fx) entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 0.4, max: 0.4, r0: 5, r1: 60 + ring * 30, col: '#c81616' });
+      }, ring * 300);
+    }
+  } },
+  // 24. 심연의 눈 (플레이어 조준 광선 4개 지연 발사)
+  { name:'abyss_eye', cd: 4.5, fire(e) {
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        const a = angleTo(e, player) + (i - 1.5) * 0.15;
+        if (entities.fx) entities.fx.push({ type:'warning', x: (e.x + player.x)/2, y: (e.y + player.y)/2, r: 20, life: 0.4, max: 0.4 });
+        setTimeout(() => {
+          entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a)*500, vy: Math.sin(a)*500, r: 6, dmg: e.dmg * 1.8, life: 1.5, kind: 'shadow', visual:'eyeofchaos', pierce: true, _pierceLeft: 5 });
+        }, 400);
+      }, i * 150);
+    }
+  } },
+  // 25. 저주 대륙 (넓은 저주 지대)
+  { name:'curse_land', cd: 6.0, fire(e) {
+    // 8방향 저주 웨이브 + 5초 저주
+    if (player) player._curseUntil = performance.now() + 5000;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a)*60, vy: Math.sin(a)*60, r: 12, dmg: e.dmg * 0.6, life: 4, kind: 'shadow', pierce: true, _pierceLeft: 999, visual:'nethershard' });
+    }
+    showMsg('저주받은 대륙 - 5초간 회복 무효', 3);
+  } },
+  // 26. 세계 반전 (플레이어 발사체 전부 반전 + 자체 발사)
+  { name:'reflect_world', cd: 8.0, fire(e) {
+    for (const b of entities.bullets) { b.vx = -b.vx; b.vy = -b.vy; b.dmg = 0; }
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      entities.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a)*180, vy: Math.sin(a)*180, r: 5, dmg: e.dmg * 1.5, life: 2, kind: 'shadow', visual:'voidbolt' });
+    }
+    showMsg('세계가 반전한다.', 3);
+  } },
+  // 27. 종말의 심판 (화면 전체 낙석)
+  { name:'apocalypse', cd: 8.0, fire(e) {
+    const rm = rooms[currentRoom];
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => {
+        const tx = rm.x + rand(20, rm.w - 20);
+        const ty = rm.y + rand(20, rm.h - 20);
+        if (entities.fx) entities.fx.push({ type:'warning', x: tx, y: ty, r: 18, life: 0.5, max: 0.5 });
+        setTimeout(() => {
+          entities.ebullets.push({ x: tx, y: ty - 60, vx: 0, vy: 400, r: 6, dmg: e.dmg * 1.4, life: 0.5, kind: 'fire', visual:'meteor' });
+        }, 500);
+      }, i * 100);
+    }
+  } },
+  // 28. 심장 분열 (4개 미니 검은 심장 스폰)
+  { name:'split_hearts', cd: 12.0, fire(e) {
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      const miniHp = e.maxHp * 0.001;
+      const mini = {
+        x: e.x + Math.cos(a)*40, y: e.y + Math.sin(a)*40, r: 8,
+        hp: miniHp, maxHp: miniHp, dmg: e.dmg * 0.4, speed: 60,
+        kind: 'slime', hitFlash: 0, freeze: 0, slow: 0, stun: 0, attackCd: 0,
+        xp: 0, gold: 0, _bhMinion: true, isElite: true,
+      };
+      entities.enemies.push(mini);
+    }
+    showMsg('심장이 분열한다.', 3);
+  } },
+  // 29. 절대 정지 (모든 발사체 정지 후 재가속)
+  { name:'time_lock', cd: 10.0, fire(e) {
+    const bak = [];
+    for (const b of entities.ebullets) { bak.push({ b, vx: b.vx, vy: b.vy }); b.vx *= 0.05; b.vy *= 0.05; }
+    setTimeout(() => {
+      for (const it of bak) { if (it.b) { it.b.vx = it.vx * 2.5; it.b.vy = it.vy * 2.5; } }
+    }, 1200);
+    showMsg('시간이 멈춘다...', 2);
+  } },
 ];
 
 function updateBlackHeart(e, dt, sm) {
@@ -227,26 +351,66 @@ function updateBlackHeart(e, dt, sm) {
     return;
   }
 
+  // 2차 부활 (10% HP - 페이즈 3, 진짜 광기)
+  if (e._rebirth2Armed && e.hp <= e.maxHp * 0.1) {
+    e._rebirth2Armed = false;
+    e.hp = e.maxHp * 0.1;
+    e._phase = 3;
+    e.dmg *= 2;
+    e.speed *= 1.5;
+    e._dmgRed = 0.35;
+    state.shake = 50;
+    state._slowMoUntil = performance.now() + 2500;
+    showMsg('★★★ 검은 심장이 진짜 형상을 드러낸다 - 광기의 페이즈 3 ★★★', 8);
+    if (typeof sfx === 'function') sfx('bosskill');
+    for (let i = 0; i < 120; i++) {
+      const a2 = Math.random() * Math.PI * 2;
+      const sp2 = 100 + Math.random() * 140;
+      spawnParticle(e.x, e.y, i % 3 === 0 ? '#ff00ff' : (i % 3 === 1 ? '#c81616' : '#0a0510'), 1.8, 5, sp2);
+    }
+    if (entities.fx) {
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 2, max: 2, r0: 8, r1: 200, col: '#ff00ff' });
+      entities.fx.push({ type:'ring', x: e.x, y: e.y, life: 2, max: 2, r0: 4, r1: 160, col: '#c81616' });
+    }
+    return;
+  }
+
   // 저속 이동
   const a = angleTo(e, player);
-  e.x += Math.cos(a) * e.speed * sm * dt * 0.3;
-  e.y += Math.sin(a) * e.speed * sm * dt * 0.3;
+  const spdMul = e._phase === 3 ? 0.6 : (e._phase === 2 ? 0.4 : 0.3);
+  e.x += Math.cos(a) * e.speed * sm * dt * spdMul;
+  e.y += Math.sin(a) * e.speed * sm * dt * spdMul;
   const rm = rooms[currentRoom];
   if (rm) {
     e.x = clamp(e.x, rm.x + 20, rm.x + rm.w - 20);
     e.y = clamp(e.y, rm.y + 20, rm.y + rm.h - 20);
   }
 
-  // 패턴 사이클 - 페이즈 1: 순차, 페이즈 2: 랜덤
+  // 촉수 애니메이션 업데이트
+  if (e._tentacles) {
+    for (const t of e._tentacles) { t.ang += dt * 0.5; t.phase += dt * 4; }
+  }
+
+  // 패턴 사이클 - 페이즈 1: 순차, 페이즈 2: 랜덤, 페이즈 3: 2개 동시
   e._patternT -= dt;
   if (e._patternT <= 0) {
-    const pat = BH_PATTERNS[e._pattern];
-    if (pat) { try { pat.fire(e); } catch(_) {} }
-    e._patternT = pat.cd / (e._phase === 2 ? 1.5 : 1);
-    if (e._phase === 1) {
-      e._pattern = (e._pattern + 1) % BH_PATTERNS.length;
+    const cdMul = e._phase === 3 ? 0.5 : (e._phase === 2 ? 0.7 : 1);
+    if (e._phase === 3) {
+      // 페이즈 3: 두 개 패턴 동시 발사
+      const pat1 = BH_PATTERNS[Math.floor(Math.random() * BH_PATTERNS.length)];
+      const pat2 = BH_PATTERNS[Math.floor(Math.random() * BH_PATTERNS.length)];
+      try { pat1.fire(e); } catch(_){}
+      try { pat2.fire(e); } catch(_){}
+      e._patternT = ((pat1.cd + pat2.cd) / 2) * cdMul;
     } else {
-      e._pattern = Math.floor(Math.random() * BH_PATTERNS.length);
+      const pat = BH_PATTERNS[e._pattern];
+      if (pat) { try { pat.fire(e); } catch(_) {} }
+      e._patternT = pat.cd * cdMul;
+      if (e._phase === 1) {
+        e._pattern = (e._pattern + 1) % BH_PATTERNS.length;
+      } else {
+        e._pattern = Math.floor(Math.random() * BH_PATTERNS.length);
+      }
     }
   }
 }
@@ -257,34 +421,108 @@ function tickBlackHeartCurse(dt) {
   if (performance.now() > player._curseUntil) player._curseUntil = 0;
 }
 
-// 검은 심장 그리기 - 어두운 심장 + 붉은 오라
+// 검은 심장 그리기 - 심장 + 촉수 + 다중 눈 + 오라 (페이즈별)
 function drawBlackHeart(e) {
   const wobble = Math.sin(state.time * 3) * 2;
-  // 오라
   const pulse = 0.6 + Math.sin(state.time * 4) * 0.4;
-  ctx.fillStyle = 'rgba(200, 22, 22, ' + (0.15 * pulse).toFixed(2) + ')';
-  ctx.beginPath(); ctx.arc(e.x*PX, e.y*PX, 30*PX, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = 'rgba(120, 0, 40, ' + (0.3 * pulse).toFixed(2) + ')';
-  ctx.beginPath(); ctx.arc(e.x*PX, e.y*PX, 22*PX, 0, Math.PI*2); ctx.fill();
-  // 심장 몸 (검은 원)
-  pxDraw(e.x - 12, e.y - 10 + wobble, 24, 20, '#0a0510');
-  pxDraw(e.x - 10, e.y - 8 + wobble, 20, 16, '#2a0a10');
-  // 붉은 파열선
-  const vein = 0.5 + Math.sin(state.time * 5) * 0.5;
-  ctx.strokeStyle = 'rgba(255, 30, 30, ' + vein.toFixed(2) + ')';
-  ctx.lineWidth = PX;
+  const phase = e._phase || 1;
+
+  // 초거대 외곽 오라
+  const auraR = 60 + (phase - 1) * 20;
+  const auraCol = phase === 3 ? '#ff00ff' : '#c81616';
+  ctx.fillStyle = 'rgba(255, 0, 255, ' + (0.06 * pulse).toFixed(2) + ')';
+  if (phase === 3) { ctx.beginPath(); ctx.arc(e.x*PX, e.y*PX, (auraR + 15)*PX, 0, Math.PI*2); ctx.fill(); }
+  ctx.fillStyle = 'rgba(200, 22, 22, ' + (0.10 * pulse).toFixed(2) + ')';
+  ctx.beginPath(); ctx.arc(e.x*PX, e.y*PX, auraR*PX, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(120, 0, 40, ' + (0.20 * pulse).toFixed(2) + ')';
+  ctx.beginPath(); ctx.arc(e.x*PX, e.y*PX, (auraR * 0.65)*PX, 0, Math.PI*2); ctx.fill();
+
+  // === 촉수 (형상 특징) ===
+  if (e._tentacles) {
+    for (const t of e._tentacles) {
+      const baseAng = t.ang + Math.sin(t.phase) * 0.3;
+      const segments = 6;
+      let px = e.x, py = e.y;
+      let ang = baseAng;
+      const segLen = t.len / segments;
+      for (let s = 0; s < segments; s++) {
+        const nx = px + Math.cos(ang) * segLen;
+        const ny = py + Math.sin(ang) * segLen;
+        const w = Math.max(1, 5 - s * 0.6);
+        ctx.strokeStyle = phase === 3 ? '#ff2d80' : (phase === 2 ? '#c81616' : '#3a0a2a');
+        ctx.lineWidth = w * PX;
+        ctx.beginPath(); ctx.moveTo(px*PX, py*PX); ctx.lineTo(nx*PX, ny*PX); ctx.stroke();
+        px = nx; py = ny;
+        ang += Math.sin(t.phase + s) * 0.35;
+      }
+      // 촉수 끝 눈
+      pxDraw(px - 1, py - 1, 2, 2, '#ff2d80');
+    }
+  }
+
+  // 심장 몸 - 페이즈별 크기 확장
+  const bodyR = phase === 3 ? 18 : (phase === 2 ? 15 : 12);
+  const bodyH = phase === 3 ? 26 : (phase === 2 ? 22 : 20);
+  pxDraw(e.x - bodyR, e.y - 12 + wobble, bodyR * 2, bodyH, '#0a0510');
+  pxDraw(e.x - bodyR + 2, e.y - 10 + wobble, (bodyR - 2) * 2, bodyH - 4, '#2a0a10');
+  // 중앙 심장 - 두 개 반원 + 아래 삼각
+  ctx.fillStyle = phase === 3 ? '#ff00ff' : '#c81616';
+  ctx.beginPath(); ctx.arc((e.x - bodyR/2)*PX, (e.y - 4 + wobble)*PX, (bodyR/2)*PX, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc((e.x + bodyR/2)*PX, (e.y - 4 + wobble)*PX, (bodyR/2)*PX, 0, Math.PI*2); ctx.fill();
   ctx.beginPath();
-  ctx.moveTo((e.x - 8)*PX, (e.y - 2 + wobble)*PX);
-  ctx.lineTo((e.x - 2)*PX, (e.y + 6 + wobble)*PX);
-  ctx.lineTo((e.x + 4)*PX, (e.y - 4 + wobble)*PX);
-  ctx.lineTo((e.x + 8)*PX, (e.y + 2 + wobble)*PX);
-  ctx.stroke();
-  // 페이즈 2 표시
-  if (e._phase === 2) {
-    // 검은 심장 위 왕관 같은 것
-    pxDraw(e.x - 6, e.y - 14 + wobble, 2, 3, '#ff2d2d');
-    pxDraw(e.x - 2, e.y - 15 + wobble, 2, 4, '#ff2d2d');
-    pxDraw(e.x + 2, e.y - 14 + wobble, 2, 3, '#ff2d2d');
-    pxDraw(e.x + 6, e.y - 14 + wobble, 2, 3, '#ff2d2d');
+  ctx.moveTo((e.x - bodyR)*PX, (e.y - 4 + wobble)*PX);
+  ctx.lineTo((e.x + bodyR)*PX, (e.y - 4 + wobble)*PX);
+  ctx.lineTo(e.x*PX, (e.y + bodyR + 4 + wobble)*PX);
+  ctx.closePath(); ctx.fill();
+
+  // 붉은 파열선 (혈관)
+  const vein = 0.5 + Math.sin(state.time * 5) * 0.5;
+  ctx.strokeStyle = phase === 3 ? 'rgba(255, 128, 255, ' + vein.toFixed(2) + ')' : 'rgba(255, 30, 30, ' + vein.toFixed(2) + ')';
+  ctx.lineWidth = PX;
+  for (let v = 0; v < 4; v++) {
+    ctx.beginPath();
+    const sx = e.x + Math.cos(state.time + v * 1.5) * 8;
+    const sy = e.y - 4 + wobble;
+    ctx.moveTo(sx*PX, sy*PX);
+    for (let seg = 1; seg <= 3; seg++) {
+      const bx = e.x + Math.cos(state.time + v * 1.5 + seg * 0.5) * (8 + seg * 3);
+      const by = sy + seg * 4;
+      ctx.lineTo(bx*PX, by*PX);
+    }
+    ctx.stroke();
+  }
+
+  // 중앙 눈 (모든 페이즈)
+  const eyeBlink = Math.sin(state.time * 2) > -0.85 ? 1 : 0.2;
+  ctx.fillStyle = '#0a0000';
+  ctx.beginPath(); ctx.arc(e.x*PX, (e.y - 2 + wobble)*PX, 4*PX, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = phase === 3 ? '#ff00ff' : '#ffff00';
+  ctx.globalAlpha = eyeBlink;
+  ctx.beginPath(); ctx.arc(e.x*PX, (e.y - 2 + wobble)*PX, 3*PX, 0, Math.PI*2); ctx.fill();
+  pxDraw(e.x - 1, e.y - 3 + wobble, 2, 2, '#000');
+  ctx.globalAlpha = 1;
+
+  // 페이즈 2/3 표시 - 왕관
+  if (phase >= 2) {
+    const crownCol = phase === 3 ? '#ff00ff' : '#ff2d2d';
+    const cy = e.y - bodyH/2 - 6 + wobble;
+    pxDraw(e.x - 8, cy + 2, 16, 2, crownCol);
+    pxDraw(e.x - 7, cy, 2, 3, crownCol);
+    pxDraw(e.x - 3, cy - 2, 2, 5, crownCol);
+    pxDraw(e.x + 1, cy - 3, 2, 6, crownCol);
+    pxDraw(e.x + 5, cy - 1, 2, 4, crownCol);
+  }
+  // 페이즈 3 표시 - 다중 눈 (몸 주위 3개 추가)
+  if (phase === 3) {
+    for (let i = 0; i < 3; i++) {
+      const ea = state.time * 0.5 + i * (Math.PI * 2 / 3);
+      const ex = e.x + Math.cos(ea) * 24;
+      const ey = e.y + Math.sin(ea) * 24 + wobble;
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(ex*PX, ey*PX, 3*PX, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ff00ff';
+      ctx.beginPath(); ctx.arc(ex*PX, ey*PX, 2*PX, 0, Math.PI*2); ctx.fill();
+      pxDraw(ex - 0.5, ey - 0.5, 1, 1, '#000');
+    }
   }
 }
