@@ -5,9 +5,9 @@
 // dungeonMode='blackheart' 에서 spawnBoss 대신 spawnBlackHeart 호출.
 // =====================================================================
 
-// 3단계 시련 보스 HP = ULTRA_TRIAL_HP × 1e32 = 1e39. 검은 심장은 그 × 1e10 = 1e49.
-const BLACKHEART_HP = 1e49;
-const BLACKHEART_DMG = 2e18;
+// 3단계 시련 보스 HP = ULTRA_TRIAL_HP × 1e32 = 1e39. 검은 심장은 그 × 1e13 = 1e52.
+const BLACKHEART_HP = 1e52;
+const BLACKHEART_DMG = 5e18;
 
 function spawnBlackHeart(room) {
   const boss = {
@@ -398,30 +398,33 @@ function updateBlackHeart(e, dt, sm) {
     e._slots = [];
     // 초기 슬롯 셋업 (페이즈 1: 3, 2: 5, 3: 8)
   }
-  const targetSlots = e._phase === 3 ? 8 : (e._phase === 2 ? 5 : 3);
-  // 부족하면 추가 - 초기 오프셋을 살짝씩 분산
+  const targetSlots = e._phase === 3 ? 12 : (e._phase === 2 ? 7 : 4);
+  // 부족하면 추가 - 초기 지연을 짧게 (첫 발사부터 촘촘하게)
   while (e._slots.length < targetSlots) {
     e._slots.push({
       pat: Math.floor(Math.random() * BH_PATTERNS.length),
-      t: 0.5 + Math.random() * 2.0,        // 첫 발사까지의 지연을 분산
+      t: 0.1 + Math.random() * 0.8,        // 훨씬 짧은 초기 지연
     });
   }
   // 페이즈 감소 시 (부활 리셋) 초과 슬롯 제거는 안 함 - 계속 늘어나기만 함
 
-  const cdMul = e._phase === 3 ? 0.5 : (e._phase === 2 ? 0.7 : 1);
+  // 패턴 간격 대폭 축소 - 페이즈 1: 40%, 2: 25%, 3: 15%
+  const cdMul = e._phase === 3 ? 0.15 : (e._phase === 2 ? 0.25 : 0.4);
   for (let i = 0; i < e._slots.length; i++) {
     const slot = e._slots[i];
     slot.t -= dt;
     if (slot.t <= 0) {
       const pat = BH_PATTERNS[slot.pat];
       if (pat) { try { pat.fire(e); } catch(_) {} }
-      // 다음 패턴 선정 - 슬롯별 다양성 유지: 같은 슬롯에서 최근 패턴 재선정 금지 (연속 회피)
+      // 다음 패턴 선정
       let next;
       let tries = 0;
       do { next = Math.floor(Math.random() * BH_PATTERNS.length); tries++; } while (next === slot.pat && tries < 4);
       slot.pat = next;
-      // 다음 CD - 슬롯 간 타이머가 서로 겹치지 않도록 살짝 랜덤 오프셋 추가
-      slot.t = pat.cd * cdMul * (0.75 + Math.random() * 0.5) + (i * 0.08);
+      // 다음 CD - 짧고 촘촘하게. 오프셋도 축소
+      slot.t = pat.cd * cdMul * (0.6 + Math.random() * 0.4) + (i * 0.04);
+      // 최소 지연 보장 (프레임 폭발 방지)
+      if (slot.t < 0.08) slot.t = 0.08;
     }
   }
 }
