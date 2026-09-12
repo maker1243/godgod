@@ -21,11 +21,71 @@ const CODEX_TABS = [
   { id:'achieve',  name:'ACHIEVE'    },
   { id:'daily',    name:'DAILY'      },
   { id:'story',    name:'STORY'      },
+  { id:'bond',     name:'BOND'       },
   { id:'weekly',   name:'WEEKLY'     },
   { id:'memory',   name:'MEMORY'     },
   { id:'modes',    name:'MODES'      },
   { id:'stats',    name:'STATS'      },
 ];
+
+// 엘라라 미션 진행도 텍스트 - 특정 bond 미션의 현재 상황을 계산
+function _elaraProgressText(q) {
+  try {
+    if (!q) return '';
+    const b = q.bond;
+    if (b === 1) {
+      const npcs = (typeof academy !== 'undefined' && academy.npcs) ? academy.npcs : [];
+      let n = 0;
+      for (const nc of npcs) { if ((nc.bond || 0) >= 1) n++; }
+      return n + ' / 3 NPC 인사';
+    }
+    if (b === 2) return (state.customizeVisited ? '완료' : '미방문 · STYLE 문');
+    if (b === 3) return (typeof hasFaction === 'function' && hasFaction()) ? '가문 결정 완료' : '미결정 · HOUSE 문';
+    if (b === 4) return ((state.customSpells||[]).length) + ' / 1 주문 창조';
+    if (b === 5) {
+      const groups = [ ['kor','eng'],['biz','psy'],['phys','chem'],['cs','robot'],
+        ['med','phar'],['math','pe'],['paint','vocal'],['phil','rel'],
+        ['lib','media'],['sculpt','vdesign'],['chn','jpn'] ];
+      const beaten = state.professorsBeaten || {};
+      let n = 0; for (const g of groups) if (g.some(k => beaten[k])) n++;
+      return n + ' / 3 계열';
+    }
+    if (b === 6) {
+      const cl = (typeof underground !== 'undefined' && underground.claimed) ? underground.claimed : {};
+      const n = Object.keys(cl).filter(k => cl[k]).length;
+      return n + ' / 3 방 개방';
+    }
+    if (b === 7) {
+      const v = !!state.blackMarketVisited;
+      let toolCnt = 0;
+      if (state.magicTools) for (const k of Object.keys(state.magicTools)) toolCnt += state.magicTools[k] || 0;
+      return (v ? '방문 완료' : '시장 미방문') + ' · 마도구 ' + toolCnt + '/1';
+    }
+    if (b === 8) {
+      if (!state.clan) return '클랜 미창설';
+      return '클랜 XP ' + (state.clan.xp||0) + ' / 2000';
+    }
+    if (b === 9) {
+      const done = !!(typeof underground !== 'undefined' && underground.bossDown && underground.bossDown[5]);
+      return done ? '심연 보스 격파' : '심연 F5 미격파';
+    }
+    if (b === 10) {
+      // 교수 + 교장 격파
+      const groups = [ ['kor','eng'],['biz','psy'],['phys','chem'],['cs','robot'],
+        ['med','phar'],['math','pe'],['paint','vocal'],['phil','rel'],
+        ['lib','media'],['sculpt','vdesign'],['chn','jpn'] ];
+      const beaten = state.professorsBeaten || {};
+      let all = true; let n = 0;
+      for (const g of groups) {
+        if (g.every(k => !beaten[k])) { all = false; }
+        for (const k of g) if (beaten[k]) n++;
+      }
+      const principal = (state.principalDefeated || 0) >= 1;
+      return '교수 ' + n + '/22 · 교장 ' + (principal ? 'O' : 'X');
+    }
+  } catch(_){}
+  return '';
+}
 
 function codexSetTab(id) {
   codex.tab = id;
@@ -273,6 +333,23 @@ function codexEntries() {
           col = '#8a7ab5';
         }
         out.push({ title, sub, color: col });
+      }
+    }
+  } else if (codex.tab === 'bond') {
+    // 엘라라 유대 미션 힌트 + 상태
+    if (typeof ELARA_QUESTS !== 'undefined') {
+      const curBond = (state.npcQuests && state.npcQuests.elara) ? (state.npcQuests.elara.bond || 0) : 0;
+      out.push({ title: '엘라라 유대: ' + curBond + ' / 10', sub: '아카데미 진입 시 조건 만족한 미션이 자동 승급됩니다', color:'#c86ade' });
+      for (const q of ELARA_QUESTS) {
+        const done = curBond >= q.bond;
+        let curStatus = '';
+        if (!done) {
+          // 미완: 실시간 진행 지표를 최대한 계산 (조각/교수/방/클랜 등 카운트)
+          curStatus = _elaraProgressText(q);
+        }
+        const title = (done ? '★ ' : '🔒 ') + 'BOND ' + q.bond + '  ·  ' + q.title;
+        const sub = done ? '완료' : (q.desc + (curStatus ? '   [' + curStatus + ']' : ''));
+        out.push({ title, sub, color: done ? '#3ac762' : '#c8b898' });
       }
     }
   } else if (codex.tab === 'trials') {

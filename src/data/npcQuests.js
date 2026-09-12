@@ -84,25 +84,28 @@ const ELARA_QUESTS = [
     },
     reward:()=>{ state.research = (state.research||0) + 100000; return '+100000 RP'; } },
 
-  // 10단계: 진실을 마주하다 (유지)
-  { bond:10, title:'진실을 마주하다',   desc:'아카데미의 진실 컷씬 시청 (또는 모든 조각 수집)',
+  // 10단계: 학원 정복 - 22명 교수 전원 + 교장 격파
+  { bond:10, title:'학원의 정복',      desc:'22명 교수 전원 격파 + 교장 격파',
     check:()=>{
-      if (state.academyTruthSeen) return true;
-      if (typeof STORY_FRAGMENTS !== 'undefined' && state.storyFragments) {
-        const total = Object.keys(STORY_FRAGMENTS).length;
-        const owned = Object.keys(state.storyFragments).filter(k => STORY_FRAGMENTS[k]).length;
-        if (owned >= total) {
-          state.academyTruthSeen = true;
-          if (typeof saveAccountData === 'function') saveAccountData();
-          return true;
-        }
+      const FACULTY_KEYS = [
+        'kor','eng','biz','psy','phys','chem','cs','robot','med','phar',
+        'math','pe','paint','vocal','phil','rel','lib','media',
+        'sculpt','vdesign','chn','jpn',
+      ];
+      const beaten = state.professorsBeaten || {};
+      for (const k of FACULTY_KEYS) if (!beaten[k]) return false;
+      if ((state.principalDefeated || 0) < 1) return false;
+      // 부수 효과: 진실 컷씬을 아직 못 봤다면 자동 시청 처리
+      if (!state.academyTruthSeen) {
+        state.academyTruthSeen = true;
       }
-      return false;
+      return true;
     },
     reward:()=>{
       if (typeof _ensureArtifactsState === 'function') _ensureArtifactsState();
       if (state.artifacts) state.artifacts.owned['god_arcana'] = true;
-      return 'ARCANA CROWN 획득!';
+      state.research = (state.research||0) + 500000;
+      return 'ARCANA CROWN · +500000 RP';
     } },
 ];
 
