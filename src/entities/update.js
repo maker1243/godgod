@@ -268,6 +268,16 @@ function updateAcademy(dt) {
   // 엘라라 유대 자동 승급 - 이미 조건 만족한 미션이 있으면 대화 없이도 클리어
   if (typeof autoAdvanceElaraBond === 'function' && !academy._elaraAutoChecked) {
     academy._elaraAutoChecked = true;
+    // 모든 조각을 모았는데 진실 컷씬을 아직 못 본 경우 - 재트리거
+    if (!state.academyTruthSeen && typeof STORY_FRAGMENTS !== 'undefined' && state.storyFragments) {
+      const total = Object.keys(STORY_FRAGMENTS).length;
+      const owned = Object.keys(state.storyFragments).filter(k => STORY_FRAGMENTS[k]).length;
+      if (owned >= total) {
+        // 짧은 지연 후 컷씬으로 전환. autoAdvance 는 아카데미 복귀 시 다시 실행됨.
+        setTimeout(() => { if (!state.academyTruthSeen && state.scene === 'academy') goTo('academyTruth'); }, 1500);
+        return;
+      }
+    }
     try { autoAdvanceElaraBond(); } catch(_){}
   }
   // 엘라라 결말 조건 - 첫 진입 시 자동 선택 다이얼로그

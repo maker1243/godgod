@@ -51,8 +51,23 @@ const ELARA_QUESTS = [
   { bond: 9, title:'교장 격파',         desc:'교장을 1회 이상 격파',
     check:()=>{ return (state.principalDefeated || 0) >= 1; },
     reward:()=>{ state.research = (state.research||0) + 50000; return '+50000 RP'; } },
-  { bond:10, title:'진실을 마주하다',   desc:'아카데미의 진실 컷씬 시청',
-    check:()=>{ return !!state.academyTruthSeen; },
+  { bond:10, title:'진실을 마주하다',   desc:'아카데미의 진실 컷씬 시청 (또는 모든 조각 수집)',
+    check:()=>{
+      // 컷씬을 봤거나 (일반 경로), 이미 모든 조각을 모아 컷씬 트리거 조건을 충족한 경우
+      // 컷씬을 미처 못 본 유저도 자동 통과되도록 완화.
+      if (state.academyTruthSeen) return true;
+      if (typeof STORY_FRAGMENTS !== 'undefined' && state.storyFragments) {
+        const total = Object.keys(STORY_FRAGMENTS).length;
+        const owned = Object.keys(state.storyFragments).filter(k => STORY_FRAGMENTS[k]).length;
+        if (owned >= total) {
+          // 조각을 다 모았는데 컷씬을 놓친 경우 - 자동으로 시청 처리
+          state.academyTruthSeen = true;
+          if (typeof saveAccountData === 'function') saveAccountData();
+          return true;
+        }
+      }
+      return false;
+    },
     reward:()=>{
       // 고유 아티팩트 지급
       if (typeof _ensureArtifactsState === 'function') _ensureArtifactsState();
